@@ -5,9 +5,10 @@ configuration can be compared under the same demand.
 
 ## Model and server
 
-`server.model` is required and must point to an existing local model directory.
-Every other `server` entry is a fixed vLLM argument. Top-level `tune` defines
-the vLLM argument search space.
+Choose either inline server settings or a native vLLM YAML file. For inline
+settings, `server.model` is required and must point to an existing local model
+directory. Every other `server` entry is a fixed vLLM argument. Top-level
+`tune` defines the vLLM argument search space.
 
 ```yaml
 server:
@@ -23,6 +24,53 @@ tune:
     step: 0.05
 env:
   CUDA_VISIBLE_DEVICES: "0,1"
+```
+
+To reuse a native vLLM configuration, set `server.config`:
+
+```yaml
+server:
+  config: ./vllm-config.yaml
+  port: 8100  # Optional override.
+```
+
+The path is resolved relative to the vLLM Optimizer configuration file. The
+native file must contain `model`, which remains subject to the existing local
+model-directory validation. vLLM Optimizer launches `vllm serve` with both the
+resolved model and `--config`. Other `server` settings, selected `tune` values,
+and runtime-assigned settings are command-line arguments, so they override the
+corresponding native values. If an inline `server.model` is supplied too, it
+overrides the native model.
+
+### LMCache with either server form
+
+A native vLLM YAML can preserve LMCache's nested transfer configuration:
+
+```yaml
+# vllm-config.yaml
+model: /models/qwen
+kv-transfer-config:
+  kv_connector: LMCacheConnectorV1
+  kv_role: kv_both
+```
+
+```yaml
+# experiment.yaml
+server:
+  config: ./vllm-config.yaml
+env:
+  LMCACHE_CONFIG_FILE: /configs/lmcache-config.yaml
+```
+
+The legacy inline form remains supported by quoting the transfer configuration
+as JSON so it is rendered as one CLI value:
+
+```yaml
+server:
+  model: /models/qwen
+  kv-transfer-config: '{"kv_connector":"LMCacheConnectorV1","kv_role":"kv_both"}'
+env:
+  LMCACHE_CONFIG_FILE: /configs/lmcache-config.yaml
 ```
 
 Unknown vLLM flags are intentionally allowed. The `vllm-opt` CLI renders keys as CLI flags,

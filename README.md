@@ -109,6 +109,19 @@ runs the experiment, persists results, and generates its exports and report.
 The `vllm-opt` CLI binds vLLM to `127.0.0.1` by default. Set `server.host` explicitly
 only when the benchmark server must be reachable from another host.
 
+Already have a native `vllm serve` YAML file? Reference it instead of copying
+its values into `experiment.yaml`:
+
+```yaml
+server:
+  config: ./vllm-config.yaml
+  gpu-memory-utilization: 0.9  # Optional CLI override of the native file.
+```
+
+The path is resolved relative to `experiment.yaml`. The native file must define
+`model`; any other `server` settings, tuned values, and runtime-assigned values
+are passed on the command line and take precedence over the native file.
+
 Fixed vLLM flags go directly under `server`; tunable flags use top-level
 `tune`. Fixed and tunable environment variables use `env` and `tune_env`.
 See the [configuration guide](https://brtydse100.github.io/vllm-optimizer/configuration/)
