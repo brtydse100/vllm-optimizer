@@ -16,6 +16,9 @@ from vllm_optimizer.workers.output_stream import mirror_output
 
 _CTRL_BREAK_EVENT = getattr(signal, "CTRL_BREAK_EVENT", 0)
 _CREATE_NEW_PROCESS_GROUP = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+_KILLPG = getattr(os, "killpg", None)
+_SIGKILL = getattr(signal, "SIGKILL", signal.SIGTERM)
+_POSIX = os.name == "posix"
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +85,13 @@ class ManagedProcess:
     async def stop(self, grace_period: float = 5.0) -> int:
         if grace_period < 0:
             raise ValueError("grace_period must not be negative")
+        if _POSIX:
+            waiter = asyncio.create_task(self.wait())
+            self._signal_group(force=False)
+            if not await self._wait_for_group_exit(grace_period):
+                self._signal_group(force=True)
+                await self._wait_for_group_exit(max(grace_period, 1.0))
+            return await waiter
         if self.returncode is not None:
             return await self.wait()
         self._signal_group(force=False)
@@ -92,11 +102,12 @@ class ManagedProcess:
             return await self.wait()
 
     def _signal_group(self, *, force: bool) -> None:
-        if self.returncode is not None:
-            return
         try:
-            if os.name == "posix":
-                os.kill(-self.pid, signal.Signals(9) if force else signal.SIGTERM)
+            if _POSIX:
+                assert _KILLPG is not None
+                _KILLPG(self.pid, _SIGKILL if force else signal.SIGTERM)
+            elif self.returncode is not None:
+                return
             elif force:
                 self._process.kill()
             else:
@@ -106,6 +117,25 @@ class ManagedProcess:
         except (OSError, ValueError):
             if not force and self.returncode is None:
                 self._process.terminate()
+
+    async def _wait_for_group_exit(self, timeout: float) -> bool:
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout
+        while self._group_exists():
+            if loop.time() >= deadline:
+                return False
+            await asyncio.sleep(min(0.05, deadline - loop.time()))
+        return True
+
+    def _group_exists(self) -> bool:
+        try:
+            assert _KILLPG is not None
+            _KILLPG(self.pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        return True
 
     def _close_log(self) -> None:
         if not self._log.closed:

@@ -10,7 +10,7 @@ import optuna
 from optuna.trial import TrialState
 
 from vllm_optimizer.config.models import VTuneConfig
-from vllm_optimizer.search.grid import TrialParameters, expand_grid
+from vllm_optimizer.search.grid import TrialParameters, definition_values, iter_grid, space_cardinality
 
 
 class OptunaSearchSession:
@@ -29,9 +29,9 @@ class OptunaSearchSession:
             load_if_exists=True,
         )
         self._config = config
-        self._total = trials
+        self._total = min(trials, space_cardinality(config))
         self._active: dict[str, optuna.Trial] = {}
-        self._space = expand_grid(config)
+        self._fallback = iter_grid(config)
         self._recover_running_trials()
         self._seen = {
             value
@@ -46,7 +46,7 @@ class OptunaSearchSession:
     def suggest(self) -> TrialParameters | None:
         if len(self._seen) >= self._total:
             return None
-        while True:
+        while len(self._seen) < self._total:
             optuna_trial = self._study.ask()
             arguments = self._suggest_section(optuna_trial, self._config.tune, "arg")
             environment = self._suggest_section(optuna_trial, self._config.tune_env, "env")
@@ -54,13 +54,15 @@ class OptunaSearchSession:
             if fingerprint in self._seen:
                 optuna_trial.set_user_attr("vllm_optimizer_status", "duplicate_skipped")
                 self._study.tell(optuna_trial, state=TrialState.PRUNED)
-                self._enqueue_remaining()
+                if not self._enqueue_remaining():
+                    return None
                 continue
             optuna_trial.set_user_attr("vllm_optimizer_configuration", fingerprint)
             trial = TrialParameters(f"trial-{len(self._seen) + 1:04d}", arguments, environment)
             self._seen.add(fingerprint)
             self._active[trial.trial_id] = optuna_trial
             return trial
+        return None
 
     def complete(self, trial: TrialParameters, value: float) -> None:
         self._study.tell(self._active.pop(trial.trial_id), value)
@@ -76,18 +78,17 @@ class OptunaSearchSession:
             if trial.state is TrialState.RUNNING:
                 self._study.tell(trial.number, state=TrialState.FAIL)
 
-    def _enqueue_remaining(self) -> None:
-        remaining = next(
-            (trial for trial in self._space if _fingerprint(trial.server_args, trial.server_env) not in self._seen),
-            None,
-        )
-        if remaining is None:
-            return
-        parameters = {
-            **{f"arg:{name}": value for name, value in remaining.server_args.items()},
-            **{f"env:{name}": value for name, value in remaining.server_env.items()},
-        }
-        self._study.enqueue_trial(parameters)
+    def _enqueue_remaining(self) -> bool:
+        for remaining in self._fallback:
+            if _fingerprint(remaining.server_args, remaining.server_env) in self._seen:
+                continue
+            parameters = {
+                **{f"arg:{name}": value for name, value in remaining.server_args.items()},
+                **{f"env:{name}": value for name, value in remaining.server_env.items()},
+            }
+            self._study.enqueue_trial(parameters)
+            return True
+        return False
 
     @staticmethod
     def _suggest_section(trial: optuna.Trial, definitions: Mapping[str, object], prefix: str) -> dict[str, object]:
@@ -101,10 +102,7 @@ def _suggest(trial: optuna.Trial, parameter: str, definition: object, label: str
     if not isinstance(definition, Mapping):
         raise ValueError(f"'{label}' must be a mapping")
     if set(definition) == {"values"}:
-        values = definition["values"]
-        if not isinstance(values, list) or not values:
-            raise ValueError(f"'{label}.values' must be a non-empty list")
-        return trial.suggest_categorical(parameter, values)
+        return trial.suggest_categorical(parameter, list(definition_values(definition, label)))
     if set(definition) != {"min", "max", "step"}:
         raise ValueError(f"'{label}' requires either values or min/max/step")
     low, high, step = definition["min"], definition["max"], definition["step"]

@@ -139,5 +139,7 @@ def _string_tuple(value: object) -> tuple[str, ...]:
 def _benchmark_policy(document: Mapping[str, object], run: Path, trials: tuple[TrialReport, ...]) -> BenchmarkPolicy:
     if not trials:
         return stored_policy(document, {})
-    benchmark = load_manifest(run, trials[0].trial_id).get("benchmark", {})
+    artifact_subdirectory = trials[0].execution.get("artifact_subdirectory")
+    subdirectory = artifact_subdirectory if isinstance(artifact_subdirectory, str) else None
+    benchmark = load_manifest(run, trials[0].trial_id, subdirectory).get("benchmark", {})
     return stored_policy(document, benchmark if isinstance(benchmark, Mapping) else {})

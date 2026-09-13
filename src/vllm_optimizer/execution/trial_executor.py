@@ -47,6 +47,8 @@ class TrialExecutor:
             trial_dir /= artifact_subdirectory
         context = TrialContext(parameters.trial_id)
         context.execution["mode"] = execution_mode(self._config)
+        if artifact_subdirectory:
+            context.execution["artifact_subdirectory"] = artifact_subdirectory
         if slot:
             context.execution.update({"worker": slot.name, "devices": list(slot.devices), "port": slot.port})
         scope = f"[{slot.name}][{parameters.trial_id}]" if slot else None

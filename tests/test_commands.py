@@ -3,6 +3,8 @@ from pathlib import Path
 from vllm_optimizer.benchmarks.guidellm import build_plan as build_guidellm_plan
 from vllm_optimizer.benchmarks.vllm import build_plan as build_vllm_plan
 from vllm_optimizer.config.models import ExperimentConfig, VTuneConfig
+from vllm_optimizer.reproduction.reader import render_command
+from vllm_optimizer.workers.configuration import build_process_spec
 
 
 def _config() -> VTuneConfig:
@@ -39,3 +41,11 @@ def test_vllm_command_normalizes_flags_and_supplies_endpoint(tmp_path: Path) -> 
         plan.argv[plan.argv.index("--dataset-name") : plan.argv.index("--dataset-name") + 2]
     )
     assert "--ignore-eos" in plan.argv
+
+
+def test_false_vllm_setting_and_spaced_environment_are_explicit() -> None:
+    config = VTuneConfig(1, ExperimentConfig("commands"), {"model": "/models/demo", "enable-prefix-caching": False})
+
+    assert "--no-enable-prefix-caching" in build_process_spec(config).argv
+    rendered = render_command({"argv": ["tool", "arg"], "environment": {"MODEL_PATH": "/models/my model"}})
+    assert rendered == "env 'MODEL_PATH=/models/my model' tool arg"

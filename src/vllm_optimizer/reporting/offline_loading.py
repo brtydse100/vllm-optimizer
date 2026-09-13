@@ -17,11 +17,16 @@ from vllm_optimizer.reproduction.reader import load_manifest
 
 def load_trial(run: Path, summary: Mapping[str, object], warnings: list[str]) -> TrialReport:
     trial_id = text(summary, "trial_id")
-    document = read_object(run / "trials" / trial_id / "result.json", "trial result")
+    summary_execution = execution(summary.get("execution"), trial_id)
+    artifact_subdirectory = cast(str | None, summary_execution.get("artifact_subdirectory"))
+    directory = run / "trials" / trial_id
+    if artifact_subdirectory:
+        directory /= artifact_subdirectory
+    document = read_object(directory / "result.json", "trial result")
     require(document.get("schema_version") == 1, f"trial {trial_id} has an invalid schema")
     require(document.get("trial_id") == trial_id, f"trial result ID mismatch: {trial_id}")
     require(document.get("status") == summary.get("status"), f"trial status mismatch: {trial_id}")
-    manifest = load_manifest(run, trial_id)
+    manifest = load_manifest(run, trial_id, artifact_subdirectory)
     warnings.extend(artifact_warnings(manifest, trial_id))
     status = _status(document.get("status"), trial_id)
     benchmarks = document.get("benchmarks", [])

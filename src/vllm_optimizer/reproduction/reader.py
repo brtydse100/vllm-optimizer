@@ -11,10 +11,15 @@ from pathlib import Path
 _TRIAL_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 
 
-def load_manifest(run: Path, trial_id: str) -> dict[str, object]:
+def load_manifest(run: Path, trial_id: str, artifact_subdirectory: str | None = None) -> dict[str, object]:
     if not _TRIAL_ID.fullmatch(trial_id):
         raise ValueError("trial ID must use only letters, numbers, '_' or '-'")
-    path = Path(run) / "trials" / trial_id / "manifest.json"
+    if artifact_subdirectory is not None and not _TRIAL_ID.fullmatch(artifact_subdirectory):
+        raise ValueError("artifact subdirectory must use only letters, numbers, '_' or '-'")
+    directory = Path(run) / "trials" / trial_id
+    if artifact_subdirectory:
+        directory /= artifact_subdirectory
+    path = directory / "manifest.json"
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
@@ -46,4 +51,5 @@ def render_command(command: Mapping[str, object]) -> str:
     ):
         raise ValueError("Manifest contains an invalid command environment")
     prefix = [f"{key}={value}" for key, value in sorted(environment.items())]
-    return shlex.join([*prefix, *argv])
+    rendered = ["env", *prefix, *argv] if prefix else argv
+    return shlex.join(rendered)

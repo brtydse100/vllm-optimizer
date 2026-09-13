@@ -93,9 +93,10 @@ max: 8
 step: 1
 ```
 
-vLLM flags are rendered deterministically. `true` emits a presence flag;
-`false` and `null` omit it; a fixed list repeats the flag for each item. All
-processes are launched with argument arrays, never interpolated shell text.
+vLLM flags are rendered deterministically. `true` emits a presence flag,
+`false` emits its `--no-` form, and `null` omits it; a fixed list repeats the
+flag for each item. All processes are launched with argument arrays, never
+interpolated shell text.
 Fixed environment variables use top-level `env`. Unless `server.host` is set
 explicitly, the `vllm-opt` CLI supplies
 `--host 127.0.0.1`. `execution.host` selects the address used for health checks
