@@ -6,7 +6,7 @@
 - **Benchmark backends:** GuideLLM and vLLM Bench Serve
 
 This document describes the behavior implemented today. Future capabilities
-belong in [ROADMAP.md](ROADMAP.md).
+belong in [ROADMAP.md](../roadmap/ROADMAP.md).
 
 ## Product contract
 
@@ -70,5 +70,5 @@ never resumed or overwritten. Manual retries create a new linked run.
 
 ## Detailed contracts
 
-- [Configuration contract](mvp/configuration.md)
-- [CLI, lifecycle, persistence, reports, and acceptance](mvp/runtime.md)
+- [Configuration contract](configuration.md)
+- [CLI, lifecycle, persistence, reports, and acceptance](runtime.md)

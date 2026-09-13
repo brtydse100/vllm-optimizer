@@ -13,7 +13,7 @@ vllm-opt --config experiment.yaml
 ```
 
 Use plain `pip install vllm-optimizer` for configuration and report inspection without
-local vLLM execution. [Understand the two installation choices](installation.md).
+local vLLM execution. [Understand the two installation choices](getting-started/installation.md).
 
 ## What vLLM Optimizer gives you
 
@@ -28,30 +28,30 @@ local vLLM execution. [Understand the two installation choices](installation.md)
 
 ### Start an experiment
 
-- [Run your first experiment](getting-started.md)
-- [Choose an installation](installation.md)
-- [Configure a run](configuration.md)
-- [See a complete YAML example](full-example.md)
+- [Run your first experiment](getting-started/index.md)
+- [Choose an installation](getting-started/installation.md)
+- [Configure a run](guides/configuration.md)
+- [See a complete YAML example](reference/yaml/full-example.md)
 
 ### Tune and benchmark
 
-- [Select a benchmark backend](benchmarking.md)
-- [Choose benchmark data](benchmark-data.md)
-- [Understand search and scoring](search-and-scoring.md)
-- [Run trials in parallel](parallel-trials.md)
+- [Select a benchmark backend](guides/benchmarks/benchmarking.md)
+- [Choose benchmark data](guides/benchmarks/benchmark-data.md)
+- [Understand search and scoring](guides/search-and-scoring.md)
+- [Run trials in parallel](guides/parallel-trials.md)
 
 ### Understand results and solve problems
 
-- [Interpret and regenerate reports](reports.md)
-- [Compare GuideLLM and vLLM Bench Serve](backend-comparison.md)
-- [Troubleshoot common failures](troubleshooting.md)
-- [Check platform compatibility](compatibility.md)
+- [Interpret and regenerate reports](guides/reports.md)
+- [Compare GuideLLM and vLLM Bench Serve](guides/benchmarks/backend-comparison.md)
+- [Troubleshoot common failures](guides/troubleshooting.md)
+- [Check platform compatibility](reference/compatibility.md)
 
 ### Contribute and explore the design
 
-- [Read the architecture overview](ARCHITECTURE.md)
-- [Review the roadmap](ROADMAP.md)
-- [Contribute to the project](contributing.md)
+- [Read the architecture overview](project/ARCHITECTURE.md)
+- [Review the roadmap](project/roadmap/ROADMAP.md)
+- [Contribute to the project](project/contributing.md)
 
 !!! note "Alpha software"
     Experiment execution targets Linux with NVIDIA GPUs. The universal Python

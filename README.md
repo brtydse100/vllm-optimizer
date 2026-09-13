@@ -47,7 +47,7 @@ Choose the installation that matches what you want to do:
 
 The core package intentionally does not install GPU frameworks. The `runtime`
 extra adds vLLM and GuideLLM, which select large PyTorch/CUDA dependencies for
-the machine. See the [installation guide](https://brtydse100.github.io/vllm-optimizer/installation/)
+the machine. See the [installation guide](https://brtydse100.github.io/vllm-optimizer/getting-started/installation/)
 for virtual environments, CUDA guidance, and verification commands.
 
 ## Quick start
@@ -190,9 +190,9 @@ YAML and measurement caveats.
 
 ## Product documents
 
-- [First MVP specification](docs/MVP_SPEC.md)
-- [Future implementation roadmap](docs/ROADMAP.md)
-- [Architecture overview and early sketch](docs/ARCHITECTURE.md)
+- [First MVP specification](docs/project/mvp/MVP_SPEC.md)
+- [Future implementation roadmap](docs/project/roadmap/ROADMAP.md)
+- [Architecture overview and early sketch](docs/project/ARCHITECTURE.md)
 - [Editable Draw.io architecture diagram](docs/vllm-optimizer-architecture.drawio)
 - [Contributor guide](CONTRIBUTING.md)
 - [Release notes](CHANGELOG.md)

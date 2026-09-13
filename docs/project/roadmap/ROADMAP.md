@@ -1,7 +1,7 @@
 # vLLM Optimizer Future Implementation Roadmap
 
 This roadmap lists capabilities that follow the first MVP described in
-[MVP_SPEC.md](MVP_SPEC.md). It is organized by dependency and product value,
+[MVP_SPEC.md](../mvp/MVP_SPEC.md). It is organized by dependency and product value,
 not by promised release dates.
 
 ## Guiding rules
@@ -22,12 +22,12 @@ Future work should preserve these invariants:
 
 ## Detailed phases
 
-- [Experiment engine and benchmark coverage](roadmap/engine.md)
-- [Optimization and rankings](roadmap/optimization.md)
-- [Faster local execution](roadmap/local-execution.md)
-- [Distributed execution and reporting](roadmap/distributed.md)
-- [Automation, APIs, cost, and capacity](roadmap/integrations.md)
-- [Cross-cutting requirements](roadmap/requirements.md)
+- [Experiment engine and benchmark coverage](engine.md)
+- [Optimization and rankings](optimization.md)
+- [Faster local execution](local-execution.md)
+- [Distributed execution and reporting](distributed.md)
+- [Automation, APIs, cost, and capacity](integrations.md)
+- [Cross-cutting requirements](requirements.md)
 
 ## Suggested release sequence
 
