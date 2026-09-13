@@ -78,12 +78,46 @@ def _build_experiment(raw: dict[str, Any]) -> ExperimentConfig:
 
 
 def _build_server(raw: dict[str, Any], config_directory: Path) -> dict[str, Any]:
-    configured = Path(_nonempty_string(raw.get("model"), "server.model")).expanduser()
-    resolved = configured if configured.is_absolute() else config_directory / configured
+    server = dict(raw)
+    model_directory = config_directory
+    if "config" in server:
+        config_path = _resolve_file(server["config"], "server.config", config_directory)
+        native = _load_vllm_config(config_path)
+        server["config"] = str(config_path)
+        model_directory = config_path.parent
+        for name in ("model", "host", "port", "tensor-parallel-size", "tensor_parallel_size"):
+            if name not in server and name in native:
+                server[name] = native[name]
+
+    configured = Path(
+        _nonempty_string(server.get("model"), "server.model or the native vLLM config model")
+    ).expanduser()
+    if "model" in raw:
+        model_directory = config_directory
+    resolved = configured if configured.is_absolute() else model_directory / configured
     resolved = resolved.resolve()
     if not resolved.is_dir():
         raise ConfigValidationError(f"'server.model' is not a directory: {resolved}")
-    return {**raw, "model": str(resolved)}
+    return {**server, "model": str(resolved)}
+
+
+def _resolve_file(value: Any, label: str, directory: Path) -> Path:
+    configured = Path(_nonempty_string(value, label)).expanduser()
+    resolved = (configured if configured.is_absolute() else directory / configured).resolve()
+    if not resolved.is_file():
+        raise ConfigValidationError(f"'{label}' is not a file: {resolved}")
+    return resolved
+
+
+def _load_vllm_config(path: Path) -> dict[str, Any]:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as error:
+        raise ConfigFileError(f"Cannot read vLLM configuration '{path}': {error}") from error
+    try:
+        return _mapping(yaml.safe_load(text), f"vLLM configuration '{path}'")
+    except yaml.YAMLError as error:
+        raise ConfigYAMLError(f"Invalid YAML in vLLM configuration '{path}': {error}") from error
 
 
 def _required_mapping(root: dict[str, Any], name: str) -> dict[str, Any]:

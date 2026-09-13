@@ -6,8 +6,9 @@ experiment:
   output_dir: runs        # Default: runs. Relative to the current directory.
   seed: 42                # Optional. Makes Random and TPE repeatable.
 
-# server.model is required and must be an existing local model directory.
-# Every other key under server becomes a fixed `vllm serve` argument.
+# Use model for inline settings, or replace it with config: ./vllm-config.yaml.
+# A native config must define an existing local model directory. Other server
+# keys are CLI overrides of native values.
 server:
   model: /models/Qwen3-32B
   port: 8000
