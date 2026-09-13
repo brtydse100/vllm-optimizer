@@ -175,8 +175,8 @@ usable metric. Normalized JSON, CSV, and HTML results show successful and
 failed request counts and the failure percentage for every repeat.
 
 Every supported profile, constraint, request format, and dataset form has a
-copyable examples in [benchmark configuration](benchmarking.md). See the
-[complete YAML](full-example.md) for all configuration sections together.
+copyable examples in [benchmark configuration](benchmarks/benchmarking.md). See the
+[complete YAML](../reference/yaml/full-example.md) for all configuration sections together.
 
 ## Logging and timeouts
 

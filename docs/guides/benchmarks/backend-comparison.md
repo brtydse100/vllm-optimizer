@@ -1,7 +1,7 @@
 # GuideLLM and vLLM comparison
 
 This procedure compares the two HTTP benchmark clients against the same
-vLLM server. It uses the fixed [four-prompt dataset](assets/backend-comparison.jsonl),
+vLLM server. It uses the fixed [four-prompt dataset](../../assets/backend-comparison.jsonl),
 one request at a time, greedy sampling, and a fixed eight-token output budget.
 Run each client against a freshly restarted server with the same model and
 server flags. Keep both raw JSON files; never compare a hand-normalized copy.

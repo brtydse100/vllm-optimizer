@@ -161,4 +161,4 @@ _August 30, 2026_
 - Added a dedicated installation guide for core-only and experiment-runtime
   environments, including native Windows and WSL differences.
 
-Earlier entries are preserved in the [changelog archive](docs/releases/CHANGELOG_ARCHIVE.md).
+Earlier entries are preserved in the [changelog archive](docs/project/releases/CHANGELOG_ARCHIVE.md).

@@ -31,59 +31,65 @@ theme:
 
 nav:
   - Overview: index.md
-  - Get started:
-      - Quick start: getting-started.md
-      - Installation choices: installation.md
-      - Configuration: configuration.md
+  - Start here:
+      - Quick start: getting-started/index.md
+      - Installation choices: getting-started/installation.md
+  - Configure and run:
+      - Configuration: guides/configuration.md
       - YAML reference:
-          - Overview: full-example.md
-          - Server and tuning: full-example-server.md
-          - Benchmarks and optimization: full-example-benchmark.md
-          - Execution and logging: full-example-execution.md
-          - vLLM Bench Serve: full-example-vllm-bench.md
+          - Overview: reference/yaml/full-example.md
+          - Server and tuning: reference/yaml/full-example-server.md
+          - Benchmarks and optimization: reference/yaml/full-example-benchmark.md
+          - Execution and logging: reference/yaml/full-example-execution.md
+          - vLLM Bench Serve: reference/yaml/full-example-vllm-bench.md
       - Benchmarks:
-          - Overview and vLLM Bench Serve: benchmarking.md
-          - GuideLLM options: benchmark-guidellm.md
-          - Datasets: benchmark-data.md
-          - Repeats and errors: benchmark-repeats.md
-      - Search and scoring: search-and-scoring.md
-      - Parallel trials: parallel-trials.md
-  - Backend comparison: backend-comparison.md
-  - Release checklist: release-checklist.md
-  - Use vLLM Optimizer:
-      - CLI reference: cli.md
-      - Reports: reports.md
-      - Compatibility: compatibility.md
-      - Troubleshooting: troubleshooting.md
-      - Migration from vtune: migration-vllm-optimizer.md
+          - Overview and vLLM Bench Serve: guides/benchmarks/benchmarking.md
+          - GuideLLM options: guides/benchmarks/benchmark-guidellm.md
+          - Datasets: guides/benchmarks/benchmark-data.md
+          - Repeats and errors: guides/benchmarks/benchmark-repeats.md
+          - Backend comparison: guides/benchmarks/backend-comparison.md
+      - Search and scoring: guides/search-and-scoring.md
+      - Parallel trials: guides/parallel-trials.md
+  - Results and operations:
+      - Reports: guides/reports.md
+      - Troubleshooting: guides/troubleshooting.md
+      - Migration from vtune: guides/migration-vllm-optimizer.md
+  - Reference:
+      - CLI: reference/cli.md
+      - Compatibility: reference/compatibility.md
   - Project:
-      - Architecture: ARCHITECTURE.md
+      - Architecture: project/ARCHITECTURE.md
       - MVP specification:
-          - Overview: MVP_SPEC.md
-          - Configuration: mvp/configuration.md
-          - Runtime and acceptance: mvp/runtime.md
+          - Overview: project/mvp/MVP_SPEC.md
+          - Configuration: project/mvp/configuration.md
+          - Runtime and acceptance: project/mvp/runtime.md
       - Roadmap:
-          - Overview: ROADMAP.md
-          - Engine and benchmarks: roadmap/engine.md
-          - Optimization: roadmap/optimization.md
-          - Local execution: roadmap/local-execution.md
-          - Distributed and reporting: roadmap/distributed.md
-          - APIs, cost, and capacity: roadmap/integrations.md
-          - Cross-cutting requirements: roadmap/requirements.md
-      - Trust plan: TRUST_PLAN.md
-      - Contributing: contributing.md
-      - v0.1.0a13: releases/v0.1.0a13.md
-      - v0.1.0a12: releases/v0.1.0a12.md
-      - v0.1.0a11: releases/v0.1.0a11.md
-      - v0.1.0a10: releases/v0.1.0a10.md
-      - v0.1.0a9: releases/v0.1.0a9.md
-      - v0.1.0a8: releases/v0.1.0a8.md
-      - v0.1.0a7: releases/v0.1.0a7.md
-      - v0.1.0a6: releases/v0.1.0a6.md
-      - v0.1.0a5: releases/v0.1.0a5.md
-      - v0.1.0a2: releases/v0.1.0a2.md
-      - Changelog archive: releases/CHANGELOG_ARCHIVE.md
-      - Release notes: https://github.com/brtydse100/vllm-optimizer/blob/main/CHANGELOG.md
+          - Overview: project/roadmap/ROADMAP.md
+          - Engine and benchmarks: project/roadmap/engine.md
+          - Optimization: project/roadmap/optimization.md
+          - Local execution: project/roadmap/local-execution.md
+          - Distributed and reporting: project/roadmap/distributed.md
+          - APIs, cost, and capacity: project/roadmap/integrations.md
+          - Cross-cutting requirements: project/roadmap/requirements.md
+      - Trust plan: project/TRUST_PLAN.md
+      - Contributing: project/contributing.md
+      - Release checklist: project/release-checklist.md
+  - Release notes:
+      - v0.1.0a13: project/releases/v0.1.0a13.md
+      - v0.1.0a12: project/releases/v0.1.0a12.md
+      - v0.1.0a11: project/releases/v0.1.0a11.md
+      - v0.1.0a10: project/releases/v0.1.0a10.md
+      - v0.1.0a9: project/releases/v0.1.0a9.md
+      - v0.1.0a8: project/releases/v0.1.0a8.md
+      - v0.1.0a7: project/releases/v0.1.0a7.md
+      - v0.1.0a6: project/releases/v0.1.0a6.md
+      - v0.1.0a5: project/releases/v0.1.0a5.md
+      - v0.1.0a4: project/releases/v0.1.0a4.md
+      - v0.1.0a3: project/releases/v0.1.0a3.md
+      - v0.1.0a2: project/releases/v0.1.0a2.md
+      - v0.1.0a1: project/releases/v0.1.0a1.md
+      - Changelog archive: project/releases/CHANGELOG_ARCHIVE.md
+      - Current changelog: https://github.com/brtydse100/vllm-optimizer/blob/main/CHANGELOG.md
 
 markdown_extensions:
   - admonition
