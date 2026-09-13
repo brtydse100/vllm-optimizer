@@ -17,7 +17,7 @@ Future work should preserve these invariants:
   exists.
 - New features must not weaken owned-process cleanup, immutable-run integrity,
   or secret handling.
-- Any result labeled â€œbestâ€ must state the population and scoring policy from
+- Any result labeled “best” must state the population and scoring policy from
   which it was selected.
 
 ## Detailed phases

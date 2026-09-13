@@ -24,10 +24,34 @@ local vLLM execution. [Understand the two installation choices](installation.md)
   parameter effects.
 - Exact, secret-redacted commands for reproducing completed trials.
 
-## Start here
+## Find what you need
 
-[Run your first experiment](getting-started.md){ .md-button .md-button--primary }
-[Read the configuration guide](configuration.md){ .md-button }
+### Start an experiment
+
+- [Run your first experiment](getting-started.md)
+- [Choose an installation](installation.md)
+- [Configure a run](configuration.md)
+- [See a complete YAML example](full-example.md)
+
+### Tune and benchmark
+
+- [Select a benchmark backend](benchmarking.md)
+- [Choose benchmark data](benchmark-data.md)
+- [Understand search and scoring](search-and-scoring.md)
+- [Run trials in parallel](parallel-trials.md)
+
+### Understand results and solve problems
+
+- [Interpret and regenerate reports](reports.md)
+- [Compare GuideLLM and vLLM Bench Serve](backend-comparison.md)
+- [Troubleshoot common failures](troubleshooting.md)
+- [Check platform compatibility](compatibility.md)
+
+### Contribute and explore the design
+
+- [Read the architecture overview](ARCHITECTURE.md)
+- [Review the roadmap](ROADMAP.md)
+- [Contribute to the project](contributing.md)
 
 !!! note "Alpha software"
     Experiment execution targets Linux with NVIDIA GPUs. The universal Python

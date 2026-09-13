@@ -31,9 +31,10 @@ theme:
 
 nav:
   - Overview: index.md
-  - Get started:
+  - Start here:
       - Quick start: getting-started.md
       - Installation choices: installation.md
+  - Configure and run:
       - Configuration: configuration.md
       - YAML reference:
           - Overview: full-example.md
@@ -46,16 +47,16 @@ nav:
           - GuideLLM options: benchmark-guidellm.md
           - Datasets: benchmark-data.md
           - Repeats and errors: benchmark-repeats.md
+          - Backend comparison: backend-comparison.md
       - Search and scoring: search-and-scoring.md
       - Parallel trials: parallel-trials.md
-  - Backend comparison: backend-comparison.md
-  - Release checklist: release-checklist.md
-  - Use vLLM Optimizer:
-      - CLI reference: cli.md
+  - Results and operations:
       - Reports: reports.md
-      - Compatibility: compatibility.md
       - Troubleshooting: troubleshooting.md
       - Migration from vtune: migration-vllm-optimizer.md
+  - Reference:
+      - CLI: cli.md
+      - Compatibility: compatibility.md
   - Project:
       - Architecture: ARCHITECTURE.md
       - MVP specification:
@@ -72,6 +73,8 @@ nav:
           - Cross-cutting requirements: roadmap/requirements.md
       - Trust plan: TRUST_PLAN.md
       - Contributing: contributing.md
+      - Release checklist: release-checklist.md
+  - Release notes:
       - v0.1.0a13: releases/v0.1.0a13.md
       - v0.1.0a12: releases/v0.1.0a12.md
       - v0.1.0a11: releases/v0.1.0a11.md
@@ -81,9 +84,12 @@ nav:
       - v0.1.0a7: releases/v0.1.0a7.md
       - v0.1.0a6: releases/v0.1.0a6.md
       - v0.1.0a5: releases/v0.1.0a5.md
+      - v0.1.0a4: releases/v0.1.0a4.md
+      - v0.1.0a3: releases/v0.1.0a3.md
       - v0.1.0a2: releases/v0.1.0a2.md
+      - v0.1.0a1: releases/v0.1.0a1.md
       - Changelog archive: releases/CHANGELOG_ARCHIVE.md
-      - Release notes: https://github.com/brtydse100/vllm-optimizer/blob/main/CHANGELOG.md
+      - Current changelog: https://github.com/brtydse100/vllm-optimizer/blob/main/CHANGELOG.md
 
 markdown_extensions:
   - admonition

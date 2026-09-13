@@ -39,19 +39,19 @@ run `interrupted`, cleans up owned processes, and returns exit code 130.
 
 ```text
 runs/EXPERIMENT/RUN_ID/
-â”œâ”€â”€ result.json
-â”œâ”€â”€ results.csv
-â”œâ”€â”€ report.html
-â”œâ”€â”€ study.db                 # Random and TPE only
-â””â”€â”€ trials/
-    â””â”€â”€ trial-0001/
-        â”œâ”€â”€ manifest.json
-        â”œâ”€â”€ result.json
-        â””â”€â”€ attempts/001/
-            â”œâ”€â”€ vllm.log
-            â””â”€â”€ repeats/001/BENCHMARK/
-                â”œâ”€â”€ benchmark.log
-                â””â”€â”€ results.json
+├── result.json
+├── results.csv
+├── report.html
+├── study.db                 # Random and TPE only
+└── trials/
+    └── trial-0001/
+        ├── manifest.json
+        ├── result.json
+        └── attempts/001/
+            ├── vllm.log
+            └── repeats/001/BENCHMARK/
+                ├── benchmark.log
+                └── results.json
 ```
 
 `result.json` is created before execution and updated after every trial. Trial

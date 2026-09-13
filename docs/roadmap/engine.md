@@ -4,14 +4,14 @@
 
 These features should follow immediately after the first working release.
 
-### Offline report regeneration â€” completed in v0.1.0a2
+### Offline report regeneration — completed in v0.1.0a2
 
 - Rebuilds HTML from one completed run and its validated trial artifacts.
 - Requires no GPU, vLLM, or GuideLLM process.
 - Preserves the original report and refuses destination overwrites.
 - Validates artifact schema and integrity before rendering.
 
-### Conditional search spaces â€” next
+### Conditional search spaces — next
 
 Allow parameters to be active only when another choice makes them valid:
 

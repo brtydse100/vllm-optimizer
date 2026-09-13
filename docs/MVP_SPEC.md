@@ -15,8 +15,8 @@ the model, server parameters, benchmark workload, and metric. The `vllm-opt` CLI
 repeated process lifecycle:
 
 ```text
-YAML â†’ search â†’ start vLLM â†’ wait for health â†’ run selected benchmark engine
-     â†’ parse metrics â†’ stop owned processes â†’ rank â†’ report
+YAML → search → start vLLM → wait for health → run selected benchmark engine
+     → parse metrics → stop owned processes → rank → report
 ```
 
 The normal workflow is one command:
