@@ -4,6 +4,23 @@
 
 _No changes yet._
 
+## v0.1.0a14 — Decision-focused reports and H100 validation examples
+
+_September 14, 2026_
+
+- Added native vLLM server configuration support, including YAML loading and
+  validation coverage.
+- Made reports decision-focused with clearer comparisons, recommendations,
+  confidence intervals, accepted scores, and independent winner validation.
+- Added configurable H100 scenarios for large-model, multi-GPU, and parallel
+  trial experiments.
+- Added H100 preparation and validation workflows plus real GPU benchmark
+  examples and published RTX 3080 evidence.
+- Fixed configuration preservation, offline reporting, cleanup, search, and
+  runtime correctness issues.
+- Reorganized experiment and guide documentation and recorded LMCache runtime
+  verification.
+
 ## v0.1.0a13 — Software trust gates; hardware validation pending
 
 _September 3, 2026_
