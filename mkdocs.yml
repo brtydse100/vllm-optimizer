@@ -52,6 +52,10 @@ nav:
       - Parallel trials: guides/parallel-trials.md
   - Results and operations:
       - Reports: guides/reports.md
+      - Real GPU examples: results/index.md
+      - Shared local and H100 experiments: experiments/README.md
+      - RTX 3080 results: results/rtx3080/index.md
+      - H100 results archive: results/h100/index.md
       - Troubleshooting: guides/troubleshooting.md
       - Migration from vtune: guides/migration-vllm-optimizer.md
   - Reference:

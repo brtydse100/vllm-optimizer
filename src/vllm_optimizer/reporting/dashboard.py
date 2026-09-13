@@ -1,30 +1,26 @@
-"""Compose the self-contained HTML decision dashboard."""
+"""Compose the self-contained HTML decision report from accepted trial evidence."""
 
 from __future__ import annotations
 
+from datetime import datetime
 from html import escape
 from pathlib import Path
 
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import TrialScore
-from vllm_optimizer.reporting.benchmark_details import benchmark_details_table
-from vllm_optimizer.reporting.charts import comparison_chart, effect_charts, history_chart, scatter_chart
+from vllm_optimizer.reporting.charts import comparison_chart, effect_charts, history_chart
+from vllm_optimizer.reporting.comparison import comparison
+from vllm_optimizer.reporting.confidence import confidence, verdict
 from vllm_optimizer.reporting.context import ReportContext
-from vllm_optimizer.reporting.dashboard_selection import best_command as _best_command
-from vllm_optimizer.reporting.dashboard_selection import best_observed as _best_observed
-from vllm_optimizer.reporting.dashboard_selection import improvement as _improvement
+from vllm_optimizer.reporting.dashboard_selection import best_observed, improvement
 from vllm_optimizer.reporting.importance import importance_section
-from vllm_optimizer.reporting.measurement import measurement_section
+from vllm_optimizer.reporting.interactions import report_script
+from vllm_optimizer.reporting.leaderboard import leaderboard
 from vllm_optimizer.reporting.methodology import metric_methodology
+from vllm_optimizer.reporting.recommendation import recommendation
 from vllm_optimizer.reporting.styles import dashboard_css
-from vllm_optimizer.reporting.tables import (
-    benchmark_table,
-    changes_table,
-    evidence_table,
-    failures,
-    metrics_table,
-    ranking_table,
-)
+from vllm_optimizer.reporting.tables import evidence_table, failures
+from vllm_optimizer.reporting.workloads import formatted
 
 
 def render_dashboard(
@@ -35,86 +31,94 @@ def render_dashboard(
     baseline: TrialScore | None,
     context: ReportContext,
 ) -> str:
-    best_tuned = ranking[0] if ranking else None
-    best = _best_observed(best_tuned, baseline)
-    best_report = next((report for report in trials if best and report.trial_id == best.trial_id), None)
-    completed = sum(report.status.value == "completed" for report in trials)
-    failed = sum(report.status.value == "failed" for report in trials)
-    interrupted = sum(report.status.value == "interrupted" for report in trials)
-    improvement = _improvement(best_tuned, baseline)
+    best = best_observed(ranking[0] if ranking else None, baseline)
+    reports = {report.trial_id: report for report in trials}
+    selected = reports.get(best.trial_id) if best else None
+    base_report = reports.get(baseline.trial_id) if baseline else None
+    finalist = reports.get(ranking[0].trial_id) if ranking else selected
+    change = improvement(best, baseline)
+    conclusion = verdict(base_report, finalist, metric, context)
+    outcome = "Best observed configuration; baseline comparison unavailable"
+    if best is None:
+        outcome = "No eligible configuration"
+    elif baseline and best.trial_id == baseline.trial_id:
+        outcome = "Baseline wins — keep the baseline"
+    elif change is not None:
+        outcome = (
+            f"Tuning improved the observed score by {change:.2f}%"
+            if change > 0
+            else "Score tied with baseline; recommendation selected by request quality"
+        )
+    counts = {
+        state: sum(item.status.value == state for item in trials) for state in ("completed", "failed", "interrupted")
+    }
     cards = "".join(
         (
+            _card("Best observed", best.trial_id if best else "Unavailable", formatted(best.value if best else None)),
             _card(
-                "Best observed",
-                f"{best.value:.4f}" if best else "Unavailable",
-                best.trial_id if best else "No completed tuned trial",
+                "Improvement vs baseline", f"{change:+.2f}%" if change is not None else "Unavailable", "Accepted score"
             ),
+            _card("Experiment time", _duration(context), "Wall clock"),
             _card(
-                "Best tuned delta",
-                f"{improvement:+.2f}%" if improvement is not None else "N/A",
-                "Compared with baseline",
+                "Trials",
+                f"{counts['completed']} completed / {counts['failed']} failed",
+                f"{counts['interrupted']} interrupted · {context.status}",
             ),
-            _card("Run status", context.status, f"{completed} completed · {failed} failed"),
-            _card("Interrupted", str(interrupted), f"Run {context.run_id}"),
         )
     )
-    command = _best_command(directory, best)
-    importance = importance_section(ranking)
-    request_total = (best.successful_requests + best.errored_requests + best.incomplete_requests) if best else 0
-    quality = (
-        f"{best.errored_requests + best.incomplete_requests} failed or incomplete of {request_total}"
-        if best and request_total
-        else "Request counts unavailable"
-        if best
-        else "No eligible result"
-    )
-    source = f"<p>Retry source: <code>{escape(context.source_run_id)}</code></p>" if context.source_run_id else ""
     contention = (
-        "<p class='note'><strong>Parallel measurement mode:</strong> when several "
-        "workers are active, tuned trials may contend for shared host resources. "
-        "The baseline ran alone; validate finalists sequentially before production "
-        "decisions.</p>"
+        "<p class='warning'>Parallel search can introduce shared-resource contention. "
+        "Finalist validation is identified separately below when available.</p>"
         if context.execution_mode == "local_parallel"
         else ""
     )
-    return f"""<!doctype html><html><head><meta charset='utf-8'>
+    return f"""<!doctype html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>vLLM Optimizer · {escape(context.run_id)}</title><style>{dashboard_css()}</style></head><body>
 <header><div><p class='eyebrow'>vLLM Optimizer decision report</p><h1>{escape(context.run_id)}</h1>
-<p>Maximize <code>{escape(metric)}</code> · Started {escape(context.started_at or "unknown")}
-· Completed {escape(context.completed_at or "unknown")} · Mode {escape(context.execution_mode)}
-</p>{source}</div>
-<span class='status'>{escape(context.status)}</span></header>
-<main>{contention}<section class='cards'>{cards}</section>
-<section><h2>Recommendation</h2>
-<p><strong>{escape(best.trial_id) if best else "No eligible trial"}</strong> was selected by the highest
-<code>{escape(metric)}</code> among eligible trials, with request failures used only as deterministic tie-breakers.
-Request quality: {escape(quality)}.</p>{changes_table(best, baseline)}
-<p class='note'>These are observed relationships, not guaranteed causal effects. Multiple settings may change together.</p>
-<h3>Reproduction command</h3><pre>{escape(command)}</pre></section>
-<section><h2>Selected trial metrics</h2>
-    <p class='note'>Metrics are averaged across the selected trial's benchmark workloads. Values are shown only when the benchmark backend supplied them.</p>
-    {metrics_table(best_report)}</section>
-    <section><h2>Per-benchmark measurements</h2>
-    <p class='note'>Each row is one workload from one benchmark repeat, including its successful and failed request counts.</p>
-    {benchmark_details_table(best_report)}</section>
-    {metric_methodology()}
-{measurement_section(trials, metric, context.minimum_repeats, context.drift_threshold)}
-{_llm_section(context)}
-<section><h2>Evidence behind the ranking</h2>{evidence_table(ranking)}
-<p class='note'>A workload is excluded when its errored and incomplete requests exceed
-{context.maximum_failure_percentage:g}% of all requests. Each eligible workload contributes its selected metric; runs use their workload mean, repeats use the median run score, and the trial score is the mean of named runs. A trial with no eligible workload is not ranked.</p></section>
-<section class='split'><div><h2>Baseline vs top configurations</h2>{comparison_chart(ranking, baseline)}</div>
-<div><h2>Score over time</h2>{history_chart(trials, ranking)}</div></section>
-<section class='split'><div><h2>Parameter importance</h2>{importance}</div>
-<div><h2>Throughput vs latency</h2>{scatter_chart(trials)}</div></section>
-<section><h2>Observed parameter effects</h2>
-<p class='note'>Bars show mean score by tested value; <code>n</code> is the number of observations.</p>
-{effect_charts(ranking)}</section>
-<section><h2>Best by benchmark</h2>{benchmark_table(context)}</section>
-<section><h2>Top configurations</h2>{ranking_table(ranking, baseline)}</section>
-<section><h2>Failures and interruptions</h2>{failures(trials)}</section>
-</main><footer>{_footer(context)}</footer></body></html>"""
+<p>Maximize <code>{escape(metric)}</code> · Mode {escape(context.execution_mode)}</p>
+<nav aria-label='Report sections'><a href='#overview'>Overview</a> · <a href='#recommendation'>Configuration</a> ·
+<a href='#comparison'>Comparison</a> · <a href='#confidence'>Confidence</a> · <a href='#leaderboard'>All trials</a></nav>
+</div></header><main><section id='overview'><h2>1. Result overview</h2><h3>{escape(outcome)}</h3>
+<p>{escape(conclusion)}</p><div class='cards'>{cards}</div>{contention}</section>
+{recommendation(directory, best, baseline, selected)}
+{comparison(base_report, selected)}
+{confidence(directory, base_report, finalist, metric, context)}
+{leaderboard(trials, ranking, baseline, metric, directory)}{_diagnostics(trials, ranking, baseline, context)}
+</main><footer>Generated from stored experiment artifacts. Missing evidence is shown as unavailable.</footer>
+{report_script()}</body></html>"""
+
+
+def _diagnostics(
+    trials: tuple[TrialReport, ...],
+    ranking: tuple[TrialScore, ...],
+    baseline: TrialScore | None,
+    context: ReportContext,
+) -> str:
+    llm = context.llm_summary or context.llm_summary_error
+    return (
+        "<details><summary>Detailed diagnostics and exploratory analysis</summary>"
+        "<section><h2>Accepted score comparison</h2>"
+        + comparison_chart(ranking, baseline)
+        + "<h3>Accepted scores in recorded trial order</h3>"
+        + history_chart(trials, ranking)
+        + "<p>This is trial order, not elapsed time. Superseded search executions are excluded.</p></section>"
+        "<section><h2>Parameter associations</h2>"
+        + importance_section(ranking)
+        + "<p>Observed score means by tested value, with sample counts; associations, not controlled ablations.</p>"
+        + effect_charts(ranking)
+        + "</section><section><h2>Failures and interruptions</h2>"
+        + failures(trials)
+        + "</section>"
+        + metric_methodology()
+        + "<section><h2>Scoring evidence</h2>"
+        + evidence_table(ranking)
+        + f"<p>A workload is excluded when failed/incomplete requests exceed\n{context.maximum_failure_percentage:g}% of all requests. "
+        "Eligible workload metrics use their mean per named run, the median across repeats, then the mean of named runs. "
+        "This configured objective is separate from the workload comparisons above.</p></section>"
+        + (f"<section><h2>Optional LLM summary</h2><p>{escape(llm)}</p></section>" if llm else "")
+        + "</details>"
+    )
 
 
 def _card(label: str, value: str, detail: str) -> str:
@@ -124,16 +128,13 @@ def _card(label: str, value: str, detail: str) -> str:
     )
 
 
-def _llm_section(context: ReportContext) -> str:
-    if context.llm_summary:
-        text = escape(context.llm_summary).replace("\n", "<br>")
-        return f"<section><h2>Optional LLM summary</h2><p>{text}</p></section>"
-    if context.llm_summary_error:
-        return f"<section><h2>Optional LLM summary</h2><p class='warning'>{escape(context.llm_summary_error)}</p></section>"
-    return ""
-
-
-def _footer(context: ReportContext) -> str:
-    if context.llm_summary:
-        return "Generated from local vLLM Optimizer run artifacts; it includes a summary returned by the configured endpoint."
-    return "Generated from local vLLM Optimizer run artifacts. No external services were used."
+def _duration(context: ReportContext) -> str:
+    if not context.started_at or not context.completed_at:
+        return "Unavailable"
+    try:
+        elapsed = (
+            datetime.fromisoformat(context.completed_at) - datetime.fromisoformat(context.started_at)
+        ).total_seconds()
+        return formatted(elapsed, "s") if elapsed >= 0 else "Unavailable"
+    except (ValueError, TypeError):
+        return "Unavailable"

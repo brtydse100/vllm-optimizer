@@ -1,0 +1,60 @@
+# Same workload and runtime settings on the local GPU and one H100.
+experiment:
+  name: baseline-control
+  output_dir: /var/tmp/vllm-optimizer-demo/runs
+  seed: 42
+server:
+  model: /var/tmp/vllm-optimizer-demo/models/opt-125m
+  host: 127.0.0.1
+  port: 8766
+  dtype: float16
+  seed: 42
+  tensor-parallel-size: 1
+  gpu-memory-utilization: 0.4
+  max-model-len: 512
+  enforce-eager: true
+  enable-chunked-prefill: true
+  max-num-seqs: 16
+  max-num-batched-tokens: 512
+env:
+  CUDA_VISIBLE_DEVICES: "0"
+  VLLM_USE_V2_MODEL_RUNNER: "0"
+  VLLM_USE_FLASHINFER_SAMPLER: "0"
+tune:
+  max-num-seqs:
+    values: [1]
+benchmark:
+  engine: vllm
+  warmup_repeats: 1
+  repeats: 3
+  min_repeats: 3
+  max_failure_percentage: 0
+  runs:
+    - name: short-chat
+      args:
+        dataset-name: random
+        random-input-len: 64
+        random-output-len: 32
+        num-prompts: 16
+        max-concurrency: 8
+        request-rate: inf
+        seed: 42
+        temperature: 0
+        ignore-eos: true
+        percentile-metrics: ttft,tpot,itl,e2el
+        metric-percentiles: 50,95,99
+baseline:
+  enabled: true
+optimization:
+  maximize: output_tokens_per_second
+  sampler: grid
+analysis:
+  drift_threshold: 0.05
+timeouts:
+  startup: 180s
+  benchmark: 120s
+execution:
+  retry:
+    max_attempts: 2
+logging:
+  level: INFO

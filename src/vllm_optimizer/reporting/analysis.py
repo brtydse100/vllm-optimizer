@@ -13,10 +13,33 @@ DEFAULT_METRICS = {
     "requests_per_second": ("requests_per_second", "request_throughput"),
     "throughput_tokens_per_second": ("output_tokens_per_second", "output_throughput"),
     "total_tokens_per_second": ("total_tokens_per_second", "total_token_throughput"),
-    "ttft_ms": ("time_to_first_token_ms", "time_to_first_token", "mean_ttft_ms", "median_ttft_ms", "p99_ttft_ms"),
-    "tpot_ms": ("time_per_output_token_ms", "mean_tpot_ms", "median_tpot_ms", "p99_tpot_ms"),
+    "ttft_ms": (
+        "time_to_first_token_ms",
+        "time_to_first_token",
+        "mean_ttft_ms",
+        "median_ttft_ms",
+        "p50_ttft_ms",
+        "p95_ttft_ms",
+        "p99_ttft_ms",
+    ),
+    "tpot_ms": (
+        "time_per_output_token_ms",
+        "mean_tpot_ms",
+        "median_tpot_ms",
+        "p50_tpot_ms",
+        "p95_tpot_ms",
+        "p99_tpot_ms",
+    ),
     "itl_ms": ("inter_token_latency_ms", "mean_itl_ms", "median_itl_ms", "p99_itl_ms"),
-    "end_to_end_ms": ("end_to_end_latency_ms", "end_to_end_latency", "mean_e2el_ms", "median_e2el_ms", "p99_e2el_ms"),
+    "end_to_end_ms": (
+        "end_to_end_latency_ms",
+        "end_to_end_latency",
+        "mean_e2el_ms",
+        "median_e2el_ms",
+        "p50_e2el_ms",
+        "p95_e2el_ms",
+        "p99_e2el_ms",
+    ),
     "total_time_seconds": ("total_time_seconds", "total_time", "duration"),
 }
 
@@ -92,7 +115,7 @@ def _metric_summary(report: TrialReport, aliases: tuple[str, ...]) -> dict[str, 
         return {}
     return {
         name: fmean(values)
-        for name in ("average", "median", "p99")
+        for name in ("average", "median", "p95", "p99")
         if (values := [summary[name] for summary in summaries if name in summary])
     }
 
@@ -111,7 +134,9 @@ def _summary(name: str, value: object) -> dict[str, float]:
         number = float(value)
         if name.startswith("p99_"):
             return {"p99": number}
-        if name.startswith("median_"):
+        if name.startswith("p95_"):
+            return {"p95": number}
+        if name.startswith(("median_", "p50_")):
             return {"median": number}
         if name.startswith("mean_"):
             return {"average": number}
@@ -121,10 +146,23 @@ def _summary(name: str, value: object) -> dict[str, float]:
     observed = value.get("successful")
     source = observed if isinstance(observed, Mapping) else value
     result: dict[str, float] = {}
-    for key, statistic in (("mean", "average"), ("average", "average"), ("median", "median"), ("p99", "p99")):
+    for key, statistic in (
+        ("mean", "average"),
+        ("average", "average"),
+        ("p50", "median"),
+        ("median", "median"),
+        ("p95", "p95"),
+        ("p99", "p99"),
+    ):
         candidate = source.get(key)
         if isinstance(candidate, int | float) and not isinstance(candidate, bool):
             result[statistic] = float(candidate)
+    percentiles = source.get("percentiles")
+    if isinstance(percentiles, Mapping):
+        for key, statistic in (("p50", "median"), ("p95", "p95"), ("p99", "p99")):
+            candidate = percentiles.get(key)
+            if isinstance(candidate, int | float) and not isinstance(candidate, bool):
+                result.setdefault(statistic, float(candidate))
     return result
 
 

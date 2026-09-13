@@ -6,12 +6,13 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 
-from vllm_optimizer.reproduction.reader import commands, load_manifest, render_command
+from vllm_optimizer.reproduction.accepted import accepted_manifest
+from vllm_optimizer.reproduction.reader import commands, render_command
 from vllm_optimizer.reproduction.redaction import REDACTED
 
 
 def reproduce_trial(run: Path, trial_id: str) -> str:
-    document = load_manifest(run, trial_id)
+    document = accepted_manifest(run, trial_id)
     lines = [
         f"Trial: {trial_id}",
         f"Status: {document.get('status', 'unknown')}",

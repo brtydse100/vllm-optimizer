@@ -6,23 +6,41 @@ for raw benchmark output where a backend writes one.
 
 The report is designed to answer, at a glance:
 
-1. Which observed configuration ranked best?
-2. How did it compare with the baseline?
-3. Which changed parameters were associated with the largest score changes?
-4. What throughput and latency tradeoffs appeared across trials?
+1. Did tuning help?
+2. Which configuration should I use?
+3. How much should I trust it?
 
-Top-configuration tables show only settings that varied in the experiment and
-remove duplicate configurations. Failed and interrupted trials remain visible
-without being ranked as successful results.
+The first four sections are expanded: result overview, recommended configuration,
+baseline comparison, and confidence. The overview identifies baseline wins,
+the optimization metric, experiment wall time, and trial status counts.
+The recommendation shows changed arguments and environment values, resolved
+explicit vLLM YAML, selected environment variables, and a copyable POSIX launch
+command. Unspecified vLLM internal defaults are not captured. Replace redacted
+values before launching.
 
-The selected-trial summary shows available throughput, TTFT, TPOT, ITL,
-end-to-end latency, and total-time measurements. A detailed table shows every
-named benchmark execution and workload, including its backend, repeat, `vllm-opt`
-wall-clock elapsed time, throughput, median latency, and P99 latency. Only
-statistics the backend actually supplied are displayed. Chart axes
-are labelled. Parameter importance is exploratory: it groups observed scores
-by each setting value and normalizes the between-group score differences; it
-does not establish causation.
+Comparisons preserve each workload's recorded configuration. They show output
+and request throughput, TTFT, TPOT, end-to-end latency, and request failures,
+with units and percentage changes. Values are medians across available repeats;
+P50/P95/P99 columns are medians of supplied backend percentiles, **not pooled
+request percentiles**. Missing measurements and zero-denominator percentage
+changes are unavailable. Different workload configurations are not paired.
+
+Confidence shows individual repeats, median, sample standard deviation, range,
+repeat count, and drift per workload. Too few repeats, mismatched workloads,
+drift, or overlapping repeat ranges make a comparison inconclusive. Range
+overlap is a descriptive heuristic, not a significance test. Independent
+production validation remains necessary. Initial search measurements are kept
+separate from accepted finalist validation.
+
+The sortable leaderboard keeps every trial, including duplicate configurations,
+failures, and interruptions. Expand a row for its configuration and execution
+evidence. Its latency and variability columns show the largest available
+workload summary; workload details remain separate. Missing total trial runtime
+is unavailable rather than inferred from benchmark time.
+
+Detailed diagnostics and exploratory parameter associations are expandable.
+Parameter importance describes associations across tested values, not causation.
+The score-history chart uses recorded trial order, not elapsed time.
 
 ## Metric calculations
 
@@ -70,6 +88,11 @@ vllm-opt report --run runs/NAME/RUN_ID
 The report uses reproduction manifests from the source run while writing all
 new output to a separate directory. Required structured data (the run and
 trial results and manifests) is validated and stops regeneration when invalid.
+Rankings, displayed measurements, charts, YAML, and command export refer to the
+accepted execution. A missing validation manifest never falls back to the
+superseded search manifest. For runs retaining a scoring policy, regeneration
+rejects ranking scores that disagree with accepted measurements. Legacy runs
+without that policy cannot receive this additional score consistency check.
 
 To apply a different request-failure policy without starting vLLM or GuideLLM:
 
