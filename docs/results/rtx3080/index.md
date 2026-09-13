@@ -1,9 +1,10 @@
 # RTX 3080 local results
 
 These are real inference measurements from one **RTX 3080, 10 GiB**, running
-Ubuntu under WSL2. The runs started on 13 September 2026 UTC. Use this checkout
-and the [unchanged experiment files](../../experiments/README.md) for the H100
-rerun; each result includes the SHA-256 of the exact YAML that was executed.
+Ubuntu under WSL2. The runs started on 13 September 2026 UTC. The
+[historical reproduction files](../../experiments/local-reproduction.md) retain
+the exact YAML and its SHA-256. New [H100 scenarios](../../experiments/h100/README.md)
+use your chosen models and GPU allocations.
 
 ## Report showcase
 

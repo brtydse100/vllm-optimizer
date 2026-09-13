@@ -4,14 +4,17 @@
 reserved for real results from the rented H100 GPU machines, not simulated or
 RTX 3080 measurements.
 
-Run both [shared experiments](../../experiments/README.md) unchanged on one
-H100. Record additional physical GPUs if present, but keep only device 0
-visible for these single-GPU comparisons.
+Use the [H100 scenario suite](../../experiments/h100/README.md) with your chosen
+models and GPU IDs: parallel independent trials, one server spanning 2+ GPUs,
+and large-model tuning followed by separate validation. H100 models do not
+need to match the historical RTX 3080 model.
 
 Store each actual run under `<date>/<experiment>/<run-id>/`, with:
 
 - `report.html`, `result.json`, `results.csv`, and `experiment.yaml`;
 - model/YAML checksums and software/hardware provenance;
+- both search and validation reports for large-model tuning, with the baseline
+  rationale and per-workload improvements or regressions;
 - normalized results, manifests, raw benchmark output, and diagnostic logs
   in an evidence archive, with public redactions disclosed.
 

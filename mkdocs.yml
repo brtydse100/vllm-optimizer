@@ -53,7 +53,9 @@ nav:
   - Results and operations:
       - Reports: guides/reports.md
       - Real GPU examples: results/index.md
-      - Shared local and H100 experiments: experiments/README.md
+      - GPU experiment recipes: experiments/README.md
+      - H100 scenario suite: experiments/h100/README.md
+      - Reproduce the RTX examples: experiments/local-reproduction.md
       - RTX 3080 results: results/rtx3080/index.md
       - H100 results archive: results/h100/index.md
       - Troubleshooting: guides/troubleshooting.md
