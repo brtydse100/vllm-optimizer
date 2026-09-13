@@ -122,6 +122,14 @@ The path is resolved relative to `experiment.yaml`. The native file must define
 `model`; any other `server` settings, tuned values, and runtime-assigned values
 are passed on the command line and take precedence over the native file.
 
+LMCache runtime verification was completed on an RTX 3080 with vLLM 0.28.0,
+LMCache 0.5.5, and Qwen2.5-0.5B-Instruct. Both the native YAML form above, with
+a nested `kv-transfer-config`, and the legacy inline JSON form launched
+successfully, completed two shared-prefix inference requests, stored 160
+tokens, and reported a 160-token LMCache hit. The Ubuntu WSL test environment
+used `VLLM_USE_V2_MODEL_RUNNER=0` to work around vLLM's WSL UVA limitation;
+this setting is not required by the configuration mapping feature.
+
 Fixed vLLM flags go directly under `server`; tunable flags use top-level
 `tune`. Fixed and tunable environment variables use `env` and `tune_env`.
 See the [configuration guide](https://brtydse100.github.io/vllm-optimizer/configuration/)
