@@ -18,7 +18,7 @@ from vllm_optimizer.reporting.reclassify_scores import benchmark_score as _bench
 from vllm_optimizer.reporting.reclassify_scores import results as _results
 from vllm_optimizer.reporting.reclassify_scores import trial_score as _trial_score
 from vllm_optimizer.reporting.reporter import Reporter
-from vllm_optimizer.reproduction.reader import load_manifest
+from vllm_optimizer.reproduction.accepted import accepted_manifest
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +84,7 @@ def _policy(
 ) -> ScoringManager:
     if not trials:
         raise ValueError("source run contains no trials")
-    benchmark = load_manifest(run, trials[0].trial_id).get("benchmark", {})
+    benchmark = accepted_manifest(run, trials[0].trial_id, trials[0].execution).get("benchmark", {})
     if not isinstance(benchmark, Mapping):
         raise ValueError("source manifest has invalid benchmark policy")
     names = tuple(

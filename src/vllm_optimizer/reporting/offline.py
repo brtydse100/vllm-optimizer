@@ -13,6 +13,7 @@ from vllm_optimizer.benchmarks.policy import BenchmarkPolicy, stored_policy
 from vllm_optimizer.domain.results import WorkerStatus
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import TrialScore
+from vllm_optimizer.reporting.accepted_scores import validate_accepted_scores
 from vllm_optimizer.reporting.analysis import default_metrics
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.offline_loading import load_trial as _load_trial
@@ -58,6 +59,7 @@ def regenerate_report(run: Path, output: Path | None = None) -> RegeneratedRepor
     }
     _validate_scores(trials, ranking, baseline, benchmark_rankings)
     policy = _benchmark_policy(document, source, trials)
+    validate_accepted_scores(document, trials, ranking, baseline, policy)
     context = ReportContext(
         str(document["run_id"]),
         str(document.get("status", "unknown")),

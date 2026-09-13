@@ -3,6 +3,12 @@
 
 def dashboard_css() -> str:
     return """*{box-sizing:border-box}body{margin:0;background:#f8fafc;color:#172033;font:15px system-ui}
+main>*{min-width:0}h3,td,pre{overflow-wrap:anywhere}h3{font-size:1rem}
+button{font:inherit;cursor:pointer;border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;background:#f1f5f9;color:#172033}
+button:hover{background:#dbeafe}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #2563eb;outline-offset:3px}
+summary{cursor:pointer;font-weight:650;padding:12px 0}details section{margin-top:16px}nav a{color:#1d4ed8}
+th[aria-sort='ascending'] button::after{content:' ↑'}th[aria-sort='descending'] button::after{content:' ↓'}
+.copy-status{display:block;color:#475569;font-size:13px}.cards article{min-width:0}.cards strong{overflow-wrap:anywhere}
 header,main,footer{max-width:1200px;margin:auto}header{padding:36px 24px 20px;display:flex;justify-content:space-between}
 h1{margin:.1rem 0;font-size:2rem}h2{margin-top:0}.eyebrow{color:#2563eb;font-weight:700;text-transform:uppercase}
 .status{background:#dbeafe;color:#1d4ed8;padding:8px 14px;border-radius:999px;height:max-content}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;background:none;padding:0}

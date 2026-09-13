@@ -1,0 +1,59 @@
+# Template: resolve model and GPU IDs with ../prepare_h100.py before running.
+experiment:
+  name: h100-multi-gpu
+  output_dir: /var/tmp/vllm-optimizer-h100/runs
+  seed: 42
+server:
+  model: /replace/with/your/model
+  host: 127.0.0.1
+  port: 8100
+  dtype: auto
+  seed: 42
+  tensor-parallel-size: 2
+  gpu-memory-utilization: 0.9
+  max-model-len: 1024
+  enable-chunked-prefill: true
+  max-num-seqs: 32
+  max-num-batched-tokens: 2048
+env:
+  CUDA_VISIBLE_DEVICES: 0,1
+tune:
+  max-num-seqs:
+    values:
+    - 16
+    - 32
+    - 64
+benchmark:
+  engine: vllm
+  warmup_repeats: 1
+  repeats: 4
+  min_repeats: 4
+  max_failure_percentage: 0
+  runs:
+  - name: concurrent-requests
+    args:
+      dataset-name: random
+      random-input-len: 128
+      random-output-len: 128
+      num-prompts: 64
+      max-concurrency: 32
+      request-rate: inf
+      seed: 42
+      temperature: 0
+      ignore-eos: true
+      percentile-metrics: ttft,tpot,itl,e2el
+      metric-percentiles: 50,95,99
+baseline:
+  enabled: true
+optimization:
+  maximize: output_tokens_per_second
+  sampler: grid
+analysis:
+  drift_threshold: 0.05
+timeouts:
+  startup: 900s
+  benchmark: 300s
+execution:
+  mode: sequential
+  retry:
+    max_attempts: 1

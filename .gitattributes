@@ -1,0 +1,8 @@
+# Preserve the exact experiment bytes used for cross-machine reproduction.
+docs/experiments/* text eol=lf
+docs/experiments/h100/* text eol=lf
+docs/results/**/experiment.yaml text eol=lf
+# Keep generated evidence readable in reviews without expanding every raw record.
+docs/results/**/*.html text eol=lf linguist-generated=true
+docs/results/**/*.json text eol=lf linguist-generated=true
+docs/results/**/*.csv text eol=lf linguist-generated=true

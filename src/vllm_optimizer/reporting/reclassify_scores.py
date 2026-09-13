@@ -10,7 +10,7 @@ from vllm_optimizer.domain.benchmark import BenchmarkResult, WorkloadResult
 from vllm_optimizer.domain.results import WorkerStatus
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
-from vllm_optimizer.reproduction.reader import load_manifest
+from vllm_optimizer.reproduction.accepted import accepted_manifest
 
 
 def results(report: TrialReport, name: str | None = None) -> tuple[BenchmarkResult, ...]:
@@ -46,16 +46,18 @@ def trial_score(run: Path, report: TrialReport, policy: ScoringManager) -> Trial
     value = policy.score(results(report)) if report.status is WorkerStatus.COMPLETED else None
     if value is None:
         return None
-    manifest = load_manifest(run, report.trial_id)
+    manifest = accepted_manifest(run, report.trial_id, report.execution)
     parameters = manifest.get("parameters", {})
     selected_args = parameters.get("selected_args", {}) if isinstance(parameters, Mapping) else {}
     selected_env = parameters.get("selected_env", {}) if isinstance(parameters, Mapping) else {}
+    fixed_args = parameters.get("fixed_args", {}) if isinstance(parameters, Mapping) else {}
+    fixed_env = parameters.get("fixed_env", {}) if isinstance(parameters, Mapping) else {}
     quality = policy.quality(results(report))
     return TrialScore(
         report.trial_id,
         value,
-        selected_args,
-        selected_env,
+        {**fixed_args, **selected_args},
+        {**fixed_env, **selected_env},
         quality.successful,
         quality.errored,
         quality.incomplete,
