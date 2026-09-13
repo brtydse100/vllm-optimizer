@@ -2,10 +2,10 @@
 
 ## Early design sketch
 
-![Early vLLM Optimizer architecture sketch](assets/architecture-early-sketch.png)
+![Early vLLM Optimizer architecture sketch](../assets/architecture-early-sketch.png)
 
 The sketch is preserved as the project's original manager-and-worker concept.
-The editable early diagram is [vllm-optimizer-architecture.drawio](vllm-optimizer-architecture.drawio).
+The editable early diagram is [vllm-optimizer-architecture.drawio](../vllm-optimizer-architecture.drawio).
 Some boxes are aspirations rather than current classes.
 
 ## Implemented flow

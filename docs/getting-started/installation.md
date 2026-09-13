@@ -34,7 +34,7 @@ guidellm --help
 The runtime installation is larger because vLLM selects PyTorch, CUDA kernels,
 and other GPU-specific packages. vLLM Optimizer does not choose a CUDA version itself;
 the correct combination depends on the vLLM release, GPU, NVIDIA driver, and
-platform. See [compatibility](compatibility.md) before changing an existing
+platform. See [compatibility](../reference/compatibility.md) before changing an existing
 working vLLM environment.
 
 ## Inspect without running

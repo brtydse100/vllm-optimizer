@@ -81,4 +81,4 @@ Open `report.html` in the printed run directory when the run completes. Add
 can instead use inclusive `min`, `max`, and `step` ranges. The same two forms
 work under `tune_env`; selected environment values are converted to strings.
 
-Next, learn how [configuration](configuration.md) maps to vLLM and GuideLLM.
+Next, learn how [configuration](../guides/configuration.md) maps to vLLM and GuideLLM.

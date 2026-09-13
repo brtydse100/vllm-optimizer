@@ -6,7 +6,7 @@
 - **Benchmark backends:** GuideLLM and vLLM Bench Serve
 
 This document describes the behavior implemented today. Future capabilities
-belong in [ROADMAP.md](ROADMAP.md).
+belong in [ROADMAP.md](../roadmap/ROADMAP.md).
 
 ## Product contract
 
@@ -15,8 +15,8 @@ the model, server parameters, benchmark workload, and metric. The `vllm-opt` CLI
 repeated process lifecycle:
 
 ```text
-YAML â†’ search â†’ start vLLM â†’ wait for health â†’ run selected benchmark engine
-     â†’ parse metrics â†’ stop owned processes â†’ rank â†’ report
+YAML → search → start vLLM → wait for health → run selected benchmark engine
+     → parse metrics → stop owned processes → rank → report
 ```
 
 The normal workflow is one command:
@@ -70,5 +70,5 @@ never resumed or overwritten. Manual retries create a new linked run.
 
 ## Detailed contracts
 
-- [Configuration contract](mvp/configuration.md)
-- [CLI, lifecycle, persistence, reports, and acceptance](mvp/runtime.md)
+- [Configuration contract](configuration.md)
+- [CLI, lifecycle, persistence, reports, and acceptance](runtime.md)

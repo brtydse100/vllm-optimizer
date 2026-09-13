@@ -23,7 +23,7 @@ benchmark:
         ignore-eos: true
 ```
 
-The [benchmark guide](benchmarking.md) includes ShareGPT, Hugging Face,
+The [benchmark guide](../../guides/benchmarks/benchmarking.md) includes ShareGPT, Hugging Face,
 custom, and prefix-repetition examples plus arbitrary argument rules.
 
 ## Important boundaries
@@ -39,5 +39,5 @@ custom, and prefix-repetition examples plus arbitrary argument rules.
 - Random and TPE trial requests larger than the unique search space are capped
   with a warning. Duplicate resolved configurations are never executed.
 
-See [benchmarking](benchmarking.md) for smaller examples and upstream links,
-and [configuration](configuration.md) for rendering rules.
+See [benchmarking](../../guides/benchmarks/benchmarking.md) for smaller examples and upstream links,
+and [configuration](../../guides/configuration.md) for rendering rules.
