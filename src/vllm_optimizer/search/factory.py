@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from vllm_optimizer.config.models import VTuneConfig
-from vllm_optimizer.search.grid import expand_grid
+from vllm_optimizer.search.grid import expand_grid, space_cardinality
 from vllm_optimizer.search.grid_session import GridSearchSession
 from vllm_optimizer.search.optuna_session import OptunaSearchSession
 from vllm_optimizer.search.strategy import SearchSession
@@ -24,7 +24,7 @@ def validate_search(config: VTuneConfig) -> tuple[str, int]:
         return sampler, len(expand_grid(config))
     if isinstance(trials, bool) or not isinstance(trials, int) or trials < 1:
         raise ValueError("optimization.trials must be a positive integer")
-    unique = len(expand_grid(config))
+    unique = space_cardinality(config)
     return sampler, min(trials, unique)
 
 

@@ -40,12 +40,13 @@ Fixed `server` values map directly to vLLM flags:
 server:
   model: /models/qwen
   enforce-eager: true       # emits --enforce-eager
-  disable-log-requests: false  # omitted
+  enable-prefix-caching: false  # emits --no-enable-prefix-caching
   lora-modules: [a=/a, b=/b]   # repeats --lora-modules
 ```
 
-`null` and `false` omit a flag. `true` emits a presence flag. Scalars emit a
-flag/value pair, and lists repeat the flag once for each item.
+`null` omits a flag. `true` emits a presence flag and `false` emits its
+`--no-` form. Scalars emit a flag/value pair, and lists repeat the flag once
+for each item.
 
 ### Tunable vLLM arguments
 

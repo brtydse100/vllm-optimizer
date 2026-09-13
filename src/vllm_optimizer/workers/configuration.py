@@ -82,7 +82,9 @@ def _render_argument(name: str, value: object) -> list[str]:
     flag = f"--{normalized.replace('_', '-')}"
     if value is True:
         return [flag]
-    if value is False or value is None:
+    if value is False:
+        return [f"--no-{normalized.replace('_', '-')}"]
+    if value is None:
         return []
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         rendered: list[str] = []

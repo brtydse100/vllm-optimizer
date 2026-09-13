@@ -8,7 +8,7 @@ import pytest
 
 import vllm_optimizer.reproduction.metadata as metadata
 from vllm_optimizer.config.models import ExperimentConfig, VTuneConfig
-from vllm_optimizer.search.grid import expand_grid
+from vllm_optimizer.search.grid import expand_grid, space_cardinality
 from vllm_optimizer.workers.base import TrialContext
 from vllm_optimizer.workers.failure_details import classified_failure, log_excerpt
 from vllm_optimizer.workers.process import ProcessRunner, ProcessSpec
@@ -89,3 +89,15 @@ def test_grid_ranges_and_invalid_definitions() -> None:
         bad = VTuneConfig(1, ExperimentConfig("bad"), {"model": "demo"}, tune={"x": definition})
         with pytest.raises(ValueError):
             expand_grid(bad)
+
+
+def test_grid_deduplicates_values_and_counts_without_expansion() -> None:
+    config = VTuneConfig(
+        1,
+        ExperimentConfig("cardinality"),
+        {"model": "demo"},
+        tune={f"choice-{index}": {"values": list(range(10))} for index in range(5)},
+        tune_env={"duplicate": {"values": [8, 8]}},
+    )
+
+    assert space_cardinality(config) == 100_000

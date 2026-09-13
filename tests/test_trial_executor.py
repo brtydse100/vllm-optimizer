@@ -71,15 +71,20 @@ def test_trial_executor_persists_and_scores_synthetic_worker(tmp_path: Path, mon
 
     report, score, by_benchmark = asyncio.run(
         executor.execute(
-            tmp_path / "run", TrialParameters("trial-1", {"max-num-seqs": 2}, {}), WorkerSlot("gpu", (0,), 8100)
+            tmp_path / "run",
+            TrialParameters("trial-1", {"max-num-seqs": 2}, {}),
+            WorkerSlot("gpu", (0,), 8100),
+            "validation-001",
         )
     )
 
     assert report.status.value == "completed"
+    assert report.execution["artifact_subdirectory"] == "validation-001"
     assert score and score.value == 5 and score.server_args["dtype"] == "float16"
     assert by_benchmark == {"requests": 5.0}
-    assert (tmp_path / "run" / "trials" / "trial-1" / "result.json").exists()
-    assert (tmp_path / "run" / "trials" / "trial-1" / "manifest.json").exists()
+    artifact_directory = tmp_path / "run" / "trials" / "trial-1" / "validation-001"
+    assert (artifact_directory / "result.json").exists()
+    assert (artifact_directory / "manifest.json").exists()
 
 
 def test_trial_executor_excludes_failed_outcome(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

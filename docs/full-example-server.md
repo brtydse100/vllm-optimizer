@@ -15,7 +15,7 @@ server:
   dtype: bfloat16
   gpu-memory-utilization: 0.90
   max-model-len: 32768
-  enforce-eager: false          # false and null omit the flag.
+  enforce-eager: false          # false emits --no-enforce-eager; null omits it.
   enable-prefix-caching: true   # true emits a presence-only flag.
   # served-model-name: qwen     # Scalars emit --flag value.
   # lora-modules:               # Lists repeat the flag for every item.

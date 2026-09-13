@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from itertools import product
+from math import prod
 
 from vllm_optimizer.config.models import VTuneConfig
 
@@ -18,29 +19,44 @@ class TrialParameters:
 
 
 def expand_grid(config: VTuneConfig) -> tuple[TrialParameters, ...]:
+    return tuple(iter_grid(config))
+
+
+def iter_grid(config: VTuneConfig) -> Iterator[TrialParameters]:
+    """Yield each unique configuration without materializing the Cartesian product."""
     options = [
-        *(("arg", key, _values(value, f"tune.{key}")) for key, value in sorted(config.tune.items())),
-        *(("env", key, _values(value, f"tune_env.{key}")) for key, value in sorted(config.tune_env.items())),
+        *(("arg", key, definition_values(value, f"tune.{key}")) for key, value in sorted(config.tune.items())),
+        *(("env", key, definition_values(value, f"tune_env.{key}")) for key, value in sorted(config.tune_env.items())),
     ]
-    combinations = product(*(entry[2] for entry in options)) if options else [()]
-    trials = []
-    for index, combination in enumerate(combinations, start=1):
+    for index, combination in enumerate(product(*(entry[2] for entry in options)), start=1):
         arguments: dict[str, object] = {}
         environment: dict[str, object] = {}
         for (kind, name, _), value in zip(options, combination, strict=True):
             (arguments if kind == "arg" else environment)[name] = value
-        trials.append(TrialParameters(f"trial-{index:04d}", arguments, environment))
-    return tuple(trials)
+        yield TrialParameters(f"trial-{index:04d}", arguments, environment)
 
 
-def _values(definition: object, label: str) -> tuple[object, ...]:
+def space_cardinality(config: VTuneConfig) -> int:
+    """Return the unique Cartesian search-space size without expanding it."""
+    definitions = [
+        *((value, f"tune.{key}") for key, value in sorted(config.tune.items())),
+        *((value, f"tune_env.{key}") for key, value in sorted(config.tune_env.items())),
+    ]
+    return prod(len(definition_values(definition, label)) for definition, label in definitions)
+
+
+def definition_values(definition: object, label: str) -> tuple[object, ...]:
     if not isinstance(definition, Mapping):
         raise ValueError(f"'{label}' must be a mapping")
     if set(definition) == {"values"}:
         values = definition["values"]
         if not isinstance(values, list) or not values:
             raise ValueError(f"'{label}.values' must be a non-empty list")
-        return tuple(values)
+        unique: list[object] = []
+        for value in values:
+            if not any(type(value) is type(existing) and value == existing for existing in unique):
+                unique.append(value)
+        return tuple(unique)
     if set(definition) == {"min", "max", "step"}:
         return _range(definition, label)
     raise ValueError(f"'{label}' requires either values or min/max/step")
