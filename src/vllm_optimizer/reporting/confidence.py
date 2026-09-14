@@ -94,7 +94,7 @@ def _rows(report: TrialReport, phase: str, metric: str, context: ReportContext) 
             f"{item.repeat}: {formatted(next(iter(samples([item], (metric,))), None))}" for item in observations
         )
         drift_value = sequential_drift(values)
-        drift = _drift_label(drift_value, context.drift_threshold)
+        drift = _drift_label(drift_value)
         cells = (
             f"{report.trial_id} / {phase}",
             key,
@@ -109,8 +109,7 @@ def _rows(report: TrialReport, phase: str, metric: str, context: ReportContext) 
     return rows
 
 
-def _drift_label(value: float | None, threshold: float) -> str:
+def _drift_label(value: float | None) -> str:
     if value is None:
         return "Unavailable (<4 repeats)"
-    status = "exceeds" if abs(value) > threshold else "within"
-    return f"{value:+.2%} ({status} {threshold:.0%} threshold)"
+    return f"{value:+.2%}"

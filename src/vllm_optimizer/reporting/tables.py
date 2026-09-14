@@ -30,14 +30,13 @@ def evidence_table(
 ) -> str:
     reports = {item.trial_id: item for item in trials}
     baseline_duration = mean_duration(reports.get(baseline.trial_id) if baseline else None)
+    items = ((baseline,) if baseline and all(item.trial_id != baseline.trial_id for item in ranking) else ()) + ranking
     rows = "".join(
-        f"<tr><td>{escape(item.trial_id)}</td><td>{item.value:.4f}</td>"
-        f"<td>{formatted(duration := mean_duration(reports.get(item.trial_id)), 's')}</td>"
-        f"<td>{duration_change(duration, baseline_duration)}</td>"
-        f"<td>{item.successful_requests}</td><td>{item.errored_requests}</td>"
-        f"<td>{item.incomplete_requests}</td><td>{item.error_rate:.2%}</td>"
-        f"<td>{item.excluded_workloads}</td></tr>"
-        for item in ranking
+        _evidence_row(
+            item, reports.get(item.trial_id), baseline_duration,
+            baseline is not None and item.trial_id == baseline.trial_id,
+        )
+        for item in items
     )
     return _table(
         (
@@ -45,6 +44,18 @@ def evidence_table(
             "Incomplete", "Error rate", "Excluded workloads",
         ),
         rows,
+    )
+
+
+def _evidence_row(item: TrialScore, report: TrialReport | None, baseline_duration: float | None, baseline: bool) -> str:
+    duration = mean_duration(report)
+    label = item.trial_id + (" (baseline)" if baseline else "")
+    return (
+        f"<tr><td>{escape(label)}</td><td>{item.value:.4f}</td>"
+        f"<td>{formatted(duration, 's')}</td><td>{duration_change(duration, baseline_duration)}</td>"
+        f"<td>{item.successful_requests}</td><td>{item.errored_requests}</td>"
+        f"<td>{item.incomplete_requests}</td><td>{item.error_rate:.2%}</td>"
+        f"<td>{item.excluded_workloads}</td></tr>"
     )
 
 
