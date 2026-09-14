@@ -6,6 +6,7 @@ import json
 from collections.abc import Sized
 from pathlib import Path
 
+from vllm_optimizer.benchmarks.metrics import compact_metrics
 from vllm_optimizer.benchmarks.quality import aggregate_quality, request_quality
 from vllm_optimizer.domain.benchmark import BenchmarkResult
 from vllm_optimizer.domain.results import WorkerResult
@@ -68,7 +69,7 @@ class ResultsManager:
             {
                 "index": item.index,
                 "configuration": item.configuration,
-                "metrics": item.metrics,
+                "metrics": compact_metrics(item.metrics),
                 **request_quality(item.metrics),
             }
             for item in result.workloads

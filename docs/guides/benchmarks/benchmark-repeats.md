@@ -1,8 +1,8 @@
 # Benchmark repeats and errors
 
-The trusted default is one discarded warmup followed by three measured repeats;
-all three are required for ranking. Explicit lower values remain available for
-smoke tests, but reports label fewer than three measurements exploratory.
+The trusted default is four measured repeats with no discarded warmup; all four
+are required for ranking. Add `warmup_repeats` only when the workload needs
+warmup. Explicit lower values remain available for smoke tests.
 Confidence intervals use Student's t distribution. Critical values through 30
 degrees of freedom use a table; larger samples use a finite-degree Student's t
 quantile expansion rather than switching to a normal interval. Drift detection requires at
@@ -11,11 +11,13 @@ least four sequential measurements and reports when it is unavailable.
 
 ```yaml
 benchmark:
-  repeats: 3
+  repeats: 4
+  warmup_repeats: 1  # Optional; omit when no warmup is needed.
   max_failure_percentage: 2
 ```
 
-The `vllm-opt` CLI takes the median score across repeats. It records successful,
+The `vllm-opt` CLI takes the median optimization score across repeats. Reported
+latency and throughput comparisons use arithmetic means. It records successful,
 errored, and incomplete request counts. `max_failure_percentage` accepts a
 number from `0` through `100` and defaults to `0`. A workload at or below that
 percentage is eligible when at least one request succeeded; a workload above it

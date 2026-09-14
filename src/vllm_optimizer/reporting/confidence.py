@@ -61,7 +61,7 @@ def confidence(
                 historical.extend(_rows(initial, "Initial search (superseded)", metric, context))
             except ValueError:
                 historical.append("<tr><td colspan='8'>Initial search evidence unavailable.</td></tr>")
-    heading = ("Trial / phase", "Workload", "Individual repeats", "n", "Median", "Sample SD", "Range", "Drift")
+    heading = ("Trial / phase", "Workload", "Individual repeats", "n", "Mean", "Sample SD", "Range", "Drift")
     return (
         "<section id='confidence'><h2>4. Confidence in the result</h2><p class='warning'>"
         + escape(verdict(baseline, best, metric, context))
@@ -103,7 +103,7 @@ def _rows(report: TrialReport, phase: str, metric: str, context: ReportContext) 
             key,
             individual,
             str(summary.count),
-            formatted(summary.median),
+            formatted(summary.mean),
             formatted(summary.variance**0.5 if summary.variance is not None else None),
             f"{formatted(min(values))} – {formatted(max(values))}",
             drift,

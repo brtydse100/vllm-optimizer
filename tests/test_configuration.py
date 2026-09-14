@@ -72,9 +72,9 @@ def test_measurement_defaults_are_trustworthy(tmp_path: Path) -> None:
     source.write_text(_config_text(), encoding="utf-8")
     config = load_config(source)
 
-    assert configured_repeats(config) == 3
-    assert configured_min_repeats(config) == 3
-    assert configured_warmup_repeats(config) == 1
+    assert configured_repeats(config) == 4
+    assert configured_min_repeats(config) == 4
+    assert configured_warmup_repeats(config) == 0
 
 
 def test_implicit_minimum_tracks_explicitly_lowered_repeats(tmp_path: Path) -> None:

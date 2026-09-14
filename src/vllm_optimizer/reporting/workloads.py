@@ -6,7 +6,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from math import isfinite
-from statistics import median
+from statistics import fmean
 
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.reporting.analysis import workload_metric_summary
@@ -53,7 +53,7 @@ def samples(observations: list[Observation], aliases: tuple[str, ...], statistic
 
 
 def center(values: list[float]) -> float | None:
-    return float(median(values)) if values else None
+    return fmean(values) if values else None
 
 
 def formatted(value: float | None, unit: str = "") -> str:

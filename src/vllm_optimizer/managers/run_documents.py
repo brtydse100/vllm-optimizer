@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 
+from vllm_optimizer.benchmarks.metrics import compact_metrics
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import TrialScore
 from vllm_optimizer.reporting.analysis import default_metrics
@@ -43,13 +44,26 @@ def trial_document(report: TrialReport, source: Mapping[str, str] | None = None)
         "failure": failure,
         "benchmark_count": len(report.benchmarks),
         "metrics": default_metrics(report),
-        "benchmarks": redact(report.to_dict()["benchmarks"]),
+        "benchmarks": redact(_compact_benchmarks(report)),
     }
     if report.execution:
         document["execution"] = dict(report.execution)
     if source is not None:
         document["source"] = dict(source)
     return document
+
+
+def _compact_benchmarks(report: TrialReport) -> list[dict[str, object]]:
+    benchmarks = report.to_dict()["benchmarks"]
+    if not isinstance(benchmarks, list):
+        return []
+    for benchmark in benchmarks:
+        if not isinstance(benchmark, dict) or not isinstance(benchmark.get("workloads"), list):
+            continue
+        for workload in benchmark["workloads"]:
+            if isinstance(workload, dict) and isinstance(workload.get("metrics"), Mapping):
+                workload["metrics"] = compact_metrics(workload["metrics"])
+    return benchmarks
 
 
 def status_counts(trials: tuple[TrialReport, ...]) -> dict[str, int]:

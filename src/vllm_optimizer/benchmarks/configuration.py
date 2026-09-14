@@ -17,21 +17,21 @@ def configured_engine(config: VTuneConfig) -> str:
 
 
 def configured_repeats(config: VTuneConfig) -> int:
-    value = config.benchmark.get("repeats", 3)
+    value = config.benchmark.get("repeats", 4)
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise ValueError("benchmark.repeats must be a positive integer")
     return value
 
 
 def configured_warmup_repeats(config: VTuneConfig) -> int:
-    value = config.benchmark.get("warmup_repeats", 1)
+    value = config.benchmark.get("warmup_repeats", 0)
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise ValueError("benchmark.warmup_repeats must be a non-negative integer")
     return value
 
 
 def configured_min_repeats(config: VTuneConfig) -> int:
-    value = config.benchmark.get("min_repeats", min(3, configured_repeats(config)))
+    value = config.benchmark.get("min_repeats", min(4, configured_repeats(config)))
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise ValueError("benchmark.min_repeats must be a positive integer")
     if value > configured_repeats(config):

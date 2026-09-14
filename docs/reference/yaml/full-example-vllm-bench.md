@@ -7,7 +7,7 @@ and result paths:
 ```yaml
 benchmark:
   engine: vllm
-  repeats: 3
+  repeats: 4
   runs:
     - name: random-throughput
       args:
@@ -30,8 +30,8 @@ custom, and prefix-repetition examples plus arbitrary argument rules.
 
 - A GuideLLM run allows one dataset item. Use multiple named runs for several
   workloads; multi-dataset GuideLLM runs are a roadmap item.
-- There is no separate warm-up switch in vLLM Optimizer. If the installed GuideLLM
-  version exposes a warm-up field for a profile, place it inside that profile.
+- Warmups are disabled by default. Add `warmup_repeats` to the benchmark section
+  only when the experiment needs discarded warmup measurements.
 - `analysis.llm_summary` is optional and sends only the top-ranked,
   name-redacted trial values to the configured OpenAI-compatible endpoint.
 - Console progress is shown at the selected logging level. Raw benchmark JSON

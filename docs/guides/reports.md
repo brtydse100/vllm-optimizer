@@ -20,12 +20,12 @@ values before launching.
 
 Comparisons preserve each workload's recorded configuration. They show output
 and request throughput, TTFT, TPOT, end-to-end latency, and request failures,
-with units and percentage changes. Values are medians across available repeats;
-P50/P95/P99 columns are medians of supplied backend percentiles, **not pooled
+with units and percentage changes. Values are arithmetic means across available
+repeats; P50/P95/P99 columns are means of supplied backend percentiles, **not pooled
 request percentiles**. Missing measurements and zero-denominator percentage
 changes are unavailable. Different workload configurations are not paired.
 
-Confidence shows individual repeats, median, sample standard deviation, range,
+Confidence shows individual repeats, mean, sample standard deviation, range,
 repeat count, and drift per workload. Too few repeats, mismatched workloads,
 drift, or overlapping repeat ranges make a comparison inconclusive. Range
 overlap is a descriptive heuristic, not a significance test. Independent
@@ -33,9 +33,9 @@ production validation remains necessary. Initial search measurements are kept
 separate from accepted finalist validation.
 
 The sortable leaderboard keeps every trial, including duplicate configurations,
-failures, and interruptions. Expand a row for its configuration and execution
-evidence. Its latency and variability columns show the largest available
-workload summary; workload details remain separate. Missing total trial runtime
+failures, and interruptions. Expand a row for its configuration and per-workload
+mean latency. Its latency column is the mean across all available benchmarks and
+repeats. Missing total trial runtime
 is unavailable rather than inferred from benchmark time.
 
 Detailed diagnostics and exploratory parameter associations are expandable.
@@ -73,8 +73,11 @@ arbitrary user-provided values contain no secrets. An unavailable endpoint
 becomes a report warning and never invalidates the experiment.
 
 Each trial directory also contains its resolved configuration, normalized
-result, reproduction manifest, `vllm.log`, and `benchmark.log`. Persistent
-values are secret-redacted.
+result, reproduction manifest, `vllm.log`, and `benchmark.log`. Normalized
+results omit token timings, request start times, and generated text. Input and
+output lengths plus a sparse error map are retained in one compact `requests`
+object. Raw
+backend JSON remains available unchanged. Persistent values are secret-redacted.
 
 ## Offline regeneration
 

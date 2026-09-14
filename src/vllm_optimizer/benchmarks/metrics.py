@@ -27,7 +27,7 @@ _VLLM_LATENCY = {
 
 def normalize_guidellm_metrics(raw: Mapping[str, object]) -> dict[str, object]:
     """Return GuideLLM metrics with backend-neutral canonical fields."""
-    result = dict(raw)
+    result = compact_metrics(raw)
     for canonical, source in _GUIDELLM_METRICS.items():
         if summary := metric_summary(raw.get(source)):
             result[canonical] = summary
@@ -39,7 +39,7 @@ def normalize_guidellm_metrics(raw: Mapping[str, object]) -> dict[str, object]:
 
 def normalize_vllm_metrics(raw: Mapping[str, object]) -> dict[str, object]:
     """Return vLLM Bench Serve metrics with the same canonical fields."""
-    result = dict(raw)
+    result = compact_metrics(raw)
     for canonical, aliases in _VLLM_THROUGHPUT.items():
         value = next((raw[name] for name in aliases if name in raw), None)
         if summary := metric_summary(value):
@@ -110,3 +110,23 @@ def _count(value: object) -> int:
 
 def _optional_count(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
+def compact_metrics(raw: Mapping[str, object]) -> dict[str, object]:
+    """Drop bulky request traces while retaining compact request diagnostics."""
+    omitted = {"input_lens", "output_lens", "errors", "itls", "start_times", "generated_texts", "generated_tests"}
+    result = {name: value for name, value in raw.items() if name not in omitted}
+    inputs = _sequence(raw.get("input_lens"))
+    outputs = _sequence(raw.get("output_lens"))
+    errors = _sequence(raw.get("errors"))
+    if inputs or outputs or errors:
+        result["requests"] = {
+            "input": inputs,
+            "output": outputs,
+            "error_msg": {str(index): error for index, error in enumerate(errors) if error not in (None, "")},
+        }
+    return result
+
+
+def _sequence(value: object) -> list[object]:
+    return list(value) if isinstance(value, list | tuple) else []
