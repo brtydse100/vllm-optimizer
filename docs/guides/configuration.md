@@ -183,9 +183,10 @@ configuration. GuideLLM runs use `profile`, `constraints`, and `data`; vLLM
 Bench Serve runs use `args`. The `vllm-opt` CLI preserves raw JSON and `benchmark.log`, then
 exposes normalized metrics to scoring and reports.
 
-Set `benchmark.warmup_repeats` to discard initial measurements and
+Set `benchmark.warmup_repeats` to a positive number when discarded warmups are
+needed; warmups are disabled when this setting is omitted. Set
 `benchmark.min_repeats` to require enough measured repeats for ranking. The
-default minimum is 3. Explicit lower values are exploratory smoke-test evidence
+default minimum is 4. Explicit lower values are exploratory smoke-test evidence
 intervals. Every configured run must meet the minimum and failure policy or the
 trial is not ranked. Set
 `analysis.drift_threshold` to change the sequential finalist rerun threshold

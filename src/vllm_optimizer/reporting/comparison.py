@@ -12,6 +12,7 @@ METRICS = (
     ("Request throughput", "requests_per_second", "req/s"),
     ("TTFT", "ttft_ms", "ms"),
     ("Time per output token", "tpot_ms", "ms"),
+    ("Inter-token latency", "itl_ms", "ms"),
     ("End-to-end latency", "end_to_end_ms", "ms"),
 )
 
@@ -37,12 +38,15 @@ def comparison(baseline: TrialReport | None, recommended: TrialReport | None) ->
         )
     return (
         "<section id='comparison'><h2>3. Baseline vs recommended</h2>"
-        "<p>Each value is the median of available repeat measurements for this exact workload. "
-        "P50/P95/P99 are medians of backend-supplied percentiles, not pooled request percentiles. "
+        "<details><summary>Latency and throughput comparison</summary>"
+        "<p class='warning'>This comparison exposes latency trade-offs, but tuning a different objective is not "
+        "the best way to search for the lowest latency. Use a latency objective for that purpose.</p>"
+        "<p>Each value is the arithmetic mean of available repeat measurements for this exact workload. "
+        "P50/P95/P99 are means of backend-supplied percentiles, not pooled request percentiles. "
         "Positive throughput changes improve performance; negative latency/failure changes improve performance. "
         "Missing or unmatched workloads remain unavailable.</p>"
         + ("".join(blocks) or "<p>Unavailable: no workload measurements.</p>")
-        + "</section>"
+        + "</details></section>"
     )
 
 

@@ -6,7 +6,8 @@ JSON and `benchmark.log`, then normalizes the result for scoring and reporting.
 
 Use `benchmark.warmup_repeats` for measured-but-discarded requests before each
 benchmark repeat. Set `benchmark.repeats` to at least `benchmark.min_repeats`
-for a ranking with the configured confidence policy; the default minimum is 3.
+for a ranking with the configured confidence policy. Warmups default to zero;
+the default repeat count and minimum are both 4.
 Reports show sample variance, a 95% Student's t confidence
 interval, and flag sequential drift above `analysis.drift_threshold` (5% by
 default). The top two flagged finalists are automatically rerun sequentially
@@ -49,7 +50,7 @@ benchmark:
         ignore-eos: true
 ```
 
-When `min_repeats` is omitted, it is `min(3, repeats)`. Thus this explicit
+When `min_repeats` is omitted, it is `min(4, repeats)`. Thus this explicit
 two-repeat smoke workload requires both measurements; setting only `repeats: 1`
 is also valid and is labeled exploratory in reports.
 

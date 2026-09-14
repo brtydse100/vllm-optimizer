@@ -135,6 +135,12 @@ def _duration(context: ReportContext) -> str:
         elapsed = (
             datetime.fromisoformat(context.completed_at) - datetime.fromisoformat(context.started_at)
         ).total_seconds()
-        return formatted(elapsed, "s") if elapsed >= 0 else "Unavailable"
+        if elapsed < 0:
+            return "Unavailable"
+        total = int(elapsed)
+        days, remainder = divmod(total, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{days:02d}:{hours:02d}:{minutes:02d}:{seconds:02d}"
     except (ValueError, TypeError):
         return "Unavailable"

@@ -13,4 +13,4 @@ def metric_methodology() -> str:
 <dt>Average / median / P99</dt><dd>Arithmetic mean, 50th percentile, and 99th percentile. P99 means 99% of observations were at or below that value.</dd>
 <dt>Elapsed</dt><dd>vLLM Optimizer wall-clock time from benchmark subprocess launch through JSON result parsing; vLLM server startup is measured separately.</dd>
 </dl>
-<p class='note'>The benchmark backend calculates request distributions and percentiles. vLLM Optimizer maps backend names and units into one schema without deriving missing percentiles. For scoring, eligible workloads are averaged within a benchmark execution, repeated executions use their median score, and named benchmark scores are averaged into the trial score.</p></section>"""
+<p class='note'>The benchmark backend calculates request distributions and percentiles. vLLM Optimizer maps backend names and units into one schema without deriving missing percentiles. Report comparisons use repeat means. For scoring, eligible workloads are averaged within a benchmark execution, repeated executions use their median score, and named benchmark scores are averaged into the trial score.</p></section>"""

@@ -13,7 +13,6 @@ from vllm_optimizer.reporting.analysis import DEFAULT_METRICS
 from vllm_optimizer.reporting.recommendation import manifest_settings, setting_changes, settings
 from vllm_optimizer.reporting.workloads import center, delta, failure_samples, formatted, samples, scenarios
 from vllm_optimizer.reproduction.accepted import accepted_manifest
-from vllm_optimizer.reproduction.redaction import redact
 
 
 def leaderboard(
@@ -36,11 +35,12 @@ def leaderboard(
         counts = []
         details = []
         for name, observations in workloads.items():
-            latency = center(samples(observations, DEFAULT_METRICS["end_to_end_ms"]))
+            latency_samples = samples(observations, DEFAULT_METRICS["end_to_end_ms"])
+            latency = center(latency_samples)
             values = samples(observations, (metric,))
             sd = stdev(values) if len(values) >= 2 else None
             if latency is not None:
-                latencies.append(latency)
+                latencies.extend(latency_samples)
             if sd is not None:
                 variability.append(sd)
             failures = failure_samples(observations)
@@ -70,7 +70,7 @@ def leaderboard(
             "<details><summary>Full details</summary>"
             + "".join(details)
             + f"<pre>{escape(configuration)}</pre>"
-            + f"<pre>{escape(json.dumps(redact(trial.to_dict()), indent=2))}</pre></details>"
+            + "</details>"
         )
         cells = [
             _cell(str(ranks.get(trial.trial_id, "Unranked")), ranks.get(trial.trial_id)),
@@ -86,7 +86,7 @@ def leaderboard(
                 if score and baseline and baseline.value
                 else None,
             ),
-            _cell(formatted(max(latencies) if latencies else None, "ms"), max(latencies) if latencies else None),
+            _cell(formatted(center(latencies), "ms"), center(latencies)),
             _cell(formatted(error_count), error_count),
             _cell(formatted(max(variability) if variability else None), max(variability) if variability else None),
             _cell("Unavailable", None),
@@ -103,7 +103,7 @@ def leaderboard(
         "Status",
         "Score",
         "Baseline delta",
-        "E2E (worst workload median)",
+        "Mean E2E latency",
         "Failed requests (all repeats)",
         "Score SD (largest workload)",
         "Total runtime",
@@ -120,7 +120,7 @@ def leaderboard(
     return (
         "<section id='leaderboard'><h2>5. Configuration leaderboard</h2>"
         "<p>All trials, including duplicate configurations and unranked failures. Latency and variability columns "
-        "show the largest available workload summary; expand for workload differences. Total trial runtime is "
+        "show the mean across all available benchmark repeats; expand for per-workload means. Total trial runtime is "
         "unavailable in existing artifacts. Click a heading to sort; missing values stay last.</p>"
         f"<div class='table'><table><thead><tr>{headers}</tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>"
     )

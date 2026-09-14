@@ -16,9 +16,9 @@ from vllm_optimizer.config.models import VTuneConfig
 
 @dataclass(frozen=True, slots=True)
 class BenchmarkPolicy:
-    repeats: int = 3
-    minimum_repeats: int = 3
-    warmup_repeats: int = 1
+    repeats: int = 4
+    minimum_repeats: int = 4
+    warmup_repeats: int = 0
     drift_threshold: float = 0.05
     maximum_failure_percentage: float = 0.0
 
@@ -45,9 +45,9 @@ def effective_policy(config: VTuneConfig) -> BenchmarkPolicy:
 def stored_policy(document: Mapping[str, object], benchmark: Mapping[str, object]) -> BenchmarkPolicy:
     stored = document.get("benchmark_policy")
     values = stored if isinstance(stored, Mapping) else benchmark
-    repeats = _integer(values.get("repeats"), 3)
-    minimum = _integer(values.get("minimum_repeats", values.get("min_repeats")), min(3, repeats))
-    warmups = _integer(values.get("warmup_repeats"), 1, allow_zero=True)
+    repeats = _integer(values.get("repeats"), 4)
+    minimum = _integer(values.get("minimum_repeats", values.get("min_repeats")), min(4, repeats))
+    warmups = _integer(values.get("warmup_repeats"), 0, allow_zero=True)
     drift = _number(values.get("drift_threshold"), 0.05)
     if values is benchmark and benchmark.get("accept_any_request_failures") is True:
         maximum = 100.0
