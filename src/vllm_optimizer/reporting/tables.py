@@ -33,15 +33,24 @@ def evidence_table(
     items = ((baseline,) if baseline and all(item.trial_id != baseline.trial_id for item in ranking) else ()) + ranking
     rows = "".join(
         _evidence_row(
-            item, reports.get(item.trial_id), baseline_duration,
+            item,
+            reports.get(item.trial_id),
+            baseline_duration,
             baseline is not None and item.trial_id == baseline.trial_id,
         )
         for item in items
     )
     return _table(
         (
-            "Trial", "Metric", "Mean benchmark duration", "Duration vs baseline", "Successful", "Errored",
-            "Incomplete", "Error rate", "Excluded workloads",
+            "Trial",
+            "Metric",
+            "Mean benchmark duration",
+            "Duration vs baseline",
+            "Successful",
+            "Errored",
+            "Incomplete",
+            "Error rate",
+            "Excluded workloads",
         ),
         rows,
     )

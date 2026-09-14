@@ -82,7 +82,10 @@ def _metric_mean(report: TrialReport | None, metric: str) -> float | None:
 
 def _duration_comparison(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
     names = dict.fromkeys(
-        str(item.get("name", "Unavailable")) for report in (baseline, recommended) if report for item in report.benchmarks
+        str(item.get("name", "Unavailable"))
+        for report in (baseline, recommended)
+        if report
+        for item in report.benchmarks
     )
     rows = []
     for name in names:
