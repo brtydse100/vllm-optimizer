@@ -9,7 +9,6 @@ from statistics import stdev
 
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
-from vllm_optimizer.reporting.analysis import DEFAULT_METRICS
 from vllm_optimizer.reporting.recommendation import manifest_settings, setting_changes, settings
 from vllm_optimizer.reporting.workloads import center, delta, failure_samples, formatted, samples, scenarios
 from vllm_optimizer.reproduction.accepted import accepted_manifest
@@ -27,20 +26,18 @@ def leaderboard(
         scores[baseline.trial_id] = baseline
     ordered = ScoringManager.rank(list(scores.values()))
     ranks = {item.trial_id: index for index, item in enumerate(ordered, 1)}
+    reports = {item.trial_id: item for item in trials}
+    baseline_duration = _mean_duration(reports.get(baseline.trial_id) if baseline else None)
     rows = []
     for trial in sorted(trials, key=lambda item: ranks.get(item.trial_id, len(trials) + 1)):
         score = scores.get(trial.trial_id)
         workloads = scenarios(trial)
-        latencies, variability = [], []
+        variability = []
         counts = []
         details = []
         for name, observations in workloads.items():
-            latency_samples = samples(observations, DEFAULT_METRICS["end_to_end_ms"])
-            latency = center(latency_samples)
             values = samples(observations, (metric,))
             sd = stdev(values) if len(values) >= 2 else None
-            if latency is not None:
-                latencies.extend(latency_samples)
             if sd is not None:
                 variability.append(sd)
             failures = failure_samples(observations)
@@ -48,9 +45,9 @@ def leaderboard(
                 counts.extend(failures)
             else:
                 counts.append(float("nan"))
-            details.append(
-                f"<p>{escape(name)}: E2E {formatted(latency, 'ms')}; score SD {formatted(sd)}; n={len(values)}</p>"
-            )
+            details.append(f"<p>{escape(name)}: score SD {formatted(sd)}; n={len(values)}</p>")
+        duration = _mean_duration(trial)
+        details.extend(_duration_details(trial))
         error_count = sum(counts) if counts and all(value == value for value in counts) else None
         selected_settings = settings(score) if score else None
         configuration = json.dumps(selected_settings, indent=2)
@@ -86,10 +83,10 @@ def leaderboard(
                 if score and baseline and baseline.value
                 else None,
             ),
-            _cell(formatted(center(latencies), "ms"), center(latencies)),
+            _cell(formatted(duration, "s"), duration),
+            _cell(_duration_delta(duration, baseline_duration), _relative(duration, baseline_duration)),
             _cell(formatted(error_count), error_count),
             _cell(formatted(max(variability) if variability else None), max(variability) if variability else None),
-            _cell("Unavailable", None),
             _cell(
                 json.dumps(diff, sort_keys=True) if diff is not None else "Unavailable",
                 json.dumps(diff, sort_keys=True) if diff is not None else None,
@@ -103,10 +100,10 @@ def leaderboard(
         "Status",
         "Score",
         "Baseline delta",
-        "Mean E2E latency",
+        "Mean benchmark duration",
+        "Duration vs baseline",
         "Failed requests (all repeats)",
         "Score SD (largest workload)",
-        "Total runtime",
         "Changed settings",
         "Details",
     )
@@ -119,12 +116,46 @@ def leaderboard(
     )
     return (
         "<section id='leaderboard'><h2>5. Configuration leaderboard</h2>"
-        "<p>All trials, including duplicate configurations and unranked failures. Latency and variability columns "
-        "show the mean across all available benchmark repeats; expand for per-workload means. Total trial runtime is "
-        "unavailable in existing artifacts. Click a heading to sort; missing values stay last.</p>"
+        "<p>All trials, including duplicate configurations and unranked failures. Benchmark duration is the mean "
+        "of recorded benchmark execution times; its baseline difference labels lower duration as better. Expand a "
+        "row for individual execution durations. Click a heading to sort; missing values stay last.</p>"
         f"<div class='table'><table><thead><tr>{headers}</tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>"
     )
 
 
 def _cell(label: str, value: object) -> str:
     return f"<td data-value='{escape(str(value) if value is not None else '', quote=True)}'>{escape(label)}</td>"
+
+
+def _mean_duration(report: TrialReport | None) -> float | None:
+    if report is None:
+        return None
+    values = [
+        float(value)
+        for benchmark in report.benchmarks
+        if isinstance((value := benchmark.get("elapsed_seconds")), int | float) and not isinstance(value, bool)
+    ]
+    return center(values)
+
+
+def _relative(value: float | None, baseline: float | None) -> float | None:
+    return (value - baseline) / abs(baseline) * 100 if value is not None and baseline not in (None, 0) else None
+
+
+def _duration_delta(value: float | None, baseline: float | None) -> str:
+    difference = _relative(value, baseline)
+    if difference is None:
+        return "Unavailable"
+    status = "better" if difference < 0 else ("worse" if difference > 0 else "same")
+    return f"{difference:+.2f}% ({status})"
+
+
+def _duration_details(report: TrialReport) -> list[str]:
+    rows = []
+    for benchmark in report.benchmarks:
+        value = benchmark.get("elapsed_seconds")
+        if isinstance(value, int | float) and not isinstance(value, bool):
+            name = escape(str(benchmark.get("name", "unknown")))
+            repeat = escape(str(benchmark.get("repeat", "Unavailable")))
+            rows.append(f"<p>{name}, repeat {repeat}: duration {formatted(float(value), 's')}</p>")
+    return rows
