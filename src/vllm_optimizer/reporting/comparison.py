@@ -4,6 +4,7 @@ from html import escape
 
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.reporting.analysis import DEFAULT_METRICS
+from vllm_optimizer.reporting.durations import mean_duration
 from vllm_optimizer.reporting.tables import _table
 from vllm_optimizer.reporting.workloads import center, delta, failure_samples, formatted, samples, scenarios
 
@@ -66,8 +67,8 @@ def _summary(baseline: TrialReport | None, recommended: TrialReport | None) -> s
         ("Mean output throughput", "throughput_tokens_per_second", "tok/s", False),
         ("Mean benchmark duration", None, "s", True),
     ):
-        before = _mean_duration(baseline) if metric is None else _metric_mean(baseline, metric)
-        after = _mean_duration(recommended) if metric is None else _metric_mean(recommended, metric)
+        before = mean_duration(baseline) if metric is None else _metric_mean(baseline, metric)
+        after = mean_duration(recommended) if metric is None else _metric_mean(recommended, metric)
         cells = (label, formatted(before, unit), formatted(after, unit), _change(after, before, lower_is_better))
         rows.append("<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>")
     return "<h3>Overall means</h3>" + _table(("Metric", "Baseline", "Recommended", "Difference"), "".join(rows))
@@ -79,22 +80,13 @@ def _metric_mean(report: TrialReport | None, metric: str) -> float | None:
     return center(values)
 
 
-def _mean_duration(report: TrialReport | None, name: str | None = None) -> float | None:
-    values = [
-        float(value)
-        for benchmark in report.benchmarks if report is not None and (name is None or benchmark.get("name") == name)
-        if isinstance((value := benchmark.get("elapsed_seconds")), int | float) and not isinstance(value, bool)
-    ] if report is not None else []
-    return center(values)
-
-
 def _duration_comparison(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
     names = dict.fromkeys(
         str(item.get("name", "Unavailable")) for report in (baseline, recommended) if report for item in report.benchmarks
     )
     rows = []
     for name in names:
-        before, after = _mean_duration(baseline, name), _mean_duration(recommended, name)
+        before, after = mean_duration(baseline, name), mean_duration(recommended, name)
         cells = (name, formatted(before, "s"), formatted(after, "s"), _change(after, before, True))
         rows.append("<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>")
     return "<h3>Mean duration by benchmark</h3>" + _table(

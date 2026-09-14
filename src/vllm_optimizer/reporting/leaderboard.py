@@ -9,8 +9,9 @@ from statistics import stdev
 
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
+from vllm_optimizer.reporting.durations import duration_change, mean_duration, relative_duration
 from vllm_optimizer.reporting.recommendation import manifest_settings, setting_changes, settings
-from vllm_optimizer.reporting.workloads import center, delta, failure_samples, formatted, samples, scenarios
+from vllm_optimizer.reporting.workloads import delta, failure_samples, formatted, samples, scenarios
 from vllm_optimizer.reproduction.accepted import accepted_manifest
 
 
@@ -27,7 +28,7 @@ def leaderboard(
     ordered = ScoringManager.rank(list(scores.values()))
     ranks = {item.trial_id: index for index, item in enumerate(ordered, 1)}
     reports = {item.trial_id: item for item in trials}
-    baseline_duration = _mean_duration(reports.get(baseline.trial_id) if baseline else None)
+    baseline_duration = mean_duration(reports.get(baseline.trial_id) if baseline else None)
     rows = []
     for trial in sorted(trials, key=lambda item: ranks.get(item.trial_id, len(trials) + 1)):
         score = scores.get(trial.trial_id)
@@ -46,7 +47,7 @@ def leaderboard(
             else:
                 counts.append(float("nan"))
             details.append(f"<p>{escape(name)}: score SD {formatted(sd)}; n={len(values)}</p>")
-        duration = _mean_duration(trial)
+        duration = mean_duration(trial)
         details.extend(_duration_details(trial))
         error_count = sum(counts) if counts and all(value == value for value in counts) else None
         selected_settings = settings(score) if score else None
@@ -84,7 +85,7 @@ def leaderboard(
                 else None,
             ),
             _cell(formatted(duration, "s"), duration),
-            _cell(_duration_delta(duration, baseline_duration), _relative(duration, baseline_duration)),
+            _cell(duration_change(duration, baseline_duration), relative_duration(duration, baseline_duration)),
             _cell(formatted(error_count), error_count),
             _cell(formatted(max(variability) if variability else None), max(variability) if variability else None),
             _cell(
@@ -125,29 +126,6 @@ def leaderboard(
 
 def _cell(label: str, value: object) -> str:
     return f"<td data-value='{escape(str(value) if value is not None else '', quote=True)}'>{escape(label)}</td>"
-
-
-def _mean_duration(report: TrialReport | None) -> float | None:
-    if report is None:
-        return None
-    values = [
-        float(value)
-        for benchmark in report.benchmarks
-        if isinstance((value := benchmark.get("elapsed_seconds")), int | float) and not isinstance(value, bool)
-    ]
-    return center(values)
-
-
-def _relative(value: float | None, baseline: float | None) -> float | None:
-    return (value - baseline) / abs(baseline) * 100 if value is not None and baseline not in (None, 0) else None
-
-
-def _duration_delta(value: float | None, baseline: float | None) -> str:
-    difference = _relative(value, baseline)
-    if difference is None:
-        return "Unavailable"
-    status = "better" if difference < 0 else ("worse" if difference > 0 else "same")
-    return f"{difference:+.2f}% ({status})"
 
 
 def _duration_details(report: TrialReport) -> list[str]:

@@ -45,6 +45,9 @@ timings remain unavailable rather than inferred.
 Detailed diagnostics and exploratory parameter associations are expandable.
 Parameter importance describes associations across tested values, not causation.
 The score-history chart uses recorded trial order, not elapsed time.
+Scoring evidence includes each ranked trial's mean benchmark duration and its
+percentage difference from the baseline; duration remains informational and does
+not alter the configured optimization score.
 
 ## Metric calculations
 
