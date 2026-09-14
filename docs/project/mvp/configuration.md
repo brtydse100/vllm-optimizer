@@ -29,7 +29,7 @@ tune_env:
     values: ["0", "1"]
 
 benchmark:
-  repeats: 3
+  repeats: 4
   runs:
     - name: throughput
       request_format: /v1/completions
