@@ -10,7 +10,7 @@ use your chosen models and GPU allocations.
 
 [Open the full interactive report](report-showcase/report.html).
 
-![Overview and recommended settings from the real showcase run](overview.png)
+![Baseline comparison with benchmark duration from the real showcase run](overview.png)
 
 The accepted configuration changes `max-num-seqs` from **1 to 16** and
 `max-num-batched-tokens` from **256 to 512**. The configured score increased
@@ -18,11 +18,13 @@ from **194.34 to 1,082.27 output tokens/s (+456.89%)**. This score is the mean
 of the two named workloads' repeat medians; their individual measurements and
 latency percentiles remain separate in the report.
 
-The experiment took **893.83 seconds**: seven trials completed, including the
+The experiment took **00:00:14:53**: seven trials completed, including the
 baseline, and two deliberately invalid configurations failed. Both finalists
 were validated again, and the accepted ranking uses those validation results.
 The intentionally zero drift threshold makes the confidence verdict
 **inconclusive due to drift**, despite the large observed improvement.
+The report also compares mean benchmark execution duration for every trial and
+shows the percentage difference from the baseline in scoring evidence.
 
 - [Exact experiment](report-showcase/experiment.yaml)
 - [CSV](report-showcase/results.csv) and [structured result](report-showcase/result.json)
@@ -38,7 +40,7 @@ with `max-num-seqs: 1`; both retain `max-num-batched-tokens: 512`.
 The **baseline wins** at **925.54 output tokens/s**, versus **205.87** for
 the candidate (**-77.76%**). The report recommends keeping the baseline with
 no changed settings. Both trials completed without request failures in
-**92.22 seconds**. With three repeats, drift assessment is unavailable.
+**00:00:01:32**. With three repeats, drift assessment is unavailable.
 The structured result's `best` field identifies the best search candidate;
 the HTML compares that candidate with the separately stored baseline.
 
@@ -60,17 +62,19 @@ The model is the pinned `facebook/opt-125m` revision recorded in the shared
 recipes. The runtime is Python 3.12.3, vLLM 0.28.0, PyTorch 2.13.0/CUDA 13.0,
 and driver 616.64. Complete package pins and model checksums are provided.
 
-These deliberately small experiments exercise the five priority report
-sections, supplied P50/P95/P99 metrics, baseline retention, validation history,
-and failure diagnostics. They do not establish production performance or H100
-speedups. Total per-trial runtime and other uncaptured fields remain unavailable.
-The restricted showcase baseline is a demonstration choice.
+These deliberately small experiments exercise the decision report, supplied
+P50/P95/P99 metrics, benchmark execution durations, baseline retention,
+validation history, and failure diagnostics. They do not establish production
+performance or H100 speedups. The restricted showcase baseline is a
+demonstration choice.
 
 ## Inspect or regenerate
 
-The HTML is self-contained and opens directly after downloading. The ZIP
-contains the run directory, accepted and initial trial results, manifests,
-raw benchmark output, and diagnostic logs. It contains no model weights.
+The HTML is self-contained and opens directly after downloading. The compact
+normalized JSON retains per-request input/output lengths and sparse errors while
+omitting generated text and bulky timing traces. The ZIP contains the run
+directory, compact accepted and initial trial results, manifests, unchanged raw
+benchmark output, and diagnostic logs. It contains no model weights.
 
 Personal paths and GPU UUIDs were redacted in the public copy. Artifact paths
 and checksums were updated accordingly; scores, request counts, measurements,

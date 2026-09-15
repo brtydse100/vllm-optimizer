@@ -8,10 +8,11 @@ reproduction and a separate H100 suite with user-selected models and GPUs.
 - [H100 results archive](h100/index.md) — reserved for real H100 executions;
   currently no H100 measurements are published.
 
-The reports cover the five implemented decision sections: overview,
-recommendation, workload-specific baseline comparison, confidence, and the
-complete configuration leaderboard. Existing charts and diagnostics are
-expandable. Missing timing or backend fields remain unavailable.
+The reports cover overview, recommendation, workload-specific baseline
+comparison, confidence, the complete configuration leaderboard, and expandable
+scoring evidence. Benchmark execution duration is shown for the baseline and
+every trial, including mean and percentage differences. Missing backend fields
+remain unavailable.
 
 Each result includes its exact experiment, score/measurement exports, and an
 evidence bundle. Compare baseline and candidates within the same model and

@@ -6,7 +6,7 @@ from html import escape
 from pathlib import Path
 
 from vllm_optimizer.domain.trial_report import TrialReport
-from vllm_optimizer.measurement import sequentially_drifted, summarize
+from vllm_optimizer.measurement import sequential_drift, sequentially_drifted, summarize
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.offline_loading import load_trial, read_object
 from vllm_optimizer.reporting.tables import _table
@@ -93,11 +93,8 @@ def _rows(report: TrialReport, phase: str, metric: str, context: ReportContext) 
         individual = "; ".join(
             f"{item.repeat}: {formatted(next(iter(samples([item], (metric,))), None))}" for item in observations
         )
-        drift = (
-            "Unavailable (<4 repeats)"
-            if len(values) < 4
-            else ("Detected" if sequentially_drifted(values, context.drift_threshold) else "Not detected")
-        )
+        drift_value = sequential_drift(values)
+        drift = _drift_label(drift_value)
         cells = (
             f"{report.trial_id} / {phase}",
             key,
@@ -110,3 +107,9 @@ def _rows(report: TrialReport, phase: str, metric: str, context: ReportContext) 
         )
         rows.append("<tr>" + "".join(f"<td>{escape(cell)}</td>" for cell in cells) + "</tr>")
     return rows
+
+
+def _drift_label(value: float | None) -> str:
+    if value is None:
+        return "Unavailable (<4 repeats)"
+    return f"{value:+.2%}"

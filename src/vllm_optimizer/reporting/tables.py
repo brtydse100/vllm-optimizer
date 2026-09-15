@@ -10,6 +10,8 @@ from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import TrialScore
 from vllm_optimizer.reporting.analysis import default_metrics
 from vllm_optimizer.reporting.context import ReportContext
+from vllm_optimizer.reporting.durations import duration_change, mean_duration
+from vllm_optimizer.reporting.workloads import formatted
 
 
 def ranking_table(ranking: tuple[TrialScore, ...], baseline: TrialScore | None) -> str:
@@ -23,15 +25,47 @@ def ranking_table(ranking: tuple[TrialScore, ...], baseline: TrialScore | None) 
     return _table(("Rank", "Trial", "Score", "Error rate", "Errors", "Changed settings"), rows)
 
 
-def evidence_table(ranking: tuple[TrialScore, ...]) -> str:
+def evidence_table(
+    ranking: tuple[TrialScore, ...], trials: tuple[TrialReport, ...] = (), baseline: TrialScore | None = None
+) -> str:
+    reports = {item.trial_id: item for item in trials}
+    baseline_duration = mean_duration(reports.get(baseline.trial_id) if baseline else None)
+    items = ((baseline,) if baseline and all(item.trial_id != baseline.trial_id for item in ranking) else ()) + ranking
     rows = "".join(
-        f"<tr><td>{escape(item.trial_id)}</td><td>{item.value:.4f}</td>"
+        _evidence_row(
+            item,
+            reports.get(item.trial_id),
+            baseline_duration,
+            baseline is not None and item.trial_id == baseline.trial_id,
+        )
+        for item in items
+    )
+    return _table(
+        (
+            "Trial",
+            "Metric",
+            "Mean benchmark duration",
+            "Duration vs baseline",
+            "Successful",
+            "Errored",
+            "Incomplete",
+            "Error rate",
+            "Excluded workloads",
+        ),
+        rows,
+    )
+
+
+def _evidence_row(item: TrialScore, report: TrialReport | None, baseline_duration: float | None, baseline: bool) -> str:
+    duration = mean_duration(report)
+    label = item.trial_id + (" (baseline)" if baseline else "")
+    return (
+        f"<tr><td>{escape(label)}</td><td>{item.value:.4f}</td>"
+        f"<td>{formatted(duration, 's')}</td><td>{duration_change(duration, baseline_duration)}</td>"
         f"<td>{item.successful_requests}</td><td>{item.errored_requests}</td>"
         f"<td>{item.incomplete_requests}</td><td>{item.error_rate:.2%}</td>"
         f"<td>{item.excluded_workloads}</td></tr>"
-        for item in ranking
     )
-    return _table(("Trial", "Metric", "Successful", "Errored", "Incomplete", "Error rate", "Excluded workloads"), rows)
 
 
 def benchmark_table(context: ReportContext) -> str:

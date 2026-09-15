@@ -98,11 +98,22 @@ def drifted(before: float, after: float, threshold: float = 0.05) -> bool:
 
 
 def sequentially_drifted(values: Iterable[float], threshold: float = 0.05) -> bool:
+    drift = sequential_drift(values)
+    if drift is None:
+        return False
+    if threshold < 0:
+        raise ValueError("drift threshold must not be negative")
+    return abs(drift) > threshold
+
+
+def sequential_drift(values: Iterable[float]) -> float | None:
+    """Return signed relative change from the first half mean to the second."""
     samples = tuple(float(value) for value in values)
     if len(samples) < 4:
-        return False
+        return None
     midpoint = len(samples) // 2
-    return drifted(fmean(samples[:midpoint]), fmean(samples[midpoint:]), threshold)
+    before, after = fmean(samples[:midpoint]), fmean(samples[midpoint:])
+    return (after - before) / max(abs(before), 1e-12)
 
 
 def benchmark_samples(benchmarks: Iterable[Mapping[str, object]], metric: str) -> dict[str, tuple[float, ...]]:

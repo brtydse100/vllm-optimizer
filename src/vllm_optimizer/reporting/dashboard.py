@@ -112,7 +112,7 @@ def _diagnostics(
         + "</section>"
         + metric_methodology()
         + "<section><h2>Scoring evidence</h2>"
-        + evidence_table(ranking)
+        + evidence_table(ranking, trials, baseline)
         + f"<p>A workload is excluded when failed/incomplete requests exceed\n{context.maximum_failure_percentage:g}% of all requests. "
         "Eligible workload metrics use their mean per named run, the median across repeats, then the mean of named runs. "
         "This configured objective is separate from the workload comparisons above.</p></section>"

@@ -11,8 +11,8 @@ Status for `0.1.0a13`: **software-side alpha complete; hardware validation pendi
   crash finalization, redaction, scoring, reporting, and offline workflows.
 - The failure percentage is an eligibility gate. The configured maximize metric is the primary
   objective everywhere; request failure rate and count are deterministic tie-breakers.
-- Trusted defaults use one warm-up and three measured repeats. Reports use Student's t intervals,
-  label fewer than three measurements exploratory, and state when drift cannot be evaluated.
+- Trusted defaults use no warm-up and four measured repeats. Reports use Student's t intervals,
+  label fewer than four measurements exploratory, and state when drift cannot be evaluated.
 - Coordinator failures atomically finalize recoverable runs as `failed`; keyboard interruption
   finalizes them as `interrupted`.
 - Credentials are recursively redacted from terminal output, manifests, run results, CSV, and HTML.

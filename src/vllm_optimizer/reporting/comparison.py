@@ -4,6 +4,7 @@ from html import escape
 
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.reporting.analysis import DEFAULT_METRICS
+from vllm_optimizer.reporting.durations import mean_duration
 from vllm_optimizer.reporting.tables import _table
 from vllm_optimizer.reporting.workloads import center, delta, failure_samples, formatted, samples, scenarios
 
@@ -19,6 +20,8 @@ METRICS = (
 
 def comparison(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
     before, after = scenarios(baseline), scenarios(recommended)
+    summary = _summary(baseline, recommended)
+    durations = _duration_comparison(baseline, recommended)
     blocks = []
     for key in dict.fromkeys((*before, *after)):
         left, right = before.get(key, []), after.get(key, [])
@@ -38,13 +41,15 @@ def comparison(baseline: TrialReport | None, recommended: TrialReport | None) ->
         )
     return (
         "<section id='comparison'><h2>3. Baseline vs recommended</h2>"
-        "<details><summary>Latency and throughput comparison</summary>"
+        "<details><summary>Latency, throughput, and benchmark duration comparison</summary>"
         "<p class='warning'>This comparison exposes latency trade-offs, but tuning a different objective is not "
         "the best way to search for the lowest latency. Use a latency objective for that purpose.</p>"
         "<p>Each value is the arithmetic mean of available repeat measurements for this exact workload. "
         "P50/P95/P99 are means of backend-supplied percentiles, not pooled request percentiles. "
         "Positive throughput changes improve performance; negative latency/failure changes improve performance. "
         "Missing or unmatched workloads remain unavailable.</p>"
+        + summary
+        + durations
         + ("".join(blocks) or "<p>Unavailable: no workload measurements.</p>")
         + "</details></section>"
     )
@@ -53,3 +58,49 @@ def comparison(baseline: TrialReport | None, recommended: TrialReport | None) ->
 def _row(label: str, baseline: float | None, recommended: float | None, unit: str, n: int, m: int) -> str:
     cells = (label, formatted(baseline, unit), formatted(recommended, unit), delta(recommended, baseline), f"{n} / {m}")
     return "<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>"
+
+
+def _summary(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
+    rows = []
+    for label, metric, unit, lower_is_better in (
+        ("Mean E2E latency", "end_to_end_ms", "ms", True),
+        ("Mean output throughput", "throughput_tokens_per_second", "tok/s", False),
+        ("Mean benchmark duration", None, "s", True),
+    ):
+        before = mean_duration(baseline) if metric is None else _metric_mean(baseline, metric)
+        after = mean_duration(recommended) if metric is None else _metric_mean(recommended, metric)
+        cells = (label, formatted(before, unit), formatted(after, unit), _change(after, before, lower_is_better))
+        rows.append("<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>")
+    return "<h3>Overall means</h3>" + _table(("Metric", "Baseline", "Recommended", "Difference"), "".join(rows))
+
+
+def _metric_mean(report: TrialReport | None, metric: str) -> float | None:
+    aliases = DEFAULT_METRICS[metric]
+    values = [value for observations in scenarios(report).values() for value in samples(observations, aliases)]
+    return center(values)
+
+
+def _duration_comparison(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
+    names = dict.fromkeys(
+        str(item.get("name", "Unavailable"))
+        for report in (baseline, recommended)
+        if report
+        for item in report.benchmarks
+    )
+    rows = []
+    for name in names:
+        before, after = mean_duration(baseline, name), mean_duration(recommended, name)
+        cells = (name, formatted(before, "s"), formatted(after, "s"), _change(after, before, True))
+        rows.append("<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>")
+    return "<h3>Mean duration by benchmark</h3>" + _table(
+        ("Benchmark", "Baseline", "Recommended", "Difference"), "".join(rows)
+    )
+
+
+def _change(value: float | None, baseline: float | None, lower_is_better: bool) -> str:
+    if value is None or baseline is None or baseline == 0:
+        return "Unavailable"
+    percent = (value - baseline) / abs(baseline) * 100
+    better = percent < 0 if lower_is_better else percent > 0
+    status = "better" if better else ("worse" if percent else "same")
+    return f"{percent:+.2f}% ({status})"

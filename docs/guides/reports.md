@@ -20,27 +20,34 @@ values before launching.
 
 Comparisons preserve each workload's recorded configuration. They show output
 and request throughput, TTFT, TPOT, end-to-end latency, and request failures,
-with units and percentage changes. Values are arithmetic means across available
+with units and percentage changes. An overall summary and per-benchmark rows
+also compare mean benchmark execution duration regardless of the optimization
+objective. Values are arithmetic means across available
 repeats; P50/P95/P99 columns are means of supplied backend percentiles, **not pooled
 request percentiles**. Missing measurements and zero-denominator percentage
 changes are unavailable. Different workload configurations are not paired.
 
 Confidence shows individual repeats, mean, sample standard deviation, range,
-repeat count, and drift per workload. Too few repeats, mismatched workloads,
+repeat count, and signed drift percentage per workload. The drift value compares
+the means of the first and second repeat halves and shows whether it exceeds the
+configured threshold. Too few repeats, mismatched workloads,
 drift, or overlapping repeat ranges make a comparison inconclusive. Range
 overlap is a descriptive heuristic, not a significance test. Independent
 production validation remains necessary. Initial search measurements are kept
 separate from accepted finalist validation.
 
 The sortable leaderboard keeps every trial, including duplicate configurations,
-failures, and interruptions. Expand a row for its configuration and per-workload
-mean latency. Its latency column is the mean across all available benchmarks and
-repeats. Missing total trial runtime
-is unavailable rather than inferred from benchmark time.
+failures, and interruptions. It shows each trial's mean recorded benchmark
+duration and percentage difference from the baseline; lower duration is labeled
+better. Expand a row for individual benchmark execution durations. Missing
+timings remain unavailable rather than inferred.
 
 Detailed diagnostics and exploratory parameter associations are expandable.
 Parameter importance describes associations across tested values, not causation.
 The score-history chart uses recorded trial order, not elapsed time.
+Scoring evidence includes each ranked trial's mean benchmark duration and its
+percentage difference from the baseline; duration remains informational and does
+not alter the configured optimization score.
 
 ## Metric calculations
 
