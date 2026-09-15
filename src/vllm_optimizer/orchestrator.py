@@ -107,11 +107,10 @@ class Orchestrator:
             interrupted = report.status is WorkerStatus.INTERRUPTED
 
         async def execute(parameters: TrialParameters, slot: WorkerSlot | None):
-            observed = [item.value for item in session.ranking]
-            if session.baseline:
-                observed.append(session.baseline.value)
-            incumbent = max(observed) if adaptive_repeat_policy(self._config) and observed else None
-            return await self._run_trial(directory, parameters, slot, incumbent_score=incumbent)
+            baseline_mean = (
+                session.baseline.value if adaptive_repeat_policy(self._config) and session.baseline else None
+            )
+            return await self._run_trial(directory, parameters, slot, baseline_mean_score=baseline_mean)
 
         searched = await run_search(
             search,
@@ -157,10 +156,12 @@ class Orchestrator:
         parameters: TrialParameters,
         slot: WorkerSlot | None = None,
         artifact_subdirectory: str | None = None,
-        incumbent_score: float | None = None,
+        baseline_mean_score: float | None = None,
     ) -> tuple[TrialReport, TrialScore | None, dict[str, float]]:
         if self._trial_executor is None:
             raise RuntimeError("trial executor is not initialized")
-        if incumbent_score is None:
+        if baseline_mean_score is None:
             return await self._trial_executor.execute(directory, parameters, slot, artifact_subdirectory)
-        return await self._trial_executor.execute(directory, parameters, slot, artifact_subdirectory, incumbent_score)
+        return await self._trial_executor.execute(
+            directory, parameters, slot, artifact_subdirectory, baseline_mean_score
+        )

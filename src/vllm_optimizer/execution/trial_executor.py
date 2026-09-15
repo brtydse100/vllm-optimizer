@@ -44,7 +44,7 @@ class TrialExecutor:
         parameters: TrialParameters,
         slot: WorkerSlot | None = None,
         artifact_subdirectory: str | None = None,
-        incumbent_score: float | None = None,
+        baseline_mean_score: float | None = None,
     ) -> tuple[TrialReport, TrialScore | None, dict[str, float]]:
         config, scorer = self._config, self._scoring
         policy = finalist_policy(config)
@@ -80,7 +80,7 @@ class TrialExecutor:
             self._terminal.benchmark_progress(name, current, elapsed, limit, scope)
 
         workers = (
-            build_trial_workers(config, parameters, trial_dir, slot, benchmark_progress, scorer, incumbent_score)
+            build_trial_workers(config, parameters, trial_dir, slot, benchmark_progress, scorer, baseline_mean_score)
             if adaptive
             else build_trial_workers(config, parameters, trial_dir, slot, benchmark_progress)
         )

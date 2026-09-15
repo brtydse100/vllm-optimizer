@@ -35,33 +35,32 @@ request arguments or outputs.
 
 ## Adaptive search repeats
 
-Use an opt-in initial budget for search trials that are clearly behind a
-completed reference:
+Use an opt-in initial budget for search trials that are clearly behind the
+baseline mean:
 
 ```yaml
 benchmark:
   repeats: 4
   min_repeats: 2
   adaptive_repeats:
-    minimum_relative_score: 0.8
+    minimum_relative_score: 0.7
 ```
 
-Each trial first runs `min_repeats` rounds. A round measures every named
-benchmark once, so the decision never relies on a missing workload. If the
-initial score is below 80% of the best completed tuned or baseline score
-available when that trial starts, its remaining repeats are skipped. A score
-equal to the threshold continues. The comparison runs only when both scores are
-positive; otherwise the full repeat budget runs.
+Each trial first runs `min_repeats` rounds; adaptive runs default to two. A
+round measures every named benchmark once, so the decision never relies on a
+missing workload. If the
+initial score is below 70% of the baseline's arithmetic-mean score, meaning it
+is more than 30% worse, its remaining repeats are skipped. For example, with a
+baseline mean of 100, a score below 70 stops while a score of exactly 70
+continues. The comparison runs only when both scores are positive; otherwise
+the full repeat budget runs.
 
-The first trial runs all repeats when no reference exists. In parallel mode,
-the first simultaneous group normally has no completed reference and therefore
-runs fully. Later trials use only results completed before they start. Completion
-order can change which reference later trials receive.
+When no completed baseline score exists, every trial runs its full repeat budget.
 
 `minimum_relative_score` must be greater than zero and at most one. Adaptive
 repeats also require `min_repeats < repeats`. Trial JSON records the decision,
-reason, initial and reference scores, planned budget, and actual repeat count by
-workload. Fresh finalist validation always disables adaptive stopping and
+reason, initial score, baseline arithmetic-mean score, planned budget, and
+actual repeat count by workload. Fresh finalist validation always disables adaptive stopping and
 requires its complete budget.
 
 This policy saves whole benchmark repeats after the initial decision. It does

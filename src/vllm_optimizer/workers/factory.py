@@ -36,7 +36,7 @@ def build_trial_workers(
     slot: WorkerSlot | None = None,
     benchmark_progress: Callable[[str, int | None, float, float], None] | None = None,
     scorer: ScoringManager | None = None,
-    incumbent_score: float | None = None,
+    baseline_mean_score: float | None = None,
 ) -> tuple[Worker, ...]:
     execution = config.execution
     grace = positive(execution, "shutdown_grace", 15)
@@ -89,7 +89,7 @@ def build_trial_workers(
         if adaptive and repeat == minimum + 1 and run is runs[0]:
             if scorer is None:
                 raise ValueError("adaptive repeats require a scoring policy")
-            workers.append(AdaptiveRepeatGate(scorer, adaptive, incumbent_score, repeats, minimum))
+            workers.append(AdaptiveRepeatGate(scorer, adaptive, baseline_mean_score, repeats, minimum))
         repeat_index = repeat if repeats > 1 else None
         measured = cast(
             Worker,

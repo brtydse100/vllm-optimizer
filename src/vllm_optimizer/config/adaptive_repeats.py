@@ -10,7 +10,7 @@ from vllm_optimizer.config.models import VTuneConfig
 
 @dataclass(frozen=True, slots=True)
 class AdaptiveRepeatPolicy:
-    minimum_relative_score: float = 0.8
+    minimum_relative_score: float = 0.7
 
 
 def adaptive_repeat_policy(config: VTuneConfig) -> AdaptiveRepeatPolicy | None:
@@ -19,7 +19,7 @@ def adaptive_repeat_policy(config: VTuneConfig) -> AdaptiveRepeatPolicy | None:
         return None
     if not isinstance(raw, Mapping) or set(raw) - {"minimum_relative_score"}:
         raise ValueError("benchmark.adaptive_repeats supports only minimum_relative_score")
-    value = raw.get("minimum_relative_score", 0.8)
+    value = raw.get("minimum_relative_score", 0.7)
     if isinstance(value, bool) or not isinstance(value, int | float) or not isfinite(value) or not 0 < value <= 1:
         raise ValueError("benchmark.adaptive_repeats.minimum_relative_score must be finite and between 0 and 1")
     if configured_min_repeats(config) >= configured_repeats(config):

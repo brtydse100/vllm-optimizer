@@ -52,7 +52,10 @@ def stored_policy(document: Mapping[str, object], benchmark: Mapping[str, object
     stored = document.get("benchmark_policy")
     values = stored if isinstance(stored, Mapping) else benchmark
     repeats = _integer(values.get("repeats"), 4)
-    minimum = _integer(values.get("minimum_repeats", values.get("min_repeats")), min(4, repeats))
+    adaptive = values.get("adaptive_minimum_relative_score")
+    minimum = _integer(
+        values.get("minimum_repeats", values.get("min_repeats")), min(2 if adaptive is not None else 4, repeats)
+    )
     warmups = _integer(values.get("warmup_repeats"), 0, allow_zero=True)
     drift = _number(values.get("drift_threshold"), 0.05)
     if values is benchmark and benchmark.get("accept_any_request_failures") is True:
@@ -62,7 +65,6 @@ def stored_policy(document: Mapping[str, object], benchmark: Mapping[str, object
     aggregation = values.get("repeat_aggregation", "median")
     if aggregation not in ("mean", "median"):
         raise ValueError("stored repeat aggregation must be mean or median")
-    adaptive = values.get("adaptive_minimum_relative_score")
     if adaptive is not None and (
         isinstance(adaptive, bool) or not isinstance(adaptive, int | float) or not 0 < adaptive <= 1
     ):

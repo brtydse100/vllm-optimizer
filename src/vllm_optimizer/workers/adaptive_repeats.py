@@ -15,7 +15,7 @@ _STOP = "adaptive_repeats_stopped"
 class AdaptiveRepeatGate:
     scorer: ScoringManager
     policy: AdaptiveRepeatPolicy
-    incumbent_score: float | None
+    baseline_mean_score: float | None
     planned_repeats: int
     completed_repeats: int
     name: str = "adaptive_repeat_gate"
@@ -24,15 +24,16 @@ class AdaptiveRepeatGate:
         raw = context.values.get("benchmark_results", ())
         results = raw if isinstance(raw, tuple) and all(isinstance(item, BenchmarkResult) for item in raw) else ()
         score = self.scorer.score(results)
-        reference = self.incumbent_score
+        baseline_mean = self.baseline_mean_score
         status = "continued"
         reason = "initial score is competitive"
-        if reference is None or reference <= 0:
-            status, reason = "continued_without_reference", "no positive completed reference score was available"
+        if baseline_mean is None or baseline_mean <= 0:
+            status, reason = "continued_without_reference", "no positive baseline mean score was available"
         elif score is None or score <= 0:
             status, reason = "continued_without_comparison", "initial score was unavailable or non-positive"
-        elif score < reference * self.policy.minimum_relative_score:
-            status, reason = "stopped", "initial score was below the configured fraction of the reference score"
+        elif score < baseline_mean * self.policy.minimum_relative_score:
+            shortfall = (1 - self.policy.minimum_relative_score) * 100
+            status, reason = "stopped", f"initial score was more than {shortfall:g}% below the baseline mean score"
             context.values[_STOP] = True
         context.execution["adaptive_repeats"] = {
             "status": status,
@@ -40,7 +41,7 @@ class AdaptiveRepeatGate:
             "decision_repeats": self.completed_repeats,
             "planned_repeats": self.planned_repeats,
             "initial_score": score,
-            "reference_score": reference,
+            "baseline_mean_score": baseline_mean,
             "minimum_relative_score": self.policy.minimum_relative_score,
         }
         return WorkerResult.completed()

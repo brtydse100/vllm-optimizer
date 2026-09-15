@@ -63,7 +63,7 @@ def _adaptive_evidence(value: object, trial_id: str) -> dict[str, object]:
         "decision_repeats",
         "planned_repeats",
         "initial_score",
-        "reference_score",
+        "baseline_mean_score",
         "minimum_relative_score",
         "actual_repeats_by_run",
     }
@@ -80,7 +80,7 @@ def _adaptive_evidence(value: object, trial_id: str) -> dict[str, object]:
             isinstance(item, int) and not isinstance(item, bool) and item >= 1,
             f"trial {trial_id} has invalid adaptive repeat {name}",
         )
-    for name in ("initial_score", "reference_score"):
+    for name in ("initial_score", "baseline_mean_score"):
         item = evidence.get(name)
         require(
             item is None or isinstance(item, int | float) and not isinstance(item, bool) and isfinite(item),

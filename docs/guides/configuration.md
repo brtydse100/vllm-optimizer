@@ -186,15 +186,16 @@ exposes normalized metrics to scoring and reports.
 Set `benchmark.warmup_repeats` to a positive number when discarded warmups are
 needed; warmups are disabled when this setting is omitted. Set
 `benchmark.min_repeats` to require enough measured repeats for ranking. The
-default minimum is 4. Explicit lower values are exploratory smoke-test evidence
-intervals. Every configured run must meet the minimum and failure policy or the
+default minimum is 4 for fixed-repeat runs and 2 when `adaptive_repeats` is
+enabled. Every configured run must meet the minimum and failure policy or the
 trial is not ranked. Set
 `analysis.drift_threshold` to change the sequential finalist rerun threshold
 (default 0.05).
 
 The optional `benchmark.adaptive_repeats.minimum_relative_score` skips remaining
-search repeats after `min_repeats` rounds when a positive initial score is
-clearly behind a positive completed reference. See [Benchmark repeats and
+search repeats after `min_repeats` rounds when a positive initial score is more
+than 30% below the baseline arithmetic mean. Its default threshold is `0.7`.
+See [Benchmark repeats and
 errors](benchmarks/benchmark-repeats.md#adaptive-search-repeats).
 
 ### Request failure policy
