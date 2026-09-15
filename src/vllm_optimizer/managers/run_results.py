@@ -14,6 +14,7 @@ from vllm_optimizer.managers.run_documents import status_counts as _status_count
 from vllm_optimizer.managers.run_documents import strings as _strings
 from vllm_optimizer.managers.run_documents import trial_document as _trial_document
 from vllm_optimizer.managers.scoring import TrialScore
+from vllm_optimizer.reporting.finalist_decision import decide
 from vllm_optimizer.reproduction.redaction import redact_environment, redact_values
 
 
@@ -22,7 +23,7 @@ class RunResultsManager:
         self,
         output_path: Path,
         execution_mode: str = "sequential",
-        benchmark_policy: Mapping[str, int | float] | None = None,
+        benchmark_policy: Mapping[str, int | float | str] | None = None,
     ) -> None:
         self._output_path = Path(output_path)
         self._execution_mode = execution_mode
@@ -48,6 +49,7 @@ class RunResultsManager:
         sources: Mapping[str, Mapping[str, str]] | None = None,
         analysis_summary: str | None = None,
         run_failure: Mapping[str, object] | None = None,
+        finalist_validation: Mapping[str, object] | None = None,
     ) -> Path:
         links = sources or {}
         document = {
@@ -77,6 +79,9 @@ class RunResultsManager:
             document["analysis_summary"] = analysis_summary
         if run_failure is not None:
             document["run_failure"] = dict(run_failure)
+        if finalist_validation:
+            document["finalist_validation"] = dict(finalist_validation)
+            document["selection_decision"] = decide(trials, ranking, baseline, metric, finalist_validation).to_dict()
         self._output_path.parent.mkdir(parents=True, exist_ok=True)
         temporary = self._output_path.with_suffix(self._output_path.suffix + ".tmp")
         temporary.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
@@ -90,6 +95,7 @@ class RunResultsManager:
         ranking: tuple[TrialScore, ...],
         benchmark_rankings: dict[str, tuple[TrialScore, ...]],
         baseline: TrialScore | None = None,
+        finalist_validation: Mapping[str, object] | None = None,
     ) -> str:
         counts = _status_counts(trials)
         lines = [
@@ -97,11 +103,14 @@ class RunResultsManager:
             f"failed={counts['failed']} interrupted={counts['interrupted']}",
             f"Maximize: {metric}",
         ]
+        if finalist_validation:
+            lines.append(decide(trials, ranking, baseline, metric, finalist_validation).reason)
+        label = "Best observed tuned score" if finalist_validation else "Best overall"
         if ranking:
             best = ranking[0]
             lines.extend(
                 (
-                    f"Best overall: {best.trial_id} ({best.value:.4f})",
+                    f"{label}: {best.trial_id} ({best.value:.4f})",
                     f"Request quality: {best.successful_requests} successful, "
                     f"{best.errored_requests} errored, "
                     f"{best.incomplete_requests} incomplete",
@@ -110,12 +119,13 @@ class RunResultsManager:
                 )
             )
         else:
-            lines.append("Best overall: unavailable")
+            lines.append(f"{label}: unavailable")
         if baseline:
             lines.append(f"Baseline: {baseline.value:.4f}")
             improvement = _improvement(ranking, baseline)
             if improvement is not None:
-                lines.append(f"Improvement over baseline: {improvement:+.2f}%")
+                comparison = "Observed score change vs baseline" if finalist_validation else "Improvement over baseline"
+                lines.append(f"{comparison}: {improvement:+.2f}%")
         for report in trials:
             if report.failure:
                 lines.append(f"{report.trial_id}: {report.failure.code}: {report.failure.message}")
@@ -123,4 +133,7 @@ class RunResultsManager:
             conclusion = f"{values[0].trial_id} ({values[0].value:.4f})" if values else "unavailable"
             lines.append(f"Best for {name}: {conclusion}")
         lines.append(f"Run result: {self._output_path}")
+        if finalist_validation:
+            phase = "search" if finalist_validation.get("status") == "pending" else "validation"
+            lines.append(f"Ranked scores describe {phase} observations; they do not establish a winner.")
         return "\n".join(lines)

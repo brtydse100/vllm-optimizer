@@ -99,12 +99,13 @@ class RunFinalizer:
             configured_min_repeats(self._config),
             float(self._config.analysis.get("drift_threshold", 0.05)),
             configured_failure_percentage(self._config),
+            session.validation,
         )
         session.persist(
             results, run_id, self._metric, status, started_at, completed_at, source_run_id, sources, llm_summary
         )
         Reporter(results.output_path.parent).write(self._metric, reports, ranking, session.baseline, context)
-        details = results.summary(self._metric, reports, ranking, by_benchmark, session.baseline)
+        details = results.summary(self._metric, reports, ranking, by_benchmark, session.baseline, session.validation)
         self._terminal.session_complete(self._terminal.close())
         self._active = None
         return FinalizedRun(reports, ranking, f"Run status: {status}\n{details}", status)

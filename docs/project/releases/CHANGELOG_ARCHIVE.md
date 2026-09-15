@@ -15,4 +15,5 @@ categorized changes, compatibility boundaries, validation, and a full changelog.
 - [v0.1.0a10](v0.1.0a10.md)
 - [v0.1.0a11](v0.1.0a11.md)
 - [v0.1.0a12](v0.1.0a12.md)
+- [v0.1.0a15](v0.1.0a15.md)
 - [v0.1.0a13](v0.1.0a13.md)

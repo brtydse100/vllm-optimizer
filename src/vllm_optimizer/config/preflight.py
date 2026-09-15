@@ -16,6 +16,7 @@ from vllm_optimizer.benchmarks.guidellm import build_plan as build_guidellm_plan
 from vllm_optimizer.benchmarks.timing import timeout_for_run
 from vllm_optimizer.benchmarks.vllm import build_plan as build_vllm_plan
 from vllm_optimizer.config.errors import ConfigValidationError
+from vllm_optimizer.config.finalist_validation import finalist_policy
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.runtime import (
     baseline_enabled,
@@ -72,6 +73,7 @@ def _validate(config: VTuneConfig) -> None:
     configured_min_repeats(config)
     configured_failure_percentage(config)
     configured_warmup_repeats(config)
+    finalist_policy(config)
     maximize_metric(config)
     validate_search(config)
     port = server_port(config)

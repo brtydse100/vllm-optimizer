@@ -13,6 +13,7 @@ from vllm_optimizer.reporting.comparison import comparison
 from vllm_optimizer.reporting.confidence import confidence, verdict
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.dashboard_selection import best_observed, improvement
+from vllm_optimizer.reporting.finalist_decision import decide
 from vllm_optimizer.reporting.importance import importance_section
 from vllm_optimizer.reporting.interactions import report_script
 from vllm_optimizer.reporting.leaderboard import leaderboard
@@ -38,6 +39,10 @@ def render_dashboard(
     finalist = reports.get(ranking[0].trial_id) if ranking else selected
     change = improvement(best, baseline)
     conclusion = verdict(base_report, finalist, metric, context)
+    decision = decide(trials, ranking, baseline, metric, context.finalist_validation)
+    validation_reports = tuple(
+        item for item in trials if item.execution.get("artifact_subdirectory") == "finalist-validation"
+    )
     outcome = "Best observed configuration; baseline comparison unavailable"
     if best is None:
         outcome = "No eligible configuration"
@@ -49,6 +54,9 @@ def render_dashboard(
             if change > 0
             else "Score tied with baseline; recommendation selected by request quality"
         )
+    if context.finalist_validation:
+        conclusion = decision.reason
+        outcome = f"Validation favors {decision.winner_trial_id}" if decision.winner_trial_id else "No clear winner"
     counts = {
         state: sum(item.status.value == state for item in trials) for state in ("completed", "failed", "interrupted")
     }
@@ -81,9 +89,9 @@ def render_dashboard(
 <a href='#comparison'>Comparison</a> · <a href='#confidence'>Confidence</a> · <a href='#leaderboard'>All trials</a></nav>
 </div></header><main><section id='overview'><h2>1. Result overview</h2><h3>{escape(outcome)}</h3>
 <p>{escape(conclusion)}</p><div class='cards'>{cards}</div>{contention}</section>
-{recommendation(directory, best, baseline, selected)}
+{recommendation(directory, best, baseline, selected, bool(context.finalist_validation) and not decision.winner_trial_id)}
 {comparison(base_report, selected)}
-{confidence(directory, base_report, finalist, metric, context)}
+{confidence(directory, base_report, finalist, metric, context, conclusion, validation_reports)}
 {leaderboard(trials, ranking, baseline, metric, directory)}{_diagnostics(trials, ranking, baseline, context)}
 </main><footer>Generated from stored experiment artifacts. Missing evidence is shown as unavailable.</footer>
 {report_script()}</body></html>"""
@@ -110,11 +118,11 @@ def _diagnostics(
         + "</section><section><h2>Failures and interruptions</h2>"
         + failures(trials)
         + "</section>"
-        + metric_methodology()
+        + metric_methodology(context.repeat_aggregation)
         + "<section><h2>Scoring evidence</h2>"
         + evidence_table(ranking, trials, baseline)
         + f"<p>A workload is excluded when failed/incomplete requests exceed\n{context.maximum_failure_percentage:g}% of all requests. "
-        "Eligible workload metrics use their mean per named run, the median across repeats, then the mean of named runs. "
+        f"Eligible workload metrics use their mean per named run, the {escape(context.repeat_aggregation)} across repeats, then the mean of named runs. "
         "This configured objective is separate from the workload comparisons above.</p></section>"
         + (f"<section><h2>Optional LLM summary</h2><p>{escape(llm)}</p></section>" if llm else "")
         + "</details>"

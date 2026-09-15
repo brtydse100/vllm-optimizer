@@ -39,12 +39,18 @@ def verdict(baseline: TrialReport | None, best: TrialReport | None, metric: str,
 
 
 def confidence(
-    directory: Path, baseline: TrialReport | None, best: TrialReport | None, metric: str, context: ReportContext
+    directory: Path,
+    baseline: TrialReport | None,
+    best: TrialReport | None,
+    metric: str,
+    context: ReportContext,
+    conclusion: str | None = None,
+    finalists: tuple[TrialReport, ...] = (),
 ) -> str:
     rows = []
     historical = []
     seen = set()
-    for report in (baseline, best):
+    for report in (baseline, best, *finalists):
         if report is None or report.trial_id in seen:
             continue
         seen.add(report.trial_id)
@@ -64,13 +70,21 @@ def confidence(
     heading = ("Trial / phase", "Workload", "Individual repeats", "n", "Mean", "Sample SD", "Range", "Drift")
     return (
         "<section id='confidence'><h2>4. Confidence in the result</h2><p class='warning'>"
-        + escape(verdict(baseline, best, metric, context))
+        + escape(conclusion or verdict(baseline, best, metric, context))
         + "</p>"
         "<p>Descriptive repeat evidence for the optimization metric, per workload. Range overlap is a conservative "
         "inconclusive flag, not a statistical significance test. These measurements are not independent proof "
         "of production performance. Drift compares the first and second halves when at least four repeats exist.</p>"
-        f"<p>At least {context.minimum_repeats} measured repeats are required by the configured confidence policy. "
-        f"Sequential drift of more than {context.drift_threshold:.0%} triggers finalist validation.</p>"
+        + (
+            f"<p>Fixed validation budget: {escape(str(context.finalist_validation.get('repeats')))} fresh repeats per named run "
+            "for each selected candidate. Search repeats do not count. A favorable decision requires separation "
+            "of observed ranges and 95% Student's t intervals of workload means against every selected rival. "
+            "These intervals are a per-workload uncertainty guard, not a significance test for the aggregate scoring objective. "
+            "Candidates run sequentially in fixed order; between-candidate drift can remain undetected.</p>"
+            if context.finalist_validation
+            else f"<p>At least {context.minimum_repeats} measured repeats are required by the configured confidence policy. "
+            f"Sequential drift of more than {context.drift_threshold:.0%} triggers finalist validation.</p>"
+        )
         + _table(heading, "".join(rows))
         + (
             "<details><summary>Initial search evidence (excluded from accepted ranking)</summary>"

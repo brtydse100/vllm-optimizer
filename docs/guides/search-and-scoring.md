@@ -10,6 +10,12 @@ Choose `grid` for exhaustive small spaces, `random` for a bounded sample, or
 `tpe` for guided exploration. Random and TPE searches do not execute the same
 resolved configuration twice.
 
+Rankings describe observed scores. Parameter associations from adaptive search
+are not causal effects. Optional [fresh finalist validation](benchmarks/benchmark-repeats.md#fresh-finalist-validation)
+compares the baseline and a fixed set of top candidates after search. It can
+report no clear winner when the evidence does not distinguish them. These fresh
+scores do not replace observations already supplied to the search sampler.
+
 ```yaml
 optimization:
   maximize: output_tokens_per_second
@@ -20,7 +26,7 @@ optimization:
 
 `maximize` names the metric used to rank trials. Direction is inferred: the
 declared metric is always maximized. For each named benchmark, the `vllm-opt` CLI averages
-the eligible workload metric values, takes the median when it was repeated,
+the eligible workload metric values, takes the arithmetic mean when it was repeated,
 then averages named benchmark scores into the trial score. A workload with an
 errored or incomplete percentage above `benchmark.max_failure_percentage` is
 excluded; the setting defaults to `0`. A trial without an eligible workload is

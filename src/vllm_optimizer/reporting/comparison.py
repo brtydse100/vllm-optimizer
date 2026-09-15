@@ -62,13 +62,16 @@ def _row(label: str, baseline: float | None, recommended: float | None, unit: st
 
 def _summary(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
     rows = []
+    matching = set(scenarios(baseline)) == set(scenarios(recommended))
     for label, metric, unit, lower_is_better in (
         ("Mean E2E latency", "end_to_end_ms", "ms", True),
         ("Mean output throughput", "throughput_tokens_per_second", "tok/s", False),
         ("Mean benchmark duration", None, "s", True),
     ):
-        before = mean_duration(baseline) if metric is None else _metric_mean(baseline, metric)
-        after = mean_duration(recommended) if metric is None else _metric_mean(recommended, metric)
+        before = mean_duration(baseline) if metric is None and matching else None
+        after = mean_duration(recommended) if metric is None and matching else None
+        if metric is not None and matching:
+            before, after = _metric_mean(baseline, metric), _metric_mean(recommended, metric)
         cells = (label, formatted(before, unit), formatted(after, unit), _change(after, before, lower_is_better))
         rows.append("<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>")
     return "<h3>Overall means</h3>" + _table(("Metric", "Baseline", "Recommended", "Difference"), "".join(rows))

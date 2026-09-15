@@ -31,7 +31,7 @@ _MAX_RESPONSE_BYTES = 1024 * 1024
 def settings(config: VTuneConfig) -> LLMSettings | None:
     if not config.analysis:
         return None
-    unknown = set(config.analysis) - {"llm_summary", "drift_threshold"}
+    unknown = set(config.analysis) - {"llm_summary", "drift_threshold", "finalist_validation"}
     if unknown:
         raise ValueError(f"unknown analysis setting(s): {', '.join(sorted(unknown))}")
     drift = config.analysis.get("drift_threshold", 0.05)
@@ -69,6 +69,9 @@ def generate(settings: LLMSettings, metric: str, ranking: tuple[TrialScore, ...]
     ]
     prompt = (
         "Summarize this local vLLM tuning outcome in at most five factual bullet points. "
+        "Scores are observations, not proof of a winner or statistically significant improvement. "
+        "Parameter associations from adaptive search are not causal effects. Do not attribute a score change "
+        "to an individual parameter or invent controlled ablation results. "
         f"Objective: maximize {metric}. Data: {json.dumps(rows, default=str)}"
     )
     body = json.dumps(

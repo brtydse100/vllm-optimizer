@@ -21,8 +21,9 @@ class BenchmarkPolicy:
     warmup_repeats: int = 0
     drift_threshold: float = 0.05
     maximum_failure_percentage: float = 0.0
+    repeat_aggregation: str = "mean"
 
-    def to_dict(self) -> dict[str, int | float]:
+    def to_dict(self) -> dict[str, int | float | str]:
         return asdict(self)
 
     def with_maximum(self, maximum: float) -> BenchmarkPolicy:
@@ -53,7 +54,10 @@ def stored_policy(document: Mapping[str, object], benchmark: Mapping[str, object
         maximum = 100.0
     else:
         maximum = _number(values.get("maximum_failure_percentage", values.get("max_failure_percentage")), 0.0)
-    return BenchmarkPolicy(repeats, minimum, warmups, drift, maximum)
+    aggregation = values.get("repeat_aggregation", "median")
+    if aggregation not in ("mean", "median"):
+        raise ValueError("stored repeat aggregation must be mean or median")
+    return BenchmarkPolicy(repeats, minimum, warmups, drift, maximum, str(aggregation))
 
 
 def _integer(value: object, default: int, *, allow_zero: bool = False) -> int:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from vllm_optimizer.config.finalist_validation import finalist_policy, validation_config
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.runtime import max_attempts
 from vllm_optimizer.domain.benchmark import BenchmarkResult
@@ -42,6 +43,11 @@ class TrialExecutor:
         slot: WorkerSlot | None = None,
         artifact_subdirectory: str | None = None,
     ) -> tuple[TrialReport, TrialScore | None, dict[str, float]]:
+        config, scorer = self._config, self._scoring
+        policy = finalist_policy(config)
+        if artifact_subdirectory == "finalist-validation" and policy is not None:
+            config = validation_config(config, policy)
+            scorer = ScoringManager(scorer.metric, policy.repeats, scorer.required_runs, scorer.max_failure_percentage)
         trial_dir = directory / "trials" / parameters.trial_id
         if artifact_subdirectory:
             trial_dir /= artifact_subdirectory
@@ -62,7 +68,7 @@ class TrialExecutor:
             self._terminal.benchmark_progress(name, current, elapsed, limit, scope)
 
         outcome = await TrialManager(
-            build_trial_workers(self._config, parameters, trial_dir, slot, benchmark_progress),
+            build_trial_workers(config, parameters, trial_dir, slot, benchmark_progress),
             max_attempts(self._config),
             progress,
         ).execute(context)
@@ -72,18 +78,13 @@ class TrialExecutor:
         report = ResultsManager(result_path).save(context, outcome)
         context.artifacts["trial_result"] = str(result_path)
         self._manifest.write(
-            manifest_path,
-            self._config,
-            parameters,
-            context,
-            outcome.status.value,
-            self._sources.get(parameters.trial_id),
+            manifest_path, config, parameters, context, outcome.status.value, self._sources.get(parameters.trial_id)
         )
         raw = context.values.get("benchmark_results", ())
         results = raw if isinstance(raw, tuple) else ()
-        value = self._scoring.score(results)
-        by_benchmark = self._scoring.score_each(results)
-        quality = self._scoring.quality(results)
+        value = scorer.score(results)
+        by_benchmark = scorer.score_each(results)
+        quality = scorer.quality(results)
         if not quality.successful and quality.errored + quality.incomplete:
             self._terminal.warning(
                 "All benchmark requests failed or were incomplete; this trial is excluded from ranking."

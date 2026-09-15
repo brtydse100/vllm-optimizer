@@ -3,6 +3,7 @@ from pathlib import Path
 
 from vllm_optimizer.benchmarks.configuration import configured_runs
 from vllm_optimizer.benchmarks.policy import effective_policy
+from vllm_optimizer.config.finalist_validation import finalist_policy
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.preflight import validate_config
 from vllm_optimizer.config.runtime import baseline_enabled, logging_level, maximize_metric
@@ -63,6 +64,9 @@ class Orchestrator:
         results = RunResultsManager(directory / "result.json", mode, effective_policy(self._config).to_dict())
         names = tuple(str(run["name"]) for run in configured_runs(self._config))
         session = RunAccumulator(names, self._scoring)
+        policy = finalist_policy(self._config)
+        if policy:
+            session.validation = {"status": "pending", "selected_trials": [], "repeats": policy.repeats}
         self._finalizer.start(results, session, run_id, started_at)
         session.persist(results, run_id, self._metric, "running", started_at, None, self._source_run_id, self._sources)
         self._terminal.info(f"Run: {run_id}\nDirectory: {directory.resolve()}")
@@ -88,6 +92,7 @@ class Orchestrator:
             self._terminal.baseline()
             parameters = TrialParameters("baseline", {}, {})
             baseline_slot = next((slot for slot in slots if slot.supports({}, self._config.server)), None)
+            parameters_by_id["baseline"], slots_by_id["baseline"] = parameters, baseline_slot
             report, score, by_benchmark = await self._run_trial(directory, parameters, baseline_slot)
             session.record(parameters, report, score, by_benchmark, baseline=True)
             session.persist(
@@ -118,7 +123,9 @@ class Orchestrator:
             self._source_run_id,
             self._sources,
         )
-        parameters_by_id, slots_by_id, interrupted = searched.parameters, searched.slots, searched.interrupted
+        parameters_by_id.update(searched.parameters)
+        slots_by_id.update(searched.slots)
+        interrupted = searched.interrupted
         if not interrupted:
             await validate_drifted_finalists(
                 directory,
@@ -134,6 +141,7 @@ class Orchestrator:
                 self._terminal.warning,
                 self._source_run_id,
                 self._sources,
+                finalist_policy(self._config),
             )
         finalized = await self._finalizer.complete(self._source_run_id, self._sources, names, mode)
         return RunOutcome(run_id, directory, finalized.reports, finalized.ranking, finalized.summary, finalized.status)
