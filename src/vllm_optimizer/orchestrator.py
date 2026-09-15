@@ -3,6 +3,7 @@ from pathlib import Path
 
 from vllm_optimizer.benchmarks.configuration import configured_runs
 from vllm_optimizer.benchmarks.policy import effective_policy
+from vllm_optimizer.config.adaptive_repeats import adaptive_repeat_policy
 from vllm_optimizer.config.finalist_validation import finalist_policy
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.preflight import validate_config
@@ -106,7 +107,11 @@ class Orchestrator:
             interrupted = report.status is WorkerStatus.INTERRUPTED
 
         async def execute(parameters: TrialParameters, slot: WorkerSlot | None):
-            return await self._run_trial(directory, parameters, slot)
+            observed = [item.value for item in session.ranking]
+            if session.baseline:
+                observed.append(session.baseline.value)
+            incumbent = max(observed) if adaptive_repeat_policy(self._config) and observed else None
+            return await self._run_trial(directory, parameters, slot, incumbent_score=incumbent)
 
         searched = await run_search(
             search,
@@ -152,7 +157,10 @@ class Orchestrator:
         parameters: TrialParameters,
         slot: WorkerSlot | None = None,
         artifact_subdirectory: str | None = None,
+        incumbent_score: float | None = None,
     ) -> tuple[TrialReport, TrialScore | None, dict[str, float]]:
         if self._trial_executor is None:
             raise RuntimeError("trial executor is not initialized")
-        return await self._trial_executor.execute(directory, parameters, slot, artifact_subdirectory)
+        if incumbent_score is None:
+            return await self._trial_executor.execute(directory, parameters, slot, artifact_subdirectory)
+        return await self._trial_executor.execute(directory, parameters, slot, artifact_subdirectory, incumbent_score)

@@ -60,6 +60,7 @@ def configured_runs(config: VTuneConfig) -> tuple[Mapping[str, object], ...]:
         "min_repeats",
         "max_failure_percentage",
         "accept_any_request_failures",
+        "adaptive_repeats",
     }
     if unknown:
         raise ValueError(f"Unsupported benchmark setting(s): {', '.join(sorted(unknown))}")

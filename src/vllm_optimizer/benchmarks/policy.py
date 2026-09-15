@@ -11,6 +11,7 @@ from vllm_optimizer.benchmarks.configuration import (
     configured_repeats,
     configured_warmup_repeats,
 )
+from vllm_optimizer.config.adaptive_repeats import adaptive_repeat_policy
 from vllm_optimizer.config.models import VTuneConfig
 
 
@@ -22,9 +23,10 @@ class BenchmarkPolicy:
     drift_threshold: float = 0.05
     maximum_failure_percentage: float = 0.0
     repeat_aggregation: str = "mean"
+    adaptive_minimum_relative_score: float | None = None
 
     def to_dict(self) -> dict[str, int | float | str]:
-        return asdict(self)
+        return {name: value for name, value in asdict(self).items() if value is not None}
 
     def with_maximum(self, maximum: float) -> BenchmarkPolicy:
         return replace(self, maximum_failure_percentage=maximum)
@@ -34,12 +36,15 @@ def effective_policy(config: VTuneConfig) -> BenchmarkPolicy:
     drift = config.analysis.get("drift_threshold", 0.05)
     if isinstance(drift, bool) or not isinstance(drift, int | float) or drift < 0:
         raise ValueError("analysis.drift_threshold must be a non-negative number")
+    adaptive = adaptive_repeat_policy(config)
     return BenchmarkPolicy(
         configured_repeats(config),
         configured_min_repeats(config),
         configured_warmup_repeats(config),
         float(drift),
         configured_failure_percentage(config),
+        "mean",
+        adaptive.minimum_relative_score if adaptive else None,
     )
 
 
@@ -57,7 +62,14 @@ def stored_policy(document: Mapping[str, object], benchmark: Mapping[str, object
     aggregation = values.get("repeat_aggregation", "median")
     if aggregation not in ("mean", "median"):
         raise ValueError("stored repeat aggregation must be mean or median")
-    return BenchmarkPolicy(repeats, minimum, warmups, drift, maximum, str(aggregation))
+    adaptive = values.get("adaptive_minimum_relative_score")
+    if adaptive is not None and (
+        isinstance(adaptive, bool) or not isinstance(adaptive, int | float) or not 0 < adaptive <= 1
+    ):
+        raise ValueError("stored adaptive repeat threshold must be between 0 and 1")
+    return BenchmarkPolicy(
+        repeats, minimum, warmups, drift, maximum, str(aggregation), float(adaptive) if adaptive is not None else None
+    )
 
 
 def _integer(value: object, default: int, *, allow_zero: bool = False) -> int:

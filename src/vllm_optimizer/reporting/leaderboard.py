@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from html import escape
 from pathlib import Path
 from statistics import stdev
@@ -68,6 +69,7 @@ def leaderboard(
             "<details><summary>Full details</summary>"
             + "".join(details)
             + f"<pre>{escape(configuration)}</pre>"
+            + _adaptive_details(trial.execution.get("adaptive_repeats"))
             + "</details>"
         )
         cells = [
@@ -126,6 +128,19 @@ def leaderboard(
 
 def _cell(label: str, value: object) -> str:
     return f"<td data-value='{escape(str(value) if value is not None else '', quote=True)}'>{escape(label)}</td>"
+
+
+def _adaptive_details(value: object) -> str:
+    if not isinstance(value, Mapping):
+        return ""
+    status = escape(str(value.get("status", "Unavailable")))
+    counts = (
+        escape(str(dict(value.get("actual_repeats_by_run", {}))))
+        if isinstance(value.get("actual_repeats_by_run"), Mapping)
+        else "Unavailable"
+    )
+    reason = escape(str(value.get("reason", "Unavailable")))
+    return f"<p>Adaptive repeats: {status}; actual by workload: {counts}; {reason}.</p>"
 
 
 def _duration_details(report: TrialReport) -> list[str]:

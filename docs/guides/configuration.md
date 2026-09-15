@@ -192,6 +192,11 @@ trial is not ranked. Set
 `analysis.drift_threshold` to change the sequential finalist rerun threshold
 (default 0.05).
 
+The optional `benchmark.adaptive_repeats.minimum_relative_score` skips remaining
+search repeats after `min_repeats` rounds when a positive initial score is
+clearly behind a positive completed reference. See [Benchmark repeats and
+errors](benchmarks/benchmark-repeats.md#adaptive-search-repeats).
+
 ### Request failure policy
 
 The default is strict: any errored or incomplete request excludes the

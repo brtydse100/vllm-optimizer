@@ -41,6 +41,10 @@ failures, and interruptions. It shows each trial's mean recorded benchmark
 duration and percentage difference from the baseline; lower duration is labeled
 better. Expand a row for individual benchmark execution durations. Missing
 timings remain unavailable rather than inferred.
+For adaptive runs, expanded trial details show whether extra repeats continued
+or stopped, the reason, and actual repeat counts for each workload. The same
+structured evidence is stored under `trials[].execution.adaptive_repeats` in the
+run JSON.
 
 Detailed diagnostics and exploratory parameter associations are expandable.
 Parameter importance describes associations across tested values, not causation.

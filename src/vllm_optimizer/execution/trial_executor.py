@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from vllm_optimizer.benchmarks.configuration import configured_min_repeats, configured_repeats
+from vllm_optimizer.config.adaptive_repeats import adaptive_repeat_policy
 from vllm_optimizer.config.finalist_validation import finalist_policy, validation_config
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.runtime import max_attempts
@@ -42,6 +44,7 @@ class TrialExecutor:
         parameters: TrialParameters,
         slot: WorkerSlot | None = None,
         artifact_subdirectory: str | None = None,
+        incumbent_score: float | None = None,
     ) -> tuple[TrialReport, TrialScore | None, dict[str, float]]:
         config, scorer = self._config, self._scoring
         policy = finalist_policy(config)
@@ -57,6 +60,15 @@ class TrialExecutor:
             context.execution["artifact_subdirectory"] = artifact_subdirectory
         if slot:
             context.execution.update({"worker": slot.name, "devices": list(slot.devices), "port": slot.port})
+        adaptive = adaptive_repeat_policy(config)
+        if adaptive:
+            context.execution["adaptive_repeats"] = {
+                "status": "not_reached",
+                "reason": "trial ended before the adaptive decision",
+                "decision_repeats": configured_min_repeats(config),
+                "planned_repeats": configured_repeats(config),
+                "minimum_relative_score": adaptive.minimum_relative_score,
+            }
         scope = f"[{slot.name}][{parameters.trial_id}]" if slot else None
 
         def progress(event: str, name: str) -> None:
@@ -67,21 +79,25 @@ class TrialExecutor:
         def benchmark_progress(name: str, current: int | None, elapsed: float, limit: float) -> None:
             self._terminal.benchmark_progress(name, current, elapsed, limit, scope)
 
-        outcome = await TrialManager(
-            build_trial_workers(config, parameters, trial_dir, slot, benchmark_progress),
-            max_attempts(self._config),
-            progress,
-        ).execute(context)
+        workers = (
+            build_trial_workers(config, parameters, trial_dir, slot, benchmark_progress, scorer, incumbent_score)
+            if adaptive
+            else build_trial_workers(config, parameters, trial_dir, slot, benchmark_progress)
+        )
+        outcome = await TrialManager(workers, max_attempts(self._config), progress).execute(context)
         manifest_path = trial_dir / "manifest.json"
         result_path = trial_dir / "result.json"
+        raw = context.values.get("benchmark_results", ())
+        results = raw if isinstance(raw, tuple) else ()
+        evidence = context.execution.get("adaptive_repeats")
+        if isinstance(evidence, dict):
+            evidence["actual_repeats_by_run"] = _repeat_counts(results)
         context.artifacts["manifest"] = str(manifest_path)
         report = ResultsManager(result_path).save(context, outcome)
         context.artifacts["trial_result"] = str(result_path)
         self._manifest.write(
             manifest_path, config, parameters, context, outcome.status.value, self._sources.get(parameters.trial_id)
         )
-        raw = context.values.get("benchmark_results", ())
-        results = raw if isinstance(raw, tuple) else ()
         value = scorer.score(results)
         by_benchmark = scorer.score_each(results)
         quality = scorer.quality(results)
@@ -126,3 +142,11 @@ class TrialExecutor:
         quality = self._scoring.quality((result,))
         repeat = int(worker.rsplit("repeat-", 1)[1]) if "repeat-" in worker else None
         self._terminal.benchmark_score(result.run_name, repeat, score, quality.successful)
+
+
+def _repeat_counts(results: tuple[object, ...]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for result in results:
+        if isinstance(result, BenchmarkResult):
+            counts[result.run_name] = counts.get(result.run_name, 0) + 1
+    return counts

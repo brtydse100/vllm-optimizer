@@ -6,15 +6,19 @@ from typing import cast
 
 from vllm_optimizer.benchmarks.configuration import (
     configured_engine,
+    configured_min_repeats,
     configured_repeats,
     configured_runs,
     configured_warmup_repeats,
 )
 from vllm_optimizer.benchmarks.timing import timeout_for_run
+from vllm_optimizer.config.adaptive_repeats import adaptive_repeat_policy
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.runtime import duration, logging_level, positive, server_port
 from vllm_optimizer.execution.slots import WorkerSlot
+from vllm_optimizer.managers.scoring import ScoringManager
 from vllm_optimizer.search.grid import TrialParameters
+from vllm_optimizer.workers.adaptive_repeats import AdaptiveRepeatGate, OptionalRepeatWorker
 from vllm_optimizer.workers.base import Worker
 from vllm_optimizer.workers.benchmark import GuideLLMBenchmarkWorker
 from vllm_optimizer.workers.configuration import ConfigurationBuilderWorker
@@ -31,6 +35,8 @@ def build_trial_workers(
     directory: Path,
     slot: WorkerSlot | None = None,
     benchmark_progress: Callable[[str, int | None, float, float], None] | None = None,
+    scorer: ScoringManager | None = None,
+    incumbent_score: float | None = None,
 ) -> tuple[Worker, ...]:
     execution = config.execution
     grace = positive(execution, "shutdown_grace", 15)
@@ -53,7 +59,8 @@ def build_trial_workers(
     warmups = configured_warmup_repeats(config)
     engine = configured_engine(config)
     benchmark_worker = GuideLLMBenchmarkWorker if engine == "guidellm" else VLLMBenchmarkWorker
-    for run in configured_runs(config):
+    runs = configured_runs(config)
+    for run in runs:
         for warmup in range(1, warmups + 1):
             workers.append(
                 cast(
@@ -71,22 +78,34 @@ def build_trial_workers(
                 )
             )
             workers.append(VLLMDrainWorker(directory, str(run["name"]), drain_grace, warmup_index=warmup))
-        for repeat in range(1, repeats + 1):
-            repeat_index = repeat if repeats > 1 else None
-            workers.append(
-                cast(
-                    Worker,
-                    benchmark_worker(
-                        config,
-                        run,
-                        ProcessRunner(debug, f"{engine}:{run['name']}", capture=True),
-                        directory,
-                        timeout=timeout_for_run(run, config.timeouts.get("benchmark")),
-                        shutdown_grace=grace,
-                        repeat_index=repeat_index,
-                        progress=benchmark_progress,
-                    ),
-                )
-            )
-            workers.append(VLLMDrainWorker(directory, str(run["name"]), drain_grace, repeat_index=repeat_index))
+    adaptive = adaptive_repeat_policy(config)
+    minimum = configured_min_repeats(config)
+    measurements = (
+        ((run, repeat) for repeat in range(1, repeats + 1) for run in runs)
+        if adaptive
+        else ((run, repeat) for run in runs for repeat in range(1, repeats + 1))
+    )
+    for run, repeat in measurements:
+        if adaptive and repeat == minimum + 1 and run is runs[0]:
+            if scorer is None:
+                raise ValueError("adaptive repeats require a scoring policy")
+            workers.append(AdaptiveRepeatGate(scorer, adaptive, incumbent_score, repeats, minimum))
+        repeat_index = repeat if repeats > 1 else None
+        measured = cast(
+            Worker,
+            benchmark_worker(
+                config,
+                run,
+                ProcessRunner(debug, f"{engine}:{run['name']}", capture=True),
+                directory,
+                timeout=timeout_for_run(run, config.timeouts.get("benchmark")),
+                shutdown_grace=grace,
+                repeat_index=repeat_index,
+                progress=benchmark_progress,
+            ),
+        )
+        drain: Worker = VLLMDrainWorker(directory, str(run["name"]), drain_grace, repeat_index=repeat_index)
+        if adaptive and repeat > minimum:
+            measured, drain = OptionalRepeatWorker(measured), OptionalRepeatWorker(drain)
+        workers.extend((measured, drain))
     return tuple(workers)

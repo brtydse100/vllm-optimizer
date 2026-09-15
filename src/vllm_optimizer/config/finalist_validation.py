@@ -5,6 +5,7 @@ from dataclasses import dataclass, replace
 from math import isfinite
 
 from vllm_optimizer.benchmarks.configuration import configured_min_repeats
+from vllm_optimizer.config.adaptive_repeats import without_adaptive_repeats
 from vllm_optimizer.config.models import VTuneConfig
 
 
@@ -32,5 +33,6 @@ def finalist_policy(config: VTuneConfig) -> FinalistPolicy | None:
 
 def validation_config(config: VTuneConfig, policy: FinalistPolicy) -> VTuneConfig:
     # Require every planned repeat to finish; never score a partial validation budget.
-    benchmark = {**config.benchmark, "repeats": policy.repeats, "min_repeats": policy.repeats}
-    return replace(config, benchmark=benchmark)
+    fixed = without_adaptive_repeats(config)
+    benchmark = {**fixed.benchmark, "repeats": policy.repeats, "min_repeats": policy.repeats}
+    return replace(fixed, benchmark=benchmark)
