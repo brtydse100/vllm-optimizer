@@ -20,6 +20,7 @@ METRICS = (
 
 def comparison(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
     before, after = scenarios(baseline), scenarios(recommended)
+    matching = bool(before) and set(before) == set(after)
     summary = _summary(baseline, recommended)
     durations = _duration_comparison(baseline, recommended)
     blocks = []
@@ -41,7 +42,7 @@ def comparison(baseline: TrialReport | None, recommended: TrialReport | None) ->
         )
     return (
         "<section id='comparison'><h2>3. Baseline vs recommended</h2>"
-        "<details><summary>Latency, throughput, and benchmark duration comparison</summary>"
+        f"<details{' open' if matching else ''}><summary>Latency, throughput, and benchmark duration comparison</summary>"
         "<p class='warning'>This comparison exposes latency trade-offs, but tuning a different objective is not "
         "the best way to search for the lowest latency. Use a latency objective for that purpose.</p>"
         "<p>Each value is the arithmetic mean of available repeat measurements for this exact workload. "
@@ -56,23 +57,31 @@ def comparison(baseline: TrialReport | None, recommended: TrialReport | None) ->
 
 
 def _row(label: str, baseline: float | None, recommended: float | None, unit: str, n: int, m: int) -> str:
-    cells = (label, formatted(baseline, unit), formatted(recommended, unit), delta(recommended, baseline), f"{n} / {m}")
+    difference = delta(recommended, baseline)
+    if (not n or not m or n != m) and difference != "Unavailable":
+        difference = "Unavailable (incomplete coverage)"
+    cells = (label, formatted(baseline, unit), formatted(recommended, unit), difference, f"{n} / {m}")
     return "<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>"
 
 
 def _summary(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
     rows = []
-    matching = set(scenarios(baseline)) == set(scenarios(recommended))
+    before, after = scenarios(baseline), scenarios(recommended)
     for label, metric, unit, lower_is_better in (
         ("Mean E2E latency", "end_to_end_ms", "ms", True),
         ("Mean output throughput", "throughput_tokens_per_second", "tok/s", False),
         ("Mean benchmark duration", None, "s", True),
     ):
-        before = mean_duration(baseline) if metric is None and matching else None
-        after = mean_duration(recommended) if metric is None and matching else None
-        if metric is not None and matching:
-            before, after = _metric_mean(baseline, metric), _metric_mean(recommended, metric)
-        cells = (label, formatted(before, unit), formatted(after, unit), _change(after, before, lower_is_better))
+        if metric is None:
+            before_value, after_value, complete = _paired_durations(baseline, recommended)
+        else:
+            before_value, after_value, complete = _paired_metric_means(before, after, metric)
+        cells = (
+            label,
+            formatted(before_value, unit),
+            formatted(after_value, unit),
+            _change(after_value, before_value, lower_is_better, incomplete=not complete),
+        )
         rows.append("<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>")
     return "<h3>Overall means</h3>" + _table(("Metric", "Baseline", "Recommended", "Difference"), "".join(rows))
 
@@ -81,6 +90,47 @@ def _metric_mean(report: TrialReport | None, metric: str) -> float | None:
     aliases = DEFAULT_METRICS[metric]
     values = [value for observations in scenarios(report).values() for value in samples(observations, aliases)]
     return center(values)
+
+
+def _paired_metric_means(
+    baseline: dict[str, list], recommended: dict[str, list], metric: str
+) -> tuple[float | None, float | None, bool]:
+    if not baseline or baseline.keys() != recommended.keys():
+        return None, None, False
+    aliases = DEFAULT_METRICS[metric]
+    left, right = [], []
+    for key in baseline:
+        a, b = samples(baseline[key], aliases), samples(recommended[key], aliases)
+        if not a or len(a) != len(b):
+            return None, None, False
+        left.extend(a)
+        right.extend(b)
+    return center(left), center(right), True
+
+
+def _paired_durations(
+    baseline: TrialReport | None, recommended: TrialReport | None
+) -> tuple[float | None, float | None, bool]:
+    if (
+        baseline is None
+        or recommended is None
+        or set(scenarios(baseline)) != set(scenarios(recommended))
+        or len(baseline.benchmarks) != len(recommended.benchmarks)
+    ):
+        return None, None, False
+    left = [item.get("elapsed_seconds") for item in baseline.benchmarks]
+    right = [item.get("elapsed_seconds") for item in recommended.benchmarks]
+    if not all(isinstance(value, int | float) and not isinstance(value, bool) for value in (*left, *right)):
+        return None, None, False
+    numeric_left: list[float] = []
+    numeric_right: list[float] = []
+    for value in left:
+        assert isinstance(value, int | float) and not isinstance(value, bool)
+        numeric_left.append(float(value))
+    for value in right:
+        assert isinstance(value, int | float) and not isinstance(value, bool)
+        numeric_right.append(float(value))
+    return sum(numeric_left) / len(numeric_left), sum(numeric_right) / len(numeric_right), True
 
 
 def _duration_comparison(baseline: TrialReport | None, recommended: TrialReport | None) -> str:
@@ -100,9 +150,9 @@ def _duration_comparison(baseline: TrialReport | None, recommended: TrialReport 
     )
 
 
-def _change(value: float | None, baseline: float | None, lower_is_better: bool) -> str:
+def _change(value: float | None, baseline: float | None, lower_is_better: bool, incomplete: bool = False) -> str:
     if value is None or baseline is None or baseline == 0:
-        return "Unavailable"
+        return "Unavailable (incomplete coverage)" if incomplete else "Unavailable"
     percent = (value - baseline) / abs(baseline) * 100
     better = percent < 0 if lower_is_better else percent > 0
     status = "better" if better else ("worse" if percent else "same")
