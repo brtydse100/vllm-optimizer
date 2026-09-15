@@ -6,6 +6,8 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 
+import yaml
+
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.runtime import model_path
 from vllm_optimizer.lifecycle.integrity import describe_artifacts
@@ -47,6 +49,9 @@ class ManifestWriter:
             "startup": [record.to_dict() for record in context.startups],
             "metadata": self._metadata,
         }
+        external_config = _external_config(config)
+        if external_config is not None:
+            document["external_config"] = external_config
         if source is not None:
             document["source"] = dict(source)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -58,6 +63,20 @@ class ManifestWriter:
 
 def _strings(values: Mapping[str, object]) -> dict[str, str]:
     return {str(key): str(value) for key, value in values.items()}
+
+
+def _external_config(config: VTuneConfig) -> dict[str, object] | None:
+    configured = config.server.get("config")
+    if configured is None:
+        return None
+    path = Path(str(configured))
+    try:
+        settings = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, yaml.YAMLError) as error:
+        raise ValueError(f"Cannot snapshot external vLLM configuration '{path}': {error}") from error
+    if not isinstance(settings, Mapping):
+        raise ValueError(f"External vLLM configuration '{path}' must be a mapping")
+    return {"path": str(path), "settings": redact(settings)}
 
 
 def _command_document(command: CommandRecord) -> dict[str, object]:

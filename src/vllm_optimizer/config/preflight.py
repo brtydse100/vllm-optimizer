@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from itertools import islice
 from pathlib import Path
 
 from vllm_optimizer.benchmarks.configuration import (
@@ -30,7 +31,7 @@ from vllm_optimizer.config.runtime import (
 from vllm_optimizer.execution.slots import WorkerSlot, worker_slots
 from vllm_optimizer.reporting.llm_summary import settings as llm_settings
 from vllm_optimizer.search.factory import validate_search
-from vllm_optimizer.search.grid import TrialParameters, expand_grid
+from vllm_optimizer.search.grid import TrialParameters, iter_grid
 from vllm_optimizer.workers.configuration import build_process_spec
 
 _EXECUTION_KEYS = {
@@ -77,7 +78,7 @@ def _validate(config: VTuneConfig) -> None:
     adaptive_repeat_policy(config)
     finalist_policy(config)
     maximize_metric(config)
-    validate_search(config)
+    sampler, trial_count = validate_search(config)
     port = server_port(config)
     baseline_enabled(config)
     llm_settings(config)
@@ -87,7 +88,9 @@ def _validate(config: VTuneConfig) -> None:
     positive(config.execution, "drain_grace", 15)
 
     slots = worker_slots(config)
-    trials = expand_grid(config)
+    trials = iter_grid(config)
+    if sampler != "grid":
+        trials = islice(trials, trial_count)
     _validate_process(config, TrialParameters("baseline", {}, {}), slots)
     for trial in trials:
         _validate_process(config, trial, slots)
