@@ -6,6 +6,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from math import isfinite
+from pathlib import Path
 from statistics import fmean
 
 from vllm_optimizer.domain.trial_report import TrialReport
@@ -19,8 +20,22 @@ class Observation:
     metrics: Mapping[str, object]
 
 
-def scenarios(report: TrialReport | None) -> dict[str, list[Observation]]:
-    grouped: dict[str, list[Observation]] = {}
+class ScenarioKey(str):
+    configuration: str
+
+    def __new__(cls, benchmark: str, index: str, configuration: str) -> ScenarioKey:
+        summary = configuration_summary(json.loads(configuration))
+        suffix = f" — {summary}" if summary else ""
+        instance = super().__new__(cls, f"{benchmark} / workload {index}{suffix}")
+        instance.configuration = configuration
+        return instance
+
+    def pretty_configuration(self) -> str:
+        return json.dumps(json.loads(self.configuration), indent=2, sort_keys=True)
+
+
+def scenarios(report: TrialReport | None) -> dict[ScenarioKey, list[Observation]]:
+    grouped: dict[ScenarioKey, list[Observation]] = {}
     if report is None:
         return grouped
     for benchmark in report.benchmarks:
@@ -30,12 +45,41 @@ def scenarios(report: TrialReport | None) -> dict[str, list[Observation]]:
         for workload in workloads:
             if not isinstance(workload, Mapping):
                 continue
-            configuration = json.dumps(redact(workload.get("configuration", {})), sort_keys=True)
-            key = f"{benchmark.get('name', 'Unavailable')} / workload {workload.get('index', '?')} / {configuration}"
+            raw_configuration = redact(workload.get("configuration", {}))
+            configuration = json.dumps(raw_configuration, sort_keys=True)
+            key = ScenarioKey(str(benchmark.get("name", "Unavailable")), str(workload.get("index", "?")), configuration)
             metrics = workload.get("metrics", {})
             if isinstance(metrics, Mapping):
                 grouped.setdefault(key, []).append(Observation(str(benchmark.get("repeat", "Unavailable")), metrics))
     return grouped
+
+
+def configuration_summary(configuration: object) -> str:
+    if not isinstance(configuration, Mapping):
+        return ""
+    aliases = (
+        (("dataset", "dataset-name"), "dataset"),
+        (("prompt_tokens", "random-input-len", "input_len"), "prompt"),
+        (("output_tokens", "random-output-len", "output_len"), "output"),
+        (("num_prompts", "num-prompts"), "requests"),
+        (("max_concurrency", "max-concurrency", "concurrency"), "concurrency"),
+        (("request_rate", "request-rate"), "request rate"),
+        (("burstiness",), "burstiness"),
+    )
+    parts = []
+    for names, label in aliases:
+        value = next((configuration[name] for name in names if name in configuration), None)
+        if value is not None:
+            parts.append(f"{label}: {_readable_value(value)}")
+    return " · ".join(parts)
+
+
+def _readable_value(value: object) -> str:
+    if isinstance(value, str) and value.lower() in {"inf", "infinity"}:
+        return "unlimited"
+    if isinstance(value, str) and ("/" in value or "\\" in value):
+        return Path(value).name or value
+    return str(value)
 
 
 def number(value: object) -> float | None:

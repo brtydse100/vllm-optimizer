@@ -18,6 +18,20 @@ This independent community project is not affiliated with the vLLM project.
 **[Quick start](https://brtydse100.github.io/vllm-optimizer/getting-started/)** ·
 **[PyPI](https://pypi.org/project/vllm-optimizer/)**
 
+## See a real optimization report
+
+[**Open the interactive RTX 3080 report**](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/report-showcase/report.html)
+· [Baseline-control example](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/baseline-control/report.html)
+· [Exact experiment YAML](docs/results/rtx3080/report-showcase/experiment.yaml)
+· [All published results](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/)
+
+[![vLLM Optimizer report showing measured baseline and recommended performance](docs/results/rtx3080/overview.png)](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/report-showcase/report.html)
+
+This measured example increased the configured score from **194.34 to 1,082.27
+output tokens/s (+456.89%)** on its deliberately small RTX 3080 workloads. It
+also reports latency trade-offs, repeat evidence, validation drift, and failed
+configurations; it is a reporting demonstration, not a production benchmark.
+
 The current code is verified with vLLM 0.28.0 and GuideLLM 0.7.3 on WSL2
 with an RTX 3080. That host required
   `VLLM_USE_V2_MODEL_RUNNER: "0"` because UVA was unavailable and
