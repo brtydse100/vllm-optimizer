@@ -144,7 +144,7 @@
     "src/vllm_optimizer/workers/vllm.py": "879a9fc79dc9be2e5514d19dd3e76ef60bc2e21c350ddeac6475640726979b03",
     "src/vllm_optimizer/workers/vllm_benchmark.py": "c49aa1a7bdc1fe3608dab7aa35a2410212ce07b40028b29bdc331c0adb1ed379"
   },
-  "public_export": "Only personal paths, GPU UUIDs, artifact locations and their checksums were changed. Benchmark measurements, request counts, statuses and scores are unchanged. HTML/CSV regenerated from the accepted execution with the reviewed report code.",
+  "public_export": "Personal paths, GPU UUIDs, and artifact locations were redacted. Normalized result files were compacted and HTML/CSV outputs regenerated with the current reviewed report code; affected public manifest sizes and checksums were refreshed. Raw backend outputs, benchmark measurements, request counts, statuses, scores, and original-artifact hashes are unchanged.",
   "original_artifact_sha256": {
     "report.html": "eadc17779d752c1fd7950ed476d3a4e7025ac2672cf00f63bedad78fe7d808dc",
     "result.json": "bc34cba195aa2b4fe19a594f52711017ef7de26e077745217c151585c21c7c9b",
