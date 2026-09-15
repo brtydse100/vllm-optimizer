@@ -27,6 +27,12 @@ repeats; P50/P95/P99 columns are means of supplied backend percentiles, **not po
 request percentiles**. Missing measurements and zero-denominator percentage
 changes are unavailable. Different workload configurations are not paired.
 
+The baseline comparison is expanded by default. Overall percentage changes
+require matching workload configurations and repeat counts on both sides.
+Missing metric samples or benchmark durations make the affected change
+unavailable; recorded absolute values and per-workload details remain visible.
+Mean-to-mean comparisons are retained when the evidence has matching coverage.
+
 Confidence shows individual repeats, mean, sample standard deviation, range,
 repeat count, and signed drift percentage per workload. The drift value compares
 the means of the first and second repeat halves and shows whether it exceeds the
