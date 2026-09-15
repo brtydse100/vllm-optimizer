@@ -74,6 +74,7 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         minimum_repeats=policy.minimum_repeats,
         drift_threshold=benchmark_policy.drift_threshold,
         maximum_failure_percentage=maximum,
+        repeat_aggregation=benchmark_policy.repeat_aggregation,
     )
     csv_path, html = Reporter(destination, source).write(policy.metric, trials, ranking, baseline, context)
     return ReclassifiedReport(destination, result, csv_path, html)
@@ -90,7 +91,13 @@ def _policy(
     names = tuple(
         str(item.get("name")) for item in benchmark.get("runs", ()) if isinstance(item, Mapping) and item.get("name")
     )
-    return ScoringManager(metric, benchmark_policy.minimum_repeats, names, benchmark_policy.maximum_failure_percentage)
+    return ScoringManager(
+        metric,
+        benchmark_policy.minimum_repeats,
+        names,
+        benchmark_policy.maximum_failure_percentage,
+        benchmark_policy.repeat_aggregation,
+    )
 
 
 def _reclassify(report: TrialReport, policy: ScoringManager) -> TrialReport:

@@ -22,7 +22,7 @@ class RunResultsManager:
         self,
         output_path: Path,
         execution_mode: str = "sequential",
-        benchmark_policy: Mapping[str, int | float] | None = None,
+        benchmark_policy: Mapping[str, int | float | str] | None = None,
     ) -> None:
         self._output_path = Path(output_path)
         self._execution_mode = execution_mode

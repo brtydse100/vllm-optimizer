@@ -79,7 +79,7 @@ configurations including the baseline, before any drift-triggered reruns.
 Runtime depends on your model; this is substantially longer than the smoke cases.
 Choose a representative dataset and request rate when validating your deployment.
 
-The objective maximizes the mean of per-workload median output throughput.
+The objective maximizes the mean of per-workload mean output throughput.
 Inspect each workload's throughput and P50/P95/P99 latency, request failures,
 and repeat variability. An aggregate gain can hide a workload regression.
 

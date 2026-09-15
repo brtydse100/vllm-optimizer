@@ -64,7 +64,7 @@ not alter the configured optimization score.
 
 Backends calculate request distributions and percentiles. vLLM Optimizer normalizes
 names and units but does not derive missing percentiles. Eligible workloads are
-averaged within an execution, repeated executions use the median score, and
+averaged within an execution, repeated executions use the arithmetic mean score, and
 named benchmark scores are averaged into the trial score.
 
 When a finalist's sequential repeat means drift beyond `analysis.drift_threshold`
@@ -103,6 +103,11 @@ accepted execution. A missing validation manifest never falls back to the
 superseded search manifest. For runs retaining a scoring policy, regeneration
 rejects ranking scores that disagree with accepted measurements. Legacy runs
 without that policy cannot receive this additional score consistency check.
+
+New runs record `benchmark_policy.repeat_aggregation: mean` and rank by the
+arithmetic mean across repeats. Older runs without this field retain median
+scoring when regenerated or reclassified, preserving their historical rankings.
+This does not change backend P50/P95/P99 request percentiles.
 
 To apply a different request-failure policy without starting vLLM or GuideLLM:
 

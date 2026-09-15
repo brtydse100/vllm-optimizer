@@ -22,7 +22,12 @@ def validate_accepted_scores(
     metric = str(document.get("maximize", "unknown"))
     # Verify the recorded value from available evidence; offline rendering does not
     # reclassify sparse legacy runs under a newly recorded minimum-repeat policy.
-    scoring = ScoringManager(metric, 1, max_failure_percentage=policy.maximum_failure_percentage)
+    scoring = ScoringManager(
+        metric,
+        1,
+        max_failure_percentage=policy.maximum_failure_percentage,
+        repeat_aggregation=policy.repeat_aggregation,
+    )
     reports = {item.trial_id: item for item in trials}
     for score in (*ranking, *((baseline,) if baseline else ())):
         measured = scoring.score(results(reports[score.trial_id]))

@@ -16,7 +16,7 @@ benchmark:
   max_failure_percentage: 2
 ```
 
-The `vllm-opt` CLI takes the median optimization score across repeats. Reported
+The `vllm-opt` CLI takes the arithmetic mean optimization score across repeats. Reported
 latency and throughput comparisons use arithmetic means. It records successful,
 errored, and incomplete request counts. `max_failure_percentage` accepts a
 number from `0` through `100` and defaults to `0`. A workload at or below that
