@@ -44,14 +44,28 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         raise ValueError(f"re-evaluation output must be a new directory: {destination}")
     benchmark_policy = _benchmark_policy(document, source, stored).with_maximum(maximum)
     policy = _policy(source, stored, str(document.get("maximize", "")), benchmark_policy)
-    trials = tuple(_reclassify(item, policy) for item in stored)
-    scores = [_trial_score(source, item, policy) for item in trials]
+    raw_validation = document.get("finalist_validation")
+    validation = raw_validation if isinstance(raw_validation, Mapping) else {}
+    if validation:
+        repeats = validation.get("repeats")
+        if isinstance(repeats, bool) or not isinstance(repeats, int) or repeats < 2:
+            raise ValueError("invalid finalist validation repeat budget")
+        policy = ScoringManager(policy.metric, repeats, policy.required_runs, maximum, policy.repeat_aggregation)
+
+    def is_accepted(item: TrialReport) -> bool:
+        return not validation or item.execution.get("artifact_subdirectory") == "finalist-validation"
+
+    trials = tuple(_reclassify(item, policy) if is_accepted(item) else item for item in stored)
+    accepted = tuple(item for item in trials if is_accepted(item))
+    scores = [_trial_score(source, item, policy) for item in accepted]
     valid = [item for item in scores if item is not None]
-    baseline_id = _baseline_id(document)
+    baseline_id = (
+        "baseline" if validation and any(item.trial_id == "baseline" for item in stored) else _baseline_id(document)
+    )
     baseline = next((item for item in valid if item.trial_id == baseline_id), None)
     ranking = policy.rank([item for item in valid if item.trial_id != baseline_id])
     by_benchmark = {
-        name: policy.rank([score for trial in trials if (score := _benchmark_score(source, trial, policy, name))])
+        name: policy.rank([score for trial in accepted if (score := _benchmark_score(source, trial, policy, name))])
         for name in policy.required_runs
     }
     destination.mkdir(parents=True)
@@ -64,6 +78,7 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         baseline,
         status="completed",
         source_run_id=source.name,
+        finalist_validation=validation,
     )
     context = ReportContext(
         str(document.get("run_id", source.name)),
@@ -74,6 +89,7 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         minimum_repeats=policy.minimum_repeats,
         drift_threshold=benchmark_policy.drift_threshold,
         maximum_failure_percentage=maximum,
+        finalist_validation=validation,
         repeat_aggregation=benchmark_policy.repeat_aggregation,
     )
     csv_path, html = Reporter(destination, source).write(policy.metric, trials, ranking, baseline, context)

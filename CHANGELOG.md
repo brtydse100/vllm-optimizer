@@ -4,6 +4,23 @@
 
 _No changes yet._
 
+## v0.1.0a15 — Fresh finalist validation and conservative decisions
+
+_September 15, 2026_
+
+- Added opt-in fixed-budget finalist validation after search, with configurable
+  `top_k` and measured repeat counts.
+- Re-run the baseline and selected candidates with fresh servers and separate
+  `finalist-validation` artifacts; search-only scores remain distinct.
+- Require complete, eligible, workload-matched evidence before declaring a
+  winner, and report **No clear winner** when uncertainty, drift, or failures
+  prevent a defensible conclusion.
+- Persist finalist selection, validation status, budgets, search ranking, and
+  selection decisions for reports, offline regeneration, and reclassification.
+- Mark provisional recommendations clearly and make LLM summaries avoid causal
+  parameter claims, invented ablations, and unsupported winner claims.
+- Expanded benchmark-repeat, reporting, and search/scoring documentation.
+
 ## v0.1.0a14 — Decision-focused reports and H100 validation examples
 
 _September 14, 2026_

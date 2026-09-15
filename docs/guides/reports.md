@@ -47,6 +47,10 @@ failures, and interruptions. It shows each trial's mean recorded benchmark
 duration and percentage difference from the baseline; lower duration is labeled
 better. Expand a row for individual benchmark execution durations. Missing
 timings remain unavailable rather than inferred.
+For adaptive runs, expanded trial details show whether extra repeats continued
+or stopped, the reason, and actual repeat counts for each workload. The same
+structured evidence is stored under `trials[].execution.adaptive_repeats` in the
+run JSON.
 
 Detailed diagnostics and exploratory parameter associations are expandable.
 Parameter importance describes associations across tested values, not causation.
@@ -73,10 +77,28 @@ names and units but does not derive missing percentiles. Eligible workloads are
 averaged within an execution, repeated executions use the arithmetic mean score, and
 named benchmark scores are averaged into the trial score.
 
-When a finalist's sequential repeat means drift beyond `analysis.drift_threshold`
+Without `analysis.finalist_validation`, when a finalist's sequential repeat means drift beyond `analysis.drift_threshold`
 (5% by default), the top two affected finalists are rerun sequentially before
 the recommendation is finalized. Their validation artifacts are kept under
 `validation-001`; a failed validation removes that candidate from the ranking.
+
+With [fixed-budget finalist validation](benchmarks/benchmark-repeats.md#fresh-finalist-validation),
+the baseline and selected candidates receive fresh measurements even without
+detected drift. Artifacts live under `finalist-validation`. The overview and
+terminal show **No clear winner** unless the highest validated score also has
+separated repeat ranges and 95% Student's t intervals of workload means against
+every selected rival. Missing, failed, drifting, or mismatched evidence blocks
+that conclusion. These intervals are a descriptive uncertainty guard, not a
+significance test for the aggregate scoring objective. An inconclusive report shows
+the best observed candidate's settings without declaring it the winner.
+
+The run JSON stores `finalist_validation` (selection, repeat budget, status,
+original `search_ranking`, and `search_baseline`) and `selection_decision`
+(`status`, nullable `winner_trial_id`, and `reason`). `best` remains the highest
+observed tuned score; consumers must use `selection_decision` for the conclusion.
+After validation starts, rankings and CSV scores exclude search-only candidates.
+Offline regeneration recomputes the conclusion from accepted measurements;
+reclassification preserves the validation budget and selected-candidate boundary.
 
 If `analysis.llm_summary` is configured, the report also includes a short
 OpenAI-compatible summary. Its API key is read only from the named environment
@@ -84,6 +106,8 @@ variable and is never persisted. It requires HTTPS except for loopback HTTP.
 Name-based redaction reduces accidental disclosure but cannot guarantee that
 arbitrary user-provided values contain no secrets. An unavailable endpoint
 becomes a report warning and never invalidates the experiment.
+The summary prompt explicitly prohibits causal parameter claims, invented
+ablations, and treating ranked observations as proof of a winner.
 
 Each trial directory also contains its resolved configuration, normalized
 result, reproduction manifest, `vllm.log`, and `benchmark.log`. Normalized

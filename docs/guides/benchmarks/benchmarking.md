@@ -50,7 +50,8 @@ benchmark:
         ignore-eos: true
 ```
 
-When `min_repeats` is omitted, it is `min(4, repeats)`. Thus this explicit
+When `min_repeats` is omitted, it is `min(4, repeats)` for fixed-repeat runs.
+Adaptive repeats use `min(2, repeats)`. Thus this explicit
 two-repeat smoke workload requires both measurements; setting only `repeats: 1`
 is also valid and is labeled exploratory in reports.
 

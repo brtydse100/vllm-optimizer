@@ -51,10 +51,15 @@ def manifest_settings(manifest: Mapping[str, object]) -> dict[str, object]:
 
 
 def recommendation(
-    directory: Path, best: TrialScore | None, baseline: TrialScore | None, report: TrialReport | None
+    directory: Path,
+    best: TrialScore | None,
+    baseline: TrialScore | None,
+    report: TrialReport | None,
+    provisional: bool = False,
 ) -> str:
+    heading = "Candidate configuration" if provisional else "Recommended configuration"
     if best is None or report is None:
-        return "<section id='recommendation'><h2>2. Recommended configuration</h2><p>Unavailable.</p></section>"
+        return f"<section id='recommendation'><h2>2. {heading}</h2><p>Unavailable.</p></section>"
     rows = "".join(
         "<tr>" + "".join(f"<td>{escape(str(value))}</td>" for value in (name, *pair)) + "</tr>"
         for name, pair in changes(best, baseline).items()
@@ -88,7 +93,7 @@ def recommendation(
     except (ValueError, TypeError, yaml.YAMLError) as error:
         reproduction = f"<p>Reproduction unavailable: {escape(str(error))}</p>"
     return (
-        "<section id='recommendation'><h2>2. Recommended configuration</h2>"
+        f"<section id='recommendation'><h2>2. {heading}</h2>"
         f"<p><strong>{escape(best.trial_id)}</strong> · Best observed eligible configuration.</p>"
         + changed
         + reproduction

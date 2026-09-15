@@ -16,6 +16,8 @@ class RunAccumulator:
         self.reports: list[TrialReport] = []
         self.scores: list[TrialScore] = []
         self.baseline: TrialScore | None = None
+        self.validation: dict[str, object] = {}
+        self._baseline_id: str | None = None
         self._benchmark_scores: dict[str, list[TrialScore]] = {name: [] for name in benchmark_names}
         self._scoring = scoring
 
@@ -30,6 +32,7 @@ class RunAccumulator:
     ) -> None:
         self.reports.append(report)
         if baseline:
+            self._baseline_id = parameters.trial_id
             self.baseline = score
             return
         if score is not None:
@@ -64,15 +67,25 @@ class RunAccumulator:
             self._benchmark_scores[name] = [
                 item for item in self._benchmark_scores[name] if item.trial_id != parameters.trial_id
             ]
-        self.record(parameters, report, score, by_benchmark)
+        self.record(parameters, report, score, by_benchmark, baseline=parameters.trial_id == self._baseline_id)
+
+    def _accepted(self, scores: list[TrialScore]) -> list[TrialScore]:
+        if not self.validation or self.validation.get("status") == "pending":
+            return scores
+        accepted = {
+            item.trial_id
+            for item in self.reports
+            if item.execution.get("artifact_subdirectory") == "finalist-validation"
+        }
+        return [item for item in scores if item.trial_id in accepted]
 
     @property
     def ranking(self) -> tuple[TrialScore, ...]:
-        return self._scoring.rank(self.scores)
+        return self._scoring.rank(self._accepted(self.scores))
 
     @property
     def benchmark_rankings(self) -> dict[str, tuple[TrialScore, ...]]:
-        return {name: self._scoring.rank(values) for name, values in self._benchmark_scores.items()}
+        return {name: self._scoring.rank(self._accepted(values)) for name, values in self._benchmark_scores.items()}
 
     def persist(
         self,
@@ -101,6 +114,7 @@ class RunAccumulator:
             sources=sources,
             analysis_summary=analysis_summary,
             run_failure=run_failure,
+            finalist_validation=self.validation,
         )
 
 

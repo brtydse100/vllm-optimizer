@@ -31,7 +31,8 @@ def configured_warmup_repeats(config: VTuneConfig) -> int:
 
 
 def configured_min_repeats(config: VTuneConfig) -> int:
-    value = config.benchmark.get("min_repeats", min(4, configured_repeats(config)))
+    default = 2 if "adaptive_repeats" in config.benchmark else 4
+    value = config.benchmark.get("min_repeats", min(default, configured_repeats(config)))
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise ValueError("benchmark.min_repeats must be a positive integer")
     if value > configured_repeats(config):
@@ -60,6 +61,7 @@ def configured_runs(config: VTuneConfig) -> tuple[Mapping[str, object], ...]:
         "min_repeats",
         "max_failure_percentage",
         "accept_any_request_failures",
+        "adaptive_repeats",
     }
     if unknown:
         raise ValueError(f"Unsupported benchmark setting(s): {', '.join(sorted(unknown))}")

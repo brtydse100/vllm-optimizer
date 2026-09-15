@@ -33,6 +33,75 @@ When failures occur, each benchmark artifact directory contains
 selected backend. Treat this file as workload data because it can contain
 request arguments or outputs.
 
+## Adaptive search repeats
+
+Use an opt-in initial budget for search trials that are clearly behind the
+baseline mean:
+
+```yaml
+benchmark:
+  repeats: 4
+  min_repeats: 2
+  adaptive_repeats:
+    minimum_relative_score: 0.7
+```
+
+Each trial first runs `min_repeats` rounds; adaptive runs default to two. A
+round measures every named benchmark once, so the decision never relies on a
+missing workload. If the
+initial score is below 70% of the baseline's arithmetic-mean score, meaning it
+is more than 30% worse, its remaining repeats are skipped. For example, with a
+baseline mean of 100, a score below 70 stops while a score of exactly 70
+continues. The comparison runs only when both scores are positive; otherwise
+the full repeat budget runs.
+
+When no completed baseline score exists, every trial runs its full repeat budget.
+
+`minimum_relative_score` must be greater than zero and at most one. Adaptive
+repeats also require `min_repeats < repeats`. Trial JSON records the decision,
+reason, initial score, baseline arithmetic-mean score, planned budget, and
+actual repeat count by workload. Fresh finalist validation always disables adaptive stopping and
+requires its complete budget.
+
+This policy saves whole benchmark repeats after the initial decision. It does
+not interrupt a benchmark already running and does not yet enforce latency SLOs.
+
 See the official
 [GuideLLM dataset guide](https://github.com/vllm-project/guidellm/blob/main/docs/guides/datasets.md)
 for file schemas and fields that vary by GuideLLM release.
+
+## Fresh finalist validation
+
+Enable a separate, fixed measurement budget after search:
+
+```yaml
+analysis:
+  finalist_validation:
+    top_k: 2
+    repeats: 6
+```
+
+This selects the top two eligible tuned configurations from search, then reruns
+the baseline (when present) and those candidates sequentially. Selection is
+fixed before validation starts. Each candidate starts a fresh server and runs
+six measured repeats of every named benchmark, retaining the configured warmup
+policy. All six repeats are required for a validation score. Existing transient
+failure retries can repeat an attempt; the budget applies to each attempt.
+
+`top_k` must be a positive integer. `repeats` must be at least two and at least
+`benchmark.min_repeats`. Defaults inside this section are two candidates and six
+repeats. Omitting the section preserves the existing drift-triggered reruns.
+
+Once validation starts, rankings use fresh measurements only. Initial search
+scores and artifacts remain separate, and search-only candidates are not
+promoted when a finalist fails. The report can say **No clear winner** if a
+candidate fails, evidence is incomplete, workloads differ, drift is detected,
+or measurement uncertainty overlaps. Close candidates do not trigger extra
+repeats beyond the configured finalist budget in this stage. Mid-benchmark SLO
+stopping and controlled ablations remain deferred.
+
+Validation adds runtime, including server startups. Candidates run in fixed
+order on their assigned devices; between-candidate drift or differences between
+devices can still affect results. Keep the model, workload, and hardware
+comparable. This is descriptive validation of selected candidates, not proof of
+a global optimum or production performance.

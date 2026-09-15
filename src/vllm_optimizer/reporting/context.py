@@ -22,4 +22,5 @@ class ReportContext:
     minimum_repeats: int = 4
     drift_threshold: float = 0.05
     maximum_failure_percentage: float = 0.0
+    finalist_validation: Mapping[str, object] = field(default_factory=dict)
     repeat_aggregation: str = "mean"

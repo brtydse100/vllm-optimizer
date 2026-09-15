@@ -74,6 +74,7 @@ def regenerate_report(run: Path, output: Path | None = None) -> RegeneratedRepor
         minimum_repeats=policy.minimum_repeats,
         drift_threshold=policy.drift_threshold,
         maximum_failure_percentage=policy.maximum_failure_percentage,
+        finalist_validation=_mapping(document, "finalist_validation") if document.get("finalist_validation") else {},
         repeat_aggregation=policy.repeat_aggregation,
     )
     destination.mkdir(parents=True)
