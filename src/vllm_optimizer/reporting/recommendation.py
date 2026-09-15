@@ -82,7 +82,7 @@ def recommendation(
         launch = render_command({**command, "argv": redact_arguments(argv), "environment": env})
         resolved = resolved_yaml(manifest, argv)
         reproduction = (
-            "<h3>Full resolved vLLM YAML</h3><p>Explicit experiment settings and runtime host/port; "
+            "<h3>Full resolved vLLM YAML</h3><p>Experiment settings, snapshotted external settings, and runtime host/port; "
             "unspecified vLLM internal defaults are not captured. Redacted values require replacement.</p>"
             + copy_block("resolved-yaml", resolved)
             + "<h3>Selected environment variables</h3>"
@@ -108,7 +108,17 @@ def resolved_yaml(manifest: Mapping[str, object], argv: list[str]) -> str:
     fixed, selected = parameters.get("fixed_args"), parameters.get("selected_args")
     if not isinstance(fixed, Mapping) or not isinstance(selected, Mapping):
         raise ValueError("Resolved argument mappings unavailable")
-    resolved = {str(k).removeprefix("--").replace("_", "-"): v for k, v in {**fixed, **selected}.items()}
+    external = manifest.get("external_config", {})
+    if not isinstance(external, Mapping):
+        raise ValueError("Invalid external configuration snapshot")
+    inherited = external.get("settings", {})
+    if not isinstance(inherited, Mapping):
+        raise ValueError("Invalid external configuration settings")
+    resolved = {str(k).removeprefix("--").replace("_", "-"): v for k, v in inherited.items()}
+    explicit = {str(k).removeprefix("--").replace("_", "-"): v for k, v in {**fixed, **selected}.items()}
+    if inherited:
+        explicit.pop("config", None)
+    resolved.update(explicit)
     resolved["model"] = manifest["model_path"]
     for index, token in enumerate(argv[:-1]):
         if token in {"--host", "--port"}:
