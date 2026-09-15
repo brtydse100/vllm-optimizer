@@ -2,10 +2,12 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from vllm_optimizer.config.models import ExperimentConfig, VTuneConfig
 from vllm_optimizer.lifecycle.integrity import artifact_warnings, describe_artifacts, load_retry_source
 from vllm_optimizer.lifecycle.retry import load_retry_plan
+from vllm_optimizer.reporting.recommendation import resolved_yaml
 from vllm_optimizer.reproduction.display import reproduce_trial
 from vllm_optimizer.reproduction.export import export_vllm_command
 from vllm_optimizer.reproduction.manifest import ManifestWriter
@@ -92,3 +94,23 @@ def test_retry_integrity_rejects_corrupt_or_mismatched_sources(tmp_path: Path) -
     (run / "result.json").write_text("not json", encoding="utf-8")
     with pytest.raises(ValueError, match="malformed"):
         load_retry_source(run, ["trial-1"])
+
+
+def test_manifest_snapshots_external_config_for_resolved_export(tmp_path: Path) -> None:
+    native = tmp_path / "vllm.yaml"
+    native.write_text("model: original\nport: 8100\nkv-transfer-config:\n  kv_role: kv_both\n", encoding="utf-8")
+    config = VTuneConfig(1, ExperimentConfig("snapshot"), {"model": str(tmp_path), "config": str(native), "port": 8200})
+    manifest_path = tmp_path / "manifest.json"
+    ManifestWriter({}).write(
+        manifest_path, config, TrialParameters("trial-1", {}, {}), TrialContext("trial-1"), "completed"
+    )
+    native.unlink()
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    exported = yaml.safe_load(resolved_yaml(manifest, ["vllm", "serve", str(tmp_path), "--port", "8200"]))
+
+    assert manifest["external_config"]["settings"]["kv-transfer-config"] == {"kv_role": "kv_both"}
+    assert exported["kv-transfer-config"] == {"kv_role": "kv_both"}
+    assert exported["port"] == 8200
+    assert exported["model"] == str(tmp_path)
+    assert "config" not in exported

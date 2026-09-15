@@ -57,7 +57,9 @@ def comparison(baseline: TrialReport | None, recommended: TrialReport | None) ->
             )
         )
         blocks.append(
-            f"<h3>{escape(key)}</h3>"
+            f"<h3>{escape(str(key))}</h3>"
+            "<details><summary>Full workload configuration JSON</summary>"
+            f"<pre>{escape(key.pretty_configuration())}</pre></details>"
             + _table(("Metric", "Baseline", "Recommended", "Change", "Repeats (base / rec)"), "".join(rows))
         )
     return (
@@ -135,9 +137,8 @@ def _duration_comparison(baseline: TrialReport | None, recommended: TrialReport 
             else "Unavailable (incomplete coverage)",
         )
         rows.append("<tr>" + "".join(f"<td>{escape(value)}</td>" for value in cells) + "</tr>")
-    return "<h3>Mean duration by benchmark</h3>" + _table(
-        ("Benchmark", "Baseline", "Recommended", "Difference"), "".join(rows)
-    )
+    headings = ("Benchmark", "Baseline", "Recommended", "Difference")
+    return "<h3>Mean duration by benchmark</h3>" + _table(headings, "".join(rows))
 
 
 def _change(value: float | None, baseline: float | None, lower_is_better: bool) -> str:
