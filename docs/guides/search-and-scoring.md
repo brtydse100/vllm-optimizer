@@ -20,7 +20,7 @@ optimization:
 
 `maximize` names the metric used to rank trials. Direction is inferred: the
 declared metric is always maximized. For each named benchmark, the `vllm-opt` CLI averages
-the eligible workload metric values, takes the median when it was repeated,
+the eligible workload metric values, takes the arithmetic mean when it was repeated,
 then averages named benchmark scores into the trial score. A workload with an
 errored or incomplete percentage above `benchmark.max_failure_percentage` is
 excluded; the setting defaults to `0`. A trial without an eligible workload is

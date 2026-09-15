@@ -74,6 +74,7 @@ def regenerate_report(run: Path, output: Path | None = None) -> RegeneratedRepor
         minimum_repeats=policy.minimum_repeats,
         drift_threshold=policy.drift_threshold,
         maximum_failure_percentage=policy.maximum_failure_percentage,
+        repeat_aggregation=policy.repeat_aggregation,
     )
     destination.mkdir(parents=True)
     result_path = destination / "result.json"

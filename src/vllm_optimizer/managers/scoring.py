@@ -41,6 +41,7 @@ class ScoringManager:
         minimum_repeats: int = 1,
         required_runs: tuple[str, ...] = (),
         max_failure_percentage: float = 0,
+        repeat_aggregation: str = "mean",
     ) -> None:
         if not metric.strip():
             raise ValueError("optimization.maximize must not be empty")
@@ -49,6 +50,9 @@ class ScoringManager:
         self.metric = metric
         self.minimum_repeats = minimum_repeats
         self.required_runs = required_runs
+        if repeat_aggregation not in {"mean", "median"}:
+            raise ValueError("repeat aggregation must be mean or median")
+        self.repeat_aggregation = repeat_aggregation
         if (
             isinstance(max_failure_percentage, bool)
             or not isinstance(max_failure_percentage, int | float)
@@ -75,7 +79,10 @@ class ScoringManager:
             ]
             if values:
                 grouped.setdefault(result.run_name, []).append(fmean(values))
-        return {name: float(median(values)) for name, values in grouped.items() if len(values) >= self.minimum_repeats}
+        aggregate = fmean if self.repeat_aggregation == "mean" else median
+        return {
+            name: float(aggregate(values)) for name, values in grouped.items() if len(values) >= self.minimum_repeats
+        }
 
     @staticmethod
     def rank(scores: list[TrialScore]) -> tuple[TrialScore, ...]:

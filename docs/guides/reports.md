@@ -27,6 +27,12 @@ repeats; P50/P95/P99 columns are means of supplied backend percentiles, **not po
 request percentiles**. Missing measurements and zero-denominator percentage
 changes are unavailable. Different workload configurations are not paired.
 
+The baseline comparison is expanded by default. Overall percentage changes
+require matching workload configurations and repeat counts on both sides.
+Missing metric samples or benchmark durations make the affected change
+unavailable; recorded absolute values and per-workload details remain visible.
+Mean-to-mean comparisons are retained when the evidence has matching coverage.
+
 Confidence shows individual repeats, mean, sample standard deviation, range,
 repeat count, and signed drift percentage per workload. The drift value compares
 the means of the first and second repeat halves and shows whether it exceeds the
@@ -64,7 +70,7 @@ not alter the configured optimization score.
 
 Backends calculate request distributions and percentiles. vLLM Optimizer normalizes
 names and units but does not derive missing percentiles. Eligible workloads are
-averaged within an execution, repeated executions use the median score, and
+averaged within an execution, repeated executions use the arithmetic mean score, and
 named benchmark scores are averaged into the trial score.
 
 When a finalist's sequential repeat means drift beyond `analysis.drift_threshold`
@@ -103,6 +109,11 @@ accepted execution. A missing validation manifest never falls back to the
 superseded search manifest. For runs retaining a scoring policy, regeneration
 rejects ranking scores that disagree with accepted measurements. Legacy runs
 without that policy cannot receive this additional score consistency check.
+
+New runs record `benchmark_policy.repeat_aggregation: mean` and rank by the
+arithmetic mean across repeats. Older runs without this field retain median
+scoring when regenerated or reclassified, preserving their historical rankings.
+This does not change backend P50/P95/P99 request percentiles.
 
 To apply a different request-failure policy without starting vLLM or GuideLLM:
 

@@ -78,6 +78,7 @@ def test_complete_synthetic_run_selects_same_winner_everywhere(tmp_path: Path, m
         "warmup_repeats": 0,
         "drift_threshold": 0.05,
         "maximum_failure_percentage": 0.0,
+        "repeat_aggregation": "mean",
     }
     assert outcome.ranking[0].trial_id in (outcome.directory / "report.html").read_text(encoding="utf-8")
 

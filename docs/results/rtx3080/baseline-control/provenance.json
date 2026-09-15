@@ -180,5 +180,39 @@
     "trials/trial-0001/attempts/001/repeats/003/short-chat/drain.json": "ac5456b5440f653ca828c84398b623a774ece5ed5020487e82d3051a9bc855f2",
     "trials/trial-0001/attempts/001/repeats/003/short-chat/results.json": "1f7de668eb41bacaeb20c93b44797ef01258d303a1a0cc3eb36f5ffc82b575af"
   },
-  "restoration_directory": "/var/tmp/vllm-optimizer-demo/public/baseline-control"
+  "restoration_directory": "/var/tmp/vllm-optimizer-demo/public/baseline-control",
+  "comparison_refresh": {
+    "description": "Expanded comparison and coverage guards; HTML/CSV regenerated without changing archived measurements or scores.",
+    "report_sha256": "fc1b5e80e8ccc1aedf9465362648d61bba8f317d54a5e2750e13d0e702140cf2",
+    "csv_sha256": "df7363848208c11c9e75e474cc5c6dde02acb8801238cfdc72760ce25fa42d07",
+    "source_files_sha256": {
+      "src/vllm_optimizer/reporting/__init__.py": "5ee4b9d49e4303eca48e69671504bbf805e6b864c83204972f0f082e0ff8c69d",
+      "src/vllm_optimizer/reporting/accepted_scores.py": "8a34df81cef9d1de100d4a8d3efdb086120bad0bfd6020ecb96592ff145760f1",
+      "src/vllm_optimizer/reporting/analysis.py": "e32b8329ebe72c5524660da0622353894468cb75f8e57c77afebb0776d9105c6",
+      "src/vllm_optimizer/reporting/charts.py": "eb1a85bc4c08e5f6d76a666d3b424080b4deaaf4b75666539efad1ffa3a3d797",
+      "src/vllm_optimizer/reporting/comparison.py": "b149118e6b84e08981c8a56cb96e16a8e3d1336f7aed0079787bd197d79a41df",
+      "src/vllm_optimizer/reporting/comparison_evidence.py": "f556ca6d68d67a68307a6ecd3b2fc596448a3b1bb0da8469a169496ba411e883",
+      "src/vllm_optimizer/reporting/confidence.py": "318b393ce7ff98d666d0ba742d33e28f858010c9c54be0791c287aeec571526f",
+      "src/vllm_optimizer/reporting/context.py": "b07e98c3e81104f29111e8d90e7d56a63afdf4a1551f7b283ac9ae5fd0bb3e4b",
+      "src/vllm_optimizer/reporting/dashboard.py": "15d9e78328dbc39a9038d731198e8fce07f749098701c270bafc0d66ac002981",
+      "src/vllm_optimizer/reporting/dashboard_selection.py": "1fbffd9143707c332e2f989c3a82a72baf322813d81478aa0c53d3a2133bdd1f",
+      "src/vllm_optimizer/reporting/durations.py": "d08d0d3a68d98e98ef77f5b5ba062ecb8537a48d71d17d75575395ece1069a04",
+      "src/vllm_optimizer/reporting/importance.py": "403ad6d9f41bd04b602163cec380b6b79291202b14778f6d37273b7b35f3a1f1",
+      "src/vllm_optimizer/reporting/interactions.py": "410a242bf466711a3c277fb976740fce57fa78031b0548f27e9ba6cdbeced4da",
+      "src/vllm_optimizer/reporting/leaderboard.py": "6593e718454b88452ed456a5d13d1227176b1d68cef51f28744867c599cddb99",
+      "src/vllm_optimizer/reporting/llm_summary.py": "1fb51de68d91139dc9d0ae1a07db3f64fa11d2dce7f786ff9c4b8ce08c02c4fe",
+      "src/vllm_optimizer/reporting/measurement.py": "0a98b0bd2c5198540e3f8901529a472afa4694ad8c41fc312298118f08de84d2",
+      "src/vllm_optimizer/reporting/methodology.py": "3c89279882d858ded3d581436be1049e89510e64c47943d1c8c8fcaf126c0a1f",
+      "src/vllm_optimizer/reporting/offline.py": "68f19d75e3d18a4d692cb3e810652af6d1db883776689abfe05b6df84ac8cbca",
+      "src/vllm_optimizer/reporting/offline_loading.py": "e2018dafa24dbb5ba12e64dd051f7b5ea7ca0276dcd0a8328b42748a1c5e7ea2",
+      "src/vllm_optimizer/reporting/reclassify.py": "5406b971ad8847b42731650667a898903d65f973075e7c6d0c8d324eb3e267e5",
+      "src/vllm_optimizer/reporting/reclassify_scores.py": "e9f8376d8e43eda273278d0e499a9e05aab2c45e7250ab0e65eaaff809ac5216",
+      "src/vllm_optimizer/reporting/recommendation.py": "06c0b175b9c494f2c39e2d2fe1c29531f1a9a211fc115cc7d80b9e2720502ef0",
+      "src/vllm_optimizer/reporting/reporter.py": "e775b41e4b7d9a8768870fedeb5d3279643cd413b6a35b45078cc52fa743d87e",
+      "src/vllm_optimizer/reporting/styles.py": "2e99673bf029dd3b3cb56b907a980cf6e5960ef5d6fea4520c36f066c07867bc",
+      "src/vllm_optimizer/reporting/tables.py": "b5d7e110b163053ae0f3be7d33b5c773a750d4ef9133f241a4bdabdb95c95bcc",
+      "src/vllm_optimizer/reporting/validation.py": "efc68e6279ab60f9d8ffcfc283b8736daa0459b6e04186fa5e0af8ffddb12bae",
+      "src/vllm_optimizer/reporting/workloads.py": "d395c113d9dc83c9a228f413423b09fbbab2fcb57c6eb3fa888c70d492855994"
+    }
+  }
 }

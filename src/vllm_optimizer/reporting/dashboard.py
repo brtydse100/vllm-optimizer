@@ -110,11 +110,11 @@ def _diagnostics(
         + "</section><section><h2>Failures and interruptions</h2>"
         + failures(trials)
         + "</section>"
-        + metric_methodology()
+        + metric_methodology(context.repeat_aggregation)
         + "<section><h2>Scoring evidence</h2>"
         + evidence_table(ranking, trials, baseline)
         + f"<p>A workload is excluded when failed/incomplete requests exceed\n{context.maximum_failure_percentage:g}% of all requests. "
-        "Eligible workload metrics use their mean per named run, the median across repeats, then the mean of named runs. "
+        f"Eligible workload metrics use their mean per named run, the {escape(context.repeat_aggregation)} across repeats, then the mean of named runs. "
         "This configured objective is separate from the workload comparisons above.</p></section>"
         + (f"<section><h2>Optional LLM summary</h2><p>{escape(llm)}</p></section>" if llm else "")
         + "</details>"
