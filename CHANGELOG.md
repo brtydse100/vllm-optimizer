@@ -4,6 +4,23 @@
 
 _No changes yet._
 
+## v0.1.0a16 — Adaptive benchmark repeats and evidence-safe reporting
+
+_September 15, 2026_
+
+- Added adaptive benchmark repeat policies that spend additional repeats when
+  measured variance or evidence quality requires them.
+- Added configuration and worker support for adaptive repeats, including
+  preflight validation and clearer repeat-budget handling.
+- Rank repeated experiments by arithmetic mean while preserving repeat-level
+  evidence for reports and comparisons.
+- Hardened comparisons against incomplete or mismatched workload and repeat
+  coverage, reporting unavailable aggregates instead of misleading results.
+- Added evidence-aware report comparison helpers, leaderboard support, and
+  refreshed RTX 3080 report examples and provenance.
+- Added retry-safe PyPI publishing for releases that partially upload files.
+- Expanded benchmark-repeat, configuration, reporting, and results guidance.
+
 ## v0.1.0a15 — Fresh finalist validation and conservative decisions
 
 _September 15, 2026_
