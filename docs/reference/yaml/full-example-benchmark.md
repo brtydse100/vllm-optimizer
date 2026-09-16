@@ -4,6 +4,9 @@
 benchmark:
   engine: guidellm  # guidellm (default) or vllm
   repeats: 4  # Default: 4. Report comparisons use the mean across repeated runs.
+  min_repeats: 2  # Measure every trial at least twice before adapting.
+  adaptive_repeats:
+    minimum_relative_score: 0.7  # Skip the remaining repeats for weak trials.
   # warmup_repeats: 1  # Optional; omitted means no warmup.
   runs:
     # Each named run is one GuideLLM invocation against the same server.
