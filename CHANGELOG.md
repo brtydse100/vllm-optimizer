@@ -20,6 +20,11 @@ _September 15, 2026_
   refreshed RTX 3080 report examples and provenance.
 - Added retry-safe PyPI publishing for releases that partially upload files.
 - Expanded benchmark-repeat, configuration, reporting, and results guidance.
+- Kept large TPE preflight validation lazy and bounded to the requested trials.
+- Snapshotted native vLLM YAML settings into manifests and resolved report exports.
+- Made workload headings readable while retaining full redacted configuration
+  JSON in expandable report details.
+- Moved the real report screenshot and example links near the top of the README.
 
 ## v0.1.0a15 — Fresh finalist validation and conservative decisions
 
