@@ -1,0 +1,153 @@
+# Complete vLLM Optimizer configuration reference.
+# Values are examples; comments show mutually exclusive forms and defaults.
+schema_version: 1
+
+experiment:
+  name: complete-example
+  output_dir: runs
+  seed: 42
+
+# Use model for inline vLLM settings, or replace it with config.
+server:
+  model: /models/Qwen3-32B
+  # config: ./vllm-config.yaml
+  host: 0.0.0.0
+  port: 8000
+  tensor-parallel-size: 4
+  dtype: bfloat16
+  gpu-memory-utilization: 0.90
+  max-model-len: 32768
+  enforce-eager: false
+  enable-prefix-caching: true
+  # Any other vLLM serve argument is accepted here as a pass-through field.
+
+# Every entry is either categorical (`values`) or an inclusive range.
+tune:
+  attention-backend:
+    values: [FLASH_ATTN, FLASHINFER]
+  max-num-seqs:
+    values: [64, 128, 256]
+  enforce-eager:
+    values: [true, false]
+  max-num-batched-tokens:
+    min: 4096
+    max: 16384
+    step: 4096
+  gpu-memory-utilization:
+    min: 0.85
+    max: 0.95
+    step: 0.05
+
+env:
+  CUDA_VISIBLE_DEVICES: "0,1,2,3"
+  VLLM_LOG_STATS_INTERVAL: "5"
+
+tune_env:
+  VLLM_USE_FLASHINFER_SAMPLER:
+    values: ["0", "1"]
+  WORKER_COUNT:
+    min: 1
+    max: 4
+    step: 1
+
+benchmark:
+  engine: guidellm
+  repeats: 4
+  warmup_repeats: 1
+  min_repeats: 2
+  max_failure_percentage: 2
+  accept_any_request_failures: false
+  adaptive_repeats:
+    minimum_relative_score: 0.7
+  runs:
+    - name: concurrent-chat
+      request_format: /v1/chat/completions
+      profile:
+        kind: concurrent
+        streams: [4, 16, 32]
+        max_concurrency: 32
+      constraints:
+        - kind: max_requests
+          count: 500
+        - kind: max_duration
+          seconds: 2m
+      data:
+        - kind: synthetic_text
+          prompt_tokens: 512
+          prompt_tokens_stdev: 32
+          prompt_tokens_min: 128
+          prompt_tokens_max: 1024
+          output_tokens: 128
+          output_tokens_stdev: 16
+          output_tokens_min: 32
+          output_tokens_max: 256
+          turns: 1
+
+  # To use vLLM Bench Serve, replace engine and runs with:
+  # engine: vllm
+  # runs:
+  #   - name: random-throughput
+  #     args:
+  #       dataset-name: random
+  #       random-input-len: 512
+  #       random-output-len: 128
+  #       random-prefix-len: 0
+  #       num-prompts: 1000
+  #       request-rate: inf
+  #       max-concurrency: 32
+  #       percentile-metrics: ttft,tpot,itl,e2el
+  #       metric-percentiles: 50,90,95,99
+  #       ignore-eos: true
+
+baseline:
+  enabled: true
+
+optimization:
+  maximize: output_tokens_per_second
+  sampler: tpe
+  trials: 20
+  # Grid alternative: sampler: grid, with trials omitted.
+  # Random alternative: sampler: random, with trials retained.
+
+analysis:
+  drift_threshold: 0.05
+  finalist_validation:
+    top_k: 2
+    repeats: 6
+  llm_summary:
+    base_url: https://api.example.com/v1
+    model: your-model
+    api_key_env: VLLM_OPTIMIZER_LLM_API_KEY
+    timeout: 30
+
+timeouts:
+  startup: 15m
+  benchmark: 20m
+
+logging:
+  level: INFO
+
+execution:
+  mode: sequential
+  host: 127.0.0.1
+  health_path: /health
+  shutdown_grace: 15
+  drain_grace: 15
+  retry:
+    max_attempts: 2
+
+  # For local parallel execution, remove server.port and
+  # env.CUDA_VISIBLE_DEVICES, then replace mode and uncomment these fields:
+  # mode: local_parallel
+  # max_parallel_trials: 2
+  # gpu_allocation:
+  #   strategy: explicit
+  #   allow_sharing: false
+  #   workers:
+  #     - name: worker-0
+  #       devices: [0, 1]
+  #     - name: worker-1
+  #       devices: [2, 3]
+  # ports:
+  #   min: 8100
+  #   max: 8199

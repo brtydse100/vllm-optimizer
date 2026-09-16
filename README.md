@@ -16,6 +16,7 @@ This independent community project is not affiliated with the vLLM project.
 
 **[Documentation](https://brtydse100.github.io/vllm-optimizer/)** ·
 **[Quick start](https://brtydse100.github.io/vllm-optimizer/getting-started/)** ·
+**[Full YAML example](docs/reference/yaml/full-example.yaml)** ·
 **[PyPI](https://pypi.org/project/vllm-optimizer/)**
 
 ## See a real optimization report
