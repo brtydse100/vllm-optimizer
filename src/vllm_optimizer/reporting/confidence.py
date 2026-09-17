@@ -69,7 +69,7 @@ def confidence(
                 historical.append("<tr><td colspan='8'>Initial search evidence unavailable.</td></tr>")
     heading = ("Trial / phase", "Workload", "Individual repeats", "n", "Mean", "Sample SD", "Range", "Drift")
     return (
-        "<section id='confidence'><h2>4. Confidence in the result</h2><p class='warning'>"
+        "<section id='confidence'><h2>Confidence in the result</h2><p class='warning'>"
         + escape(conclusion or verdict(baseline, best, metric, context))
         + "</p>"
         "<p>Descriptive repeat evidence for the optimization metric, per workload. Range overlap is a conservative "

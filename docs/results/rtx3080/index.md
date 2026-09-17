@@ -10,7 +10,7 @@ use your chosen models and GPU allocations.
 
 [Open the full interactive report](report-showcase/report.html).
 
-![Baseline comparison with benchmark duration from the real showcase run](overview.png)
+![Concise showcase report with throughput, average duration, and all trials](overview.png)
 
 The accepted configuration changes `max-num-seqs` from **1 to 16** and
 `max-num-batched-tokens` from **256 to 512**. The configured score increased
@@ -23,8 +23,12 @@ baseline, and two deliberately invalid configurations failed. Both finalists
 were validated again, and the accepted ranking uses those validation results.
 The intentionally zero drift threshold makes the confidence verdict
 **inconclusive due to drift**, despite the large observed improvement.
-The report also compares mean benchmark execution duration for every trial and
-shows the percentage difference from the baseline in scoring evidence.
+The concise summary compares arithmetic means: **464.18% higher output
+throughput** and **33.40% shorter average benchmark duration** versus baseline.
+This differs from the historical median-based score above. Every trial's
+average benchmark duration remains visible. Expand Full details for repeat
+timings, settings, errors, and all recorded trial data; performance breakdown,
+confidence evidence, and diagnostics start collapsed.
 
 - [Exact experiment](report-showcase/experiment.yaml)
 - [CSV](report-showcase/results.csv) and [structured result](report-showcase/result.json)

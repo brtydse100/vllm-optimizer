@@ -63,8 +63,8 @@ def comparison(baseline: TrialReport | None, recommended: TrialReport | None) ->
             + _table(("Metric", "Baseline", "Recommended", "Change", "Repeats (base / rec)"), "".join(rows))
         )
     return (
-        "<section id='comparison'><h2>3. Baseline vs recommended</h2>"
-        "<details open><summary>Latency, throughput, and benchmark duration comparison</summary>"
+        "<section id='comparison'><h2>Baseline vs best observed</h2>"
+        "<div>"
         "<p class='warning'>This comparison exposes latency trade-offs, but tuning a different objective is not "
         "the best way to search for the lowest latency. Use a latency objective for that purpose.</p>"
         "<p>Each value is the arithmetic mean of available repeat measurements for this exact workload. "
@@ -75,7 +75,7 @@ def comparison(baseline: TrialReport | None, recommended: TrialReport | None) ->
         + summary
         + durations
         + ("".join(blocks) or "<p>Unavailable: no workload measurements.</p>")
-        + "</details></section>"
+        + "</div></section>"
     )
 
 

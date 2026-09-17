@@ -20,8 +20,8 @@ local vLLM execution. [Understand the two installation choices](getting-started/
 - A baseline and Grid, Random, or TPE exploration of your chosen settings.
 - One or more GuideLLM or vLLM Bench Serve workloads per server configuration.
 - Immutable trial artifacts, concise terminal progress, and detailed logs.
-- A self-contained HTML report showing the best configuration and observed
-  parameter effects.
+- A self-contained HTML report with a concise throughput/duration summary,
+  confidence, best-observed settings, and expandable data for every trial.
 - Exact, secret-redacted commands for reproducing completed trials.
 
 ## Find what you need

@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-_No changes yet._
+- Simplified the HTML report with a coverage-checked throughput/duration summary,
+  visible confidence, compact settings, and expandable supporting evidence.
+- Preserved every trial and its average benchmark duration, with complete recorded
+  trial data available in details. Refreshed example reports and screenshots.
 
 ## v0.1.0a16 — Adaptive benchmark repeats and evidence-safe reporting
 

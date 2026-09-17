@@ -26,7 +26,7 @@ This independent community project is not affiliated with the vLLM project.
 · [Exact experiment YAML](docs/results/rtx3080/report-showcase/experiment.yaml)
 · [All published results](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/)
 
-[![vLLM Optimizer report showing measured baseline and recommended performance](docs/results/rtx3080/overview.png)](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/report-showcase/report.html)
+[![Concise report with throughput and duration summary, confidence, and all trials](docs/results/rtx3080/overview.png)](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/report-showcase/report.html)
 
 This measured example increased the configured score from **194.34 to 1,082.27
 output tokens/s (+456.89%)** on its deliberately small RTX 3080 workloads. It
@@ -209,9 +209,11 @@ vllm-opt reproduce --run runs/EXPERIMENT/RUN_ID --trial trial-0001
 ```
 
 Each completed run also contains a self-contained `report.html` decision
-dashboard with the best observed configuration, per-benchmark elapsed time,
-average/median/P99 latency, baseline comparison, score history,
-throughput/latency tradeoff, metric definitions, and observed parameter effects.
+dashboard with a one-line throughput and average benchmark duration summary,
+a visible confidence verdict, and the best observed settings. Every trial and
+its average benchmark duration remain visible; expand details for all recorded
+trial data. Comparisons, latency percentiles, repeat statistics, charts, and
+methodology are available on demand. See the [reports guide](docs/guides/reports.md).
 
 Random and TPE runs never execute the same resolved configuration twice. If
 `optimization.trials` exceeds the unique search space, the `vllm-opt` CLI warns and runs
