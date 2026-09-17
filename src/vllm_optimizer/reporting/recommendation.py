@@ -57,9 +57,9 @@ def recommendation(
     report: TrialReport | None,
     provisional: bool = False,
 ) -> str:
-    heading = "Candidate configuration" if provisional else "Recommended configuration"
+    heading = "Candidate configuration" if provisional else "Best observed settings"
     if best is None or report is None:
-        return f"<section id='recommendation'><h2>2. {heading}</h2><p>Unavailable.</p></section>"
+        return f"<section id='recommendation'><h2>{heading}</h2><p>Unavailable.</p></section>"
     rows = "".join(
         "<tr>" + "".join(f"<td>{escape(str(value))}</td>" for value in (name, *pair)) + "</tr>"
         for name, pair in changes(best, baseline).items()
@@ -93,10 +93,18 @@ def recommendation(
     except (ValueError, TypeError, yaml.YAMLError) as error:
         reproduction = f"<p>Reproduction unavailable: {escape(str(error))}</p>"
     return (
-        f"<section id='recommendation'><h2>2. {heading}</h2>"
+        f"<section id='recommendation'><h2>{heading}</h2>"
         f"<p><strong>{escape(best.trial_id)}</strong> · Best observed eligible configuration.</p>"
         + changed
+        + (
+            "<button type='button' data-copy='launch-command'>Copy launch command</button>"
+            "<span class='copy-status' role='status'></span>"
+            if "id='launch-command'" in reproduction
+            else ""
+        )
+        + "<details><summary>Full configuration and launch command</summary>"
         + reproduction
+        + "</details>"
         + "</section>"
     )
 

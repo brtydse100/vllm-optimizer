@@ -488,5 +488,41 @@
       "src/vllm_optimizer/reporting/validation.py": "66361b56b4b3fd34be119a16e26ba0d861b3775fb20183100d3e53e49bdc5488",
       "src/vllm_optimizer/reporting/workloads.py": "150a83ceca85d589e766cecd78b078165f11ac8c125f786b598f7fb8b588fe25"
     }
+  },
+  "concise_report_refresh": {
+    "description": "Concise overview, throughput/duration summary, and full trial details; HTML/CSV regenerated without changing archived measurements or scores.",
+    "report_sha256": "22a18a0b260bdc49a7d93526deee5c21431bb3babeb8e130ef8198fb13806d39",
+    "csv_sha256": "04146db246c0bc684a8c810e542291a7fadc4b76e063a590cabedf4d58fe8dc9",
+    "source_files_sha256": {
+      "src/vllm_optimizer/reporting/__init__.py": "5ee4b9d49e4303eca48e69671504bbf805e6b864c83204972f0f082e0ff8c69d",
+      "src/vllm_optimizer/reporting/accepted_scores.py": "4c7dccf8fdf8f23d728dc893b512690f958a752dd75c529d0bf20714647a56a6",
+      "src/vllm_optimizer/reporting/analysis.py": "e32b8329ebe72c5524660da0622353894468cb75f8e57c77afebb0776d9105c6",
+      "src/vllm_optimizer/reporting/charts.py": "eb1a85bc4c08e5f6d76a666d3b424080b4deaaf4b75666539efad1ffa3a3d797",
+      "src/vllm_optimizer/reporting/comparison.py": "0860838d574cf628c65eddb43452a579b9d698b831fb50f37e61a72fe8c0aaa1",
+      "src/vllm_optimizer/reporting/comparison_evidence.py": "5d317652a5e7d5d439b92968931d2ffb448803e94d054f8230b525e4d32f4108",
+      "src/vllm_optimizer/reporting/confidence.py": "a7cef35f640ad0776832f6b00256606ed4c696eb885a1a56701dedc2686fc914",
+      "src/vllm_optimizer/reporting/context.py": "0817b5d05c4882a860a38be789df4bf064f9c6047af76a2f47b844934e100b16",
+      "src/vllm_optimizer/reporting/dashboard.py": "11a70571c85972b6348733ca495f1fd1995759fe48f78c7688597932bdc4367c",
+      "src/vllm_optimizer/reporting/dashboard_selection.py": "1fbffd9143707c332e2f989c3a82a72baf322813d81478aa0c53d3a2133bdd1f",
+      "src/vllm_optimizer/reporting/durations.py": "d08d0d3a68d98e98ef77f5b5ba062ecb8537a48d71d17d75575395ece1069a04",
+      "src/vllm_optimizer/reporting/finalist_decision.py": "a6407500e957c559bee89e5f91cbd683e1a34920596d480bda93b70d7ffcc9f2",
+      "src/vllm_optimizer/reporting/importance.py": "403ad6d9f41bd04b602163cec380b6b79291202b14778f6d37273b7b35f3a1f1",
+      "src/vllm_optimizer/reporting/interactions.py": "239700e353150b87a65bcb170fd8fc5f1ebe6f944cd3218f4a2792c002f9a549",
+      "src/vllm_optimizer/reporting/leaderboard.py": "73c04ccd24eb3f1c742388a8b5ab73093357108f99078db03933e37bf1a875d8",
+      "src/vllm_optimizer/reporting/llm_summary.py": "10136827fad3174ef8006040551b9fd4460fda479580f8c88e88182173f68d14",
+      "src/vllm_optimizer/reporting/measurement.py": "0a98b0bd2c5198540e3f8901529a472afa4694ad8c41fc312298118f08de84d2",
+      "src/vllm_optimizer/reporting/methodology.py": "3c89279882d858ded3d581436be1049e89510e64c47943d1c8c8fcaf126c0a1f",
+      "src/vllm_optimizer/reporting/offline.py": "486a173562740ac14c258d0f7b1e00060a6ff9c8971ffd159bddfa48b38b8518",
+      "src/vllm_optimizer/reporting/offline_loading.py": "e2018dafa24dbb5ba12e64dd051f7b5ea7ca0276dcd0a8328b42748a1c5e7ea2",
+      "src/vllm_optimizer/reporting/overview.py": "9e9a4bfcf2721ae354be3afa868e99af411feca5bfadf6da2dc67330bf5a23ac",
+      "src/vllm_optimizer/reporting/reclassify.py": "34730c63bd8ff9b3afc1a6f0a0ba184656b7d9f978da940666ee8bc475375b24",
+      "src/vllm_optimizer/reporting/reclassify_scores.py": "e9f8376d8e43eda273278d0e499a9e05aab2c45e7250ab0e65eaaff809ac5216",
+      "src/vllm_optimizer/reporting/recommendation.py": "1c8fb65735c721dc9dac0025524a0592bb7460c7b4dcf289c9b98fc85f73ccc2",
+      "src/vllm_optimizer/reporting/reporter.py": "e775b41e4b7d9a8768870fedeb5d3279643cd413b6a35b45078cc52fa743d87e",
+      "src/vllm_optimizer/reporting/styles.py": "b4ffcb252979943386aec8871e5726b8030e363439275b654c4751e3b85f9cbc",
+      "src/vllm_optimizer/reporting/tables.py": "b5d7e110b163053ae0f3be7d33b5c773a750d4ef9133f241a4bdabdb95c95bcc",
+      "src/vllm_optimizer/reporting/validation.py": "66361b56b4b3fd34be119a16e26ba0d861b3775fb20183100d3e53e49bdc5488",
+      "src/vllm_optimizer/reporting/workloads.py": "150a83ceca85d589e766cecd78b078165f11ac8c125f786b598f7fb8b588fe25"
+    }
   }
 }

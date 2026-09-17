@@ -10,10 +10,11 @@ from statistics import stdev
 
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
-from vllm_optimizer.reporting.durations import duration_change, mean_duration, relative_duration
+from vllm_optimizer.reporting.durations import duration_change, mean_duration
 from vllm_optimizer.reporting.recommendation import manifest_settings, setting_changes, settings
 from vllm_optimizer.reporting.workloads import delta, failure_samples, formatted, samples, scenarios
 from vllm_optimizer.reproduction.accepted import accepted_manifest
+from vllm_optimizer.reproduction.redaction import redact_values
 
 
 def leaderboard(
@@ -66,10 +67,15 @@ def leaderboard(
             else None
         )
         detail = (
-            "<details><summary>Full details</summary>"
+            "<details><summary>Full details</summary>" + f"<p>Failed requests (all repeats): {formatted(error_count)}; "
+            f"Score SD (largest workload): {formatted(max(variability) if variability else None)}</p>"
+            + f"<p>Duration vs baseline: {duration_change(duration, baseline_duration)}</p>"
+            + f"<p>Changed settings: {escape(json.dumps(diff, sort_keys=True)) if diff is not None else 'Unavailable'}</p>"
             + "".join(details)
             + f"<pre>{escape(configuration)}</pre>"
             + _adaptive_details(trial.execution.get("adaptive_repeats"))
+            + "<details><summary>All recorded trial data (JSON)</summary>"
+            + f"<pre>{escape(json.dumps(redact_values(trial.to_dict()), indent=2))}</pre></details>"
             + "</details>"
         )
         cells = [
@@ -87,41 +93,21 @@ def leaderboard(
                 else None,
             ),
             _cell(formatted(duration, "s"), duration),
-            _cell(duration_change(duration, baseline_duration), relative_duration(duration, baseline_duration)),
-            _cell(formatted(error_count), error_count),
-            _cell(formatted(max(variability) if variability else None), max(variability) if variability else None),
-            _cell(
-                json.dumps(diff, sort_keys=True) if diff is not None else "Unavailable",
-                json.dumps(diff, sort_keys=True) if diff is not None else None,
-            ),
             f"<td>{detail}</td>",
         ]
         rows.append("<tr>" + "".join(cells) + "</tr>")
-    labels = (
-        "Rank",
-        "Trial",
-        "Status",
-        "Score",
-        "Baseline delta",
-        "Mean benchmark duration",
-        "Duration vs baseline",
-        "Failed requests (all repeats)",
-        "Score SD (largest workload)",
-        "Changed settings",
-        "Details",
-    )
+    labels = ("Rank", "Trial", "Status", "Score", "Baseline delta", "Mean benchmark duration", "Details")
     headers = "".join(
-        f"<th><button data-sort='{index}' data-type='{'text' if index in (1, 2, 9) else 'number'}'>"
+        f"<th><button data-sort='{index}' data-type='{'text' if index in (1, 2) else 'number'}'>"
         f"{escape(label)}</button></th>"
-        if index < 10
+        if index < 6
         else f"<th>{label}</th>"
         for index, label in enumerate(labels)
     )
     return (
-        "<section id='leaderboard'><h2>5. Configuration leaderboard</h2>"
-        "<p>All trials, including duplicate configurations and unranked failures. Benchmark duration is the mean "
-        "of recorded benchmark execution times; its baseline difference labels lower duration as better. Expand a "
-        "row for individual execution durations. Click a heading to sort; missing values stay last.</p>"
+        "<section id='leaderboard'><h2>All trials</h2>"
+        "<p>Every trial, including failures. Mean benchmark duration excludes server startup. "
+        "Expand Full details for repeat timings, settings, errors, and all recorded metrics. Click a heading to sort.</p>"
         f"<div class='table'><table><thead><tr>{headers}</tr></thead><tbody>{''.join(rows)}</tbody></table></div></section>"
     )
 

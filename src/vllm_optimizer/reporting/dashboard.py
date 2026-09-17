@@ -18,10 +18,10 @@ from vllm_optimizer.reporting.importance import importance_section
 from vllm_optimizer.reporting.interactions import report_script
 from vllm_optimizer.reporting.leaderboard import leaderboard
 from vllm_optimizer.reporting.methodology import metric_methodology
+from vllm_optimizer.reporting.overview import result_summary
 from vllm_optimizer.reporting.recommendation import recommendation
 from vllm_optimizer.reporting.styles import dashboard_css
 from vllm_optimizer.reporting.tables import evidence_table, failures
-from vllm_optimizer.reporting.workloads import formatted
 
 
 def render_dashboard(
@@ -50,7 +50,7 @@ def render_dashboard(
         outcome = "Baseline wins — keep the baseline"
     elif change is not None:
         outcome = (
-            f"Tuning improved the observed score by {change:.2f}%"
+            "Higher optimization score observed"
             if change > 0
             else "Score tied with baseline; recommendation selected by request quality"
         )
@@ -60,20 +60,6 @@ def render_dashboard(
     counts = {
         state: sum(item.status.value == state for item in trials) for state in ("completed", "failed", "interrupted")
     }
-    cards = "".join(
-        (
-            _card("Best observed", best.trial_id if best else "Unavailable", formatted(best.value if best else None)),
-            _card(
-                "Improvement vs baseline", f"{change:+.2f}%" if change is not None else "Unavailable", "Accepted score"
-            ),
-            _card("Experiment time", _duration(context), "Wall clock"),
-            _card(
-                "Trials",
-                f"{counts['completed']} completed / {counts['failed']} failed",
-                f"{counts['interrupted']} interrupted · {context.status}",
-            ),
-        )
-    )
     contention = (
         "<p class='warning'>Parallel search can introduce shared-resource contention. "
         "Finalist validation is identified separately below when available.</p>"
@@ -87,11 +73,14 @@ def render_dashboard(
 <p>Maximize <code>{escape(metric)}</code> · Mode {escape(context.execution_mode)}</p>
 <nav aria-label='Report sections'><a href='#overview'>Overview</a> · <a href='#recommendation'>Configuration</a> ·
 <a href='#comparison'>Comparison</a> · <a href='#confidence'>Confidence</a> · <a href='#leaderboard'>All trials</a></nav>
-</div></header><main><section id='overview'><h2>1. Result overview</h2><h3>{escape(outcome)}</h3>
-<p>{escape(conclusion)}</p><div class='cards'>{cards}</div>{contention}</section>
+</div></header><main><section id='overview'><h2>{escape(outcome)}</h2>
+<p class='confidence-note'>{escape(conclusion)}</p>{result_summary(base_report, selected)}
+<p class='run-meta'>{_duration(context)} elapsed &middot; {counts["completed"]} completed &middot; {counts["failed"]} failed &middot;
+{counts["interrupted"]} interrupted &middot; {escape(context.status)}</p>{contention}</section>
 {recommendation(directory, best, baseline, selected, bool(context.finalist_validation) and not decision.winner_trial_id)}
-{comparison(base_report, selected)}
-{confidence(directory, base_report, finalist, metric, context, conclusion, validation_reports)}
+<details class='report-panel'><summary>Performance breakdown</summary>{comparison(base_report, selected)}</details>
+<details class='report-panel'><summary>Confidence and validation</summary>
+{confidence(directory, base_report, finalist, metric, context, conclusion, validation_reports)}</details>
 {leaderboard(trials, ranking, baseline, metric, directory)}{_diagnostics(trials, ranking, baseline, context)}
 </main><footer>Generated from stored experiment artifacts. Missing evidence is shown as unavailable.</footer>
 {report_script()}</body></html>"""
@@ -105,7 +94,7 @@ def _diagnostics(
 ) -> str:
     llm = context.llm_summary or context.llm_summary_error
     return (
-        "<details><summary>Detailed diagnostics and exploratory analysis</summary>"
+        "<details class='report-panel'><summary>Diagnostics and methodology</summary>"
         "<section><h2>Accepted score comparison</h2>"
         + comparison_chart(ranking, baseline)
         + "<h3>Accepted scores in recorded trial order</h3>"
@@ -126,13 +115,6 @@ def _diagnostics(
         "This configured objective is separate from the workload comparisons above.</p></section>"
         + (f"<section><h2>Optional LLM summary</h2><p>{escape(llm)}</p></section>" if llm else "")
         + "</details>"
-    )
-
-
-def _card(label: str, value: str, detail: str) -> str:
-    return (
-        f"<article><span>{escape(label)}</span><strong>{escape(value)}</strong>"
-        f"<small>{escape(detail)}</small></article>"
     )
 
 

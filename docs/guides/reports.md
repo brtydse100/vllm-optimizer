@@ -10,13 +10,31 @@ The report is designed to answer, at a glance:
 2. Which configuration should I use?
 3. How much should I trust it?
 
-The first four sections are expanded: result overview, recommended configuration,
-baseline comparison, and confidence. The overview identifies baseline wins,
-the optimization metric, experiment wall time, and trial status counts.
-The recommendation shows changed arguments and environment values, resolved
-explicit vLLM YAML, selected environment variables, and a copyable POSIX launch
+The default view shows a one-line result summary, a visible confidence verdict,
+baseline and best-observed measurements, changed settings, and every trial.
+The summary reports the percentage change in **mean output throughput** and
+**average benchmark duration** against the baseline. For example: "Results show
+20% higher output throughput and 10% shorter average benchmark duration versus
+baseline." Regressions are labeled lower throughput or longer duration; ties
+are unchanged. Baseline retention does not claim an improvement.
+
+Duration reduction is `(baseline - selected) / baseline * 100`; throughput
+increase is `(selected - baseline) / baseline * 100`. These are arithmetic
+means of recorded measurements, separate from the configured optimization
+score (including historical median-based scores). Percentages require matching
+workloads, repeat counts, complete measurements, and a nonzero baseline.
+Unavailable comparisons are identified explicitly.
+
+The settings section shows changed arguments and environment values with a
+**Copy launch command** button. Expand **Full configuration and launch command**
+for resolved explicit vLLM YAML, selected environment variables, and the POSIX
 command. Unspecified vLLM internal defaults are not captured. Replace redacted
 values before launching.
+
+**Performance breakdown**, **Confidence and validation**, and **Diagnostics and
+methodology** start collapsed. Open them for detailed comparisons, repeat
+statistics, charts, failures, and metric definitions. The confidence verdict
+remains visible in the overview even when its supporting details are collapsed.
 
 Comparisons preserve each workload's recorded configuration. They show output
 and request throughput, TTFT, TPOT, end-to-end latency, and request failures,
@@ -27,7 +45,7 @@ repeats; P50/P95/P99 columns are means of supplied backend percentiles, **not po
 request percentiles**. Missing measurements and zero-denominator percentage
 changes are unavailable. Different workload configurations are not paired.
 
-The baseline comparison is expanded by default. Overall percentage changes
+The baseline comparison is inside Performance breakdown. Overall percentage changes
 require matching workload configurations and repeat counts on both sides.
 Missing metric samples or benchmark durations make the affected change
 unavailable; recorded absolute values and per-workload details remain visible.
@@ -42,11 +60,16 @@ overlap is a descriptive heuristic, not a significance test. Independent
 production validation remains necessary. Initial search measurements are kept
 separate from accepted finalist validation.
 
-The sortable leaderboard keeps every trial, including duplicate configurations,
+The sortable **All trials** table keeps every trial, including duplicate configurations,
 failures, and interruptions. It shows each trial's mean recorded benchmark
-duration and percentage difference from the baseline; lower duration is labeled
-better. Expand a row for individual benchmark execution durations. Missing
-timings remain unavailable rather than inferred.
+duration. Open **Full details** for the duration difference from baseline,
+individual repeat durations, variability, request failures, and settings. Lower
+duration is labeled better. **All recorded trial data (JSON)** includes every
+stored benchmark/workload metric, execution metadata, artifacts, attempts, and
+errors, with secret-name redaction and HTML escaping. Missing timings remain
+unavailable rather than inferred. Average benchmark duration excludes server
+startup and is not total trial wall time. Raw log and benchmark file contents
+remain in the run artifacts.
 For adaptive runs, expanded trial details show whether extra repeats continued
 or stopped, the reason, and actual repeat counts for each workload. The same
 structured evidence is stored under `trials[].execution.adaptive_repeats` in the

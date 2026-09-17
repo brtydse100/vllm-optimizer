@@ -6,16 +6,25 @@ def report_script() -> str:
 document.querySelectorAll('[data-copy]').forEach(button => {
   button.addEventListener('click', async () => {
     const target = document.getElementById(button.dataset.copy);
-    const status = target.nextElementSibling;
+    const status = button.nextElementSibling?.matches('.copy-status')
+      ? button.nextElementSibling : target.nextElementSibling;
     try {
       await navigator.clipboard.writeText(target.textContent);
       status.textContent = 'Copied';
     } catch {
+      let parent = target.parentElement;
+      while (parent) { if (parent.tagName === 'DETAILS') parent.open = true; parent = parent.parentElement; }
       const selection = window.getSelection();
       const range = document.createRange();
       range.selectNodeContents(target); selection.removeAllRanges(); selection.addRange(range);
       status.textContent = 'Text selected. Press Ctrl+C or Cmd+C to copy.';
     }
+  });
+});
+document.querySelectorAll('nav a').forEach(link => {
+  link.addEventListener('click', () => {
+    let target = document.querySelector(link.getAttribute('href'));
+    while (target) { if (target.tagName === 'DETAILS') target.open = true; target = target.parentElement; }
   });
 });
 document.querySelectorAll('[data-sort]').forEach(button => {

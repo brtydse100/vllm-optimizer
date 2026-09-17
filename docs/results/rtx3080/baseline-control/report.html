@@ -1,13 +1,20 @@
 <!doctype html><html lang='en'><head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>vLLM Optimizer · 20260913-210946-683068</title><style>*{box-sizing:border-box}body{margin:0;background:#f8fafc;color:#172033;font:15px system-ui}
-main>*{min-width:0}h3,td,pre{overflow-wrap:anywhere}h3{font-size:1rem}
+main>*{min-width:0}h2{font-size:1.25rem}.result-summary{font-size:1.4rem;line-height:1.5;font-weight:650;max-width:780px}
+.confidence-note{border-left:3px solid #d97706;padding:8px 12px;background:#fffbeb;color:#78350f;border-radius:4px}
+.run-meta,.note{font-size:13px;line-height:1.6}.run-meta{margin-bottom:0;color:#64748b}
+.report-panel{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:4px 20px}
+.report-panel>section{border:0;padding:12px 0}.report-panel>summary{padding:14px 0}
+.summary-table th,.summary-table td{padding:12px 9px}.summary-table td{font-variant-numeric:tabular-nums}
+#leaderboard td:last-child{min-width:125px}#leaderboard pre{max-height:440px;min-width:260px}
+@media(max-width:520px){header{padding-top:24px!important}h1{font-size:1.35rem!important}.result-summary{font-size:1.15rem}section{padding:16px!important}main{padding:0 12px!important}}h3,td,pre{overflow-wrap:anywhere}h3{font-size:1rem}
 button{font:inherit;cursor:pointer;border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;background:#f1f5f9;color:#172033}
 button:hover{background:#dbeafe}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #2563eb;outline-offset:3px}
 summary{cursor:pointer;font-weight:650;padding:12px 0}details section{margin-top:16px}nav a{color:#1d4ed8}
 th[aria-sort='ascending'] button::after{content:' ↑'}th[aria-sort='descending'] button::after{content:' ↓'}
 .copy-status{display:block;color:#475569;font-size:13px}.cards article{min-width:0}.cards strong{overflow-wrap:anywhere}
-header,main,footer{max-width:1200px;margin:auto}header{padding:36px 24px 20px;display:flex;justify-content:space-between}
+header,main,footer{max-width:1060px;margin:auto}header{padding:36px 24px 20px;display:flex;justify-content:space-between}
 h1{margin:.1rem 0;font-size:2rem}h2{margin-top:0}.eyebrow{color:#2563eb;font-weight:700;text-transform:uppercase}
 .status{background:#dbeafe;color:#1d4ed8;padding:8px 14px;border-radius:999px;height:max-content}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;background:none;padding:0}
 .cards article,section{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:20px}.cards strong{display:block;font-size:1.65rem;margin:7px 0}.cards span,.cards small,.muted,.note{color:#64748b}
@@ -17,9 +24,11 @@ main{padding:0 24px;display:grid;gap:18px}.split{display:grid;grid-template-colu
 <p>Maximize <code>output_tokens_per_second</code> · Mode sequential</p>
 <nav aria-label='Report sections'><a href='#overview'>Overview</a> · <a href='#recommendation'>Configuration</a> ·
 <a href='#comparison'>Comparison</a> · <a href='#confidence'>Confidence</a> · <a href='#leaderboard'>All trials</a></nav>
-</div></header><main><section id='overview'><h2>1. Result overview</h2><h3>Baseline wins — keep the baseline</h3>
-<p>Repeat ranges favor the baseline in every matched workload; independent validation is still limited.</p><div class='cards'><article><span>Best observed</span><strong>baseline</strong><small>925.5</small></article><article><span>Improvement vs baseline</span><strong>+0.00%</strong><small>Accepted score</small></article><article><span>Experiment time</span><strong>00:00:01:32</strong><small>Wall clock</small></article><article><span>Trials</span><strong>2 completed / 0 failed</strong><small>0 interrupted · completed</small></article></div></section>
-<section id='recommendation'><h2>2. Recommended configuration</h2><p><strong>baseline</strong> · Best observed eligible configuration.</p><p>No settings changed.</p><h3>Full resolved vLLM YAML</h3><p>Explicit experiment settings and runtime host/port; unspecified vLLM internal defaults are not captured. Redacted values require replacement.</p><button type='button' data-copy='resolved-yaml'>Copy</button><pre id='resolved-yaml'>dtype: float16
+</div></header><main><section id='overview'><h2>Baseline wins — keep the baseline</h2>
+<p class='confidence-note'>Repeat ranges favor the baseline in every matched workload; independent validation is still limited.</p><p class='result-summary'>Baseline retained; no observed improvement is claimed.</p><div class='table'><table class='summary-table'><thead><tr><th>Measurement</th><th>Baseline</th><th>Best observed</th></tr></thead><tbody><tr><th>Mean output throughput</th><td>925.5 tok/s</td><td>925.5 tok/s</td></tr><tr><th>Average benchmark duration</th><td>6.618 s</td><td>6.618 s</td></tr></tbody></table></div><p class='note'>Arithmetic means of recorded measurements; benchmark duration excludes server startup. The configured optimization score may use a different aggregation.</p>
+<p class='run-meta'>00:00:01:32 elapsed &middot; 2 completed &middot; 0 failed &middot;
+0 interrupted &middot; completed</p></section>
+<section id='recommendation'><h2>Best observed settings</h2><p><strong>baseline</strong> · Best observed eligible configuration.</p><p>No settings changed.</p><button type='button' data-copy='launch-command'>Copy launch command</button><span class='copy-status' role='status'></span><details><summary>Full configuration and launch command</summary><h3>Full resolved vLLM YAML</h3><p>Experiment settings, snapshotted external settings, and runtime host/port; unspecified vLLM internal defaults are not captured. Redacted values require replacement.</p><button type='button' data-copy='resolved-yaml'>Copy</button><pre id='resolved-yaml'>dtype: float16
 enable-chunked-prefill: true
 enforce-eager: true
 gpu-memory-utilization: 0.4
@@ -35,10 +44,18 @@ tensor-parallel-size: 1
 VLLM_LOGGING_LEVEL: INFO
 VLLM_USE_FLASHINFER_SAMPLER: &#x27;0&#x27;
 VLLM_USE_V2_MODEL_RUNNER: &#x27;0&#x27;
-</pre><span class='copy-status' role='status'></span><h3>Launch command (POSIX shell)</h3><button type='button' data-copy='launch-command'>Copy</button><pre id='launch-command'>env CUDA_VISIBLE_DEVICES=0 VLLM_LOGGING_LEVEL=INFO VLLM_USE_FLASHINFER_SAMPLER=0 VLLM_USE_V2_MODEL_RUNNER=0 vllm serve /var/tmp/vllm-optimizer-demo/models/opt-125m --dtype float16 --enable-chunked-prefill --enforce-eager --gpu-memory-utilization 0.4 --host 127.0.0.1 --max-model-len 512 --max-num-batched-tokens 512 --max-num-seqs 16 --port 8766 --seed 42 --tensor-parallel-size 1</pre><span class='copy-status' role='status'></span></section>
-<section id='comparison'><h2>3. Baseline vs recommended</h2><details open><summary>Latency, throughput, and benchmark duration comparison</summary><p class='warning'>This comparison exposes latency trade-offs, but tuning a different objective is not the best way to search for the lowest latency. Use a latency objective for that purpose.</p><p>Each value is the arithmetic mean of available repeat measurements for this exact workload. P50/P95/P99 are means of backend-supplied percentiles, not pooled request percentiles. Positive throughput changes improve performance; negative latency/failure changes improve performance. Percentage changes are unavailable for mismatched workloads, unequal repeat counts, or missing measurements. Overall means retain the same workload weighting only when coverage matches.</p><h3>Overall means</h3><div class='table'><table><thead><tr><th>Metric</th><th>Baseline</th><th>Recommended</th><th>Difference</th></tr></thead><tbody><tr><td>Mean E2E latency</td><td>275.9 ms</td><td>275.9 ms</td><td>+0.00% (same)</td></tr><tr><td>Mean output throughput</td><td>925.5 tok/s</td><td>925.5 tok/s</td><td>+0.00% (same)</td></tr><tr><td>Mean benchmark duration</td><td>6.618 s</td><td>6.618 s</td><td>+0.00% (same)</td></tr></tbody></table></div><h3>Mean duration by benchmark</h3><div class='table'><table><thead><tr><th>Benchmark</th><th>Baseline</th><th>Recommended</th><th>Difference</th></tr></thead><tbody><tr><td>short-chat</td><td>6.618 s</td><td>6.618 s</td><td>+0.00% (same)</td></tr></tbody></table></div><h3>short-chat / workload 0 / {&quot;backend&quot;: &quot;vllm&quot;, &quot;burstiness&quot;: 1.0, &quot;max_concurrency&quot;: 8, &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;, &quot;num_prompts&quot;: 16, &quot;request_rate&quot;: &quot;inf&quot;}</h3><div class='table'><table><thead><tr><th>Metric</th><th>Baseline</th><th>Recommended</th><th>Change</th><th>Repeats (base / rec)</th></tr></thead><tbody><tr><td>Output throughput · Mean</td><td>925.5 tok/s</td><td>925.5 tok/s</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Request throughput · Mean</td><td>28.92 req/s</td><td>28.92 req/s</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>TTFT · Mean</td><td>35.81 ms</td><td>35.81 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>TTFT · P50</td><td>25.94 ms</td><td>25.94 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>TTFT · P95</td><td>52.3 ms</td><td>52.3 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>TTFT · P99</td><td>52.47 ms</td><td>52.47 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Time per output token · Mean</td><td>7.745 ms</td><td>7.745 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Time per output token · P50</td><td>7.773 ms</td><td>7.773 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Time per output token · P95</td><td>10.8 ms</td><td>10.8 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Time per output token · P99</td><td>11.28 ms</td><td>11.28 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Inter-token latency · Mean</td><td>7.97 ms</td><td>7.97 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Inter-token latency · P50</td><td>5.149 ms</td><td>5.149 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Inter-token latency · P99</td><td>22.79 ms</td><td>22.79 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>End-to-end latency · Mean</td><td>275.9 ms</td><td>275.9 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>End-to-end latency · P50</td><td>275.9 ms</td><td>275.9 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>End-to-end latency · P95</td><td>381.1 ms</td><td>381.1 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>End-to-end latency · P99</td><td>381.3 ms</td><td>381.3 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Failed + incomplete requests</td><td>0 requests</td><td>0 requests</td><td>Unavailable</td><td>3 / 3</td></tr></tbody></table></div></details></section>
-<section id='confidence'><h2>4. Confidence in the result</h2><p class='warning'>Repeat ranges favor the baseline in every matched workload; independent validation is still limited.</p><p>Descriptive repeat evidence for the optimization metric, per workload. Range overlap is a conservative inconclusive flag, not a statistical significance test. These measurements are not independent proof of production performance. Drift compares the first and second halves when at least four repeats exist.</p><p>At least 3 measured repeats are required by the configured confidence policy. Sequential drift of more than 5% triggers finalist validation.</p><div class='table'><table><thead><tr><th>Trial / phase</th><th>Workload</th><th>Individual repeats</th><th>n</th><th>Mean</th><th>Sample SD</th><th>Range</th><th>Drift</th></tr></thead><tbody><tr><td>baseline / Initial search (accepted)</td><td>short-chat / workload 0 / {&quot;backend&quot;: &quot;vllm&quot;, &quot;burstiness&quot;: 1.0, &quot;max_concurrency&quot;: 8, &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;, &quot;num_prompts&quot;: 16, &quot;request_rate&quot;: &quot;inf&quot;}</td><td>1: 919.4; 2: 931.7; 3: 925.5</td><td>3</td><td>925.5</td><td>6.127</td><td>919.4 – 931.7</td><td>Unavailable (&lt;4 repeats)</td></tr><tr><td>trial-0001 / Initial search (accepted)</td><td>short-chat / workload 0 / {&quot;backend&quot;: &quot;vllm&quot;, &quot;burstiness&quot;: 1.0, &quot;max_concurrency&quot;: 8, &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;, &quot;num_prompts&quot;: 16, &quot;request_rate&quot;: &quot;inf&quot;}</td><td>1: 205.9; 2: 187.6; 3: 207.7</td><td>3</td><td>200.4</td><td>11.1</td><td>187.6 – 207.7</td><td>Unavailable (&lt;4 repeats)</td></tr></tbody></table></div></section>
-<section id='leaderboard'><h2>5. Configuration leaderboard</h2><p>All trials, including duplicate configurations and unranked failures. Benchmark duration is the mean of recorded benchmark execution times; its baseline difference labels lower duration as better. Expand a row for individual execution durations. Click a heading to sort; missing values stay last.</p><div class='table'><table><thead><tr><th><button data-sort='0' data-type='number'>Rank</button></th><th><button data-sort='1' data-type='text'>Trial</button></th><th><button data-sort='2' data-type='text'>Status</button></th><th><button data-sort='3' data-type='number'>Score</button></th><th><button data-sort='4' data-type='number'>Baseline delta</button></th><th><button data-sort='5' data-type='number'>Mean benchmark duration</button></th><th><button data-sort='6' data-type='number'>Duration vs baseline</button></th><th><button data-sort='7' data-type='number'>Failed requests (all repeats)</button></th><th><button data-sort='8' data-type='number'>Score SD (largest workload)</button></th><th><button data-sort='9' data-type='text'>Changed settings</button></th><th>Details</th></tr></thead><tbody><tr><td data-value='1'>1</td><td data-value='baseline'>baseline (baseline)</td><td data-value='completed'>completed</td><td data-value='925.5437374195907'>925.5</td><td data-value='0.0'>+0.00%</td><td data-value='6.618133199333291'>6.618 s</td><td data-value='0.0'>+0.00% (same)</td><td data-value='0.0'>0</td><td data-value='6.127213190167429'>6.127</td><td data-value='{}'>{}</td><td><details><summary>Full details</summary><p>short-chat / workload 0 / {&quot;backend&quot;: &quot;vllm&quot;, &quot;burstiness&quot;: 1.0, &quot;max_concurrency&quot;: 8, &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;, &quot;num_prompts&quot;: 16, &quot;request_rate&quot;: &quot;inf&quot;}: score SD 6.127; n=3</p><p>short-chat, repeat 1: duration 6.621 s</p><p>short-chat, repeat 2: duration 6.635 s</p><p>short-chat, repeat 3: duration 6.599 s</p><pre>{
+</pre><span class='copy-status' role='status'></span><h3>Launch command (POSIX shell)</h3><button type='button' data-copy='launch-command'>Copy</button><pre id='launch-command'>env CUDA_VISIBLE_DEVICES=0 VLLM_LOGGING_LEVEL=INFO VLLM_USE_FLASHINFER_SAMPLER=0 VLLM_USE_V2_MODEL_RUNNER=0 vllm serve /var/tmp/vllm-optimizer-demo/models/opt-125m --dtype float16 --enable-chunked-prefill --enforce-eager --gpu-memory-utilization 0.4 --host 127.0.0.1 --max-model-len 512 --max-num-batched-tokens 512 --max-num-seqs 16 --port 8766 --seed 42 --tensor-parallel-size 1</pre><span class='copy-status' role='status'></span></details></section>
+<details class='report-panel'><summary>Performance breakdown</summary><section id='comparison'><h2>Baseline vs best observed</h2><div><p class='warning'>This comparison exposes latency trade-offs, but tuning a different objective is not the best way to search for the lowest latency. Use a latency objective for that purpose.</p><p>Each value is the arithmetic mean of available repeat measurements for this exact workload. P50/P95/P99 are means of backend-supplied percentiles, not pooled request percentiles. Positive throughput changes improve performance; negative latency/failure changes improve performance. Percentage changes are unavailable for mismatched workloads, unequal repeat counts, or missing measurements. Overall means retain the same workload weighting only when coverage matches.</p><h3>Overall means</h3><div class='table'><table><thead><tr><th>Metric</th><th>Baseline</th><th>Recommended</th><th>Difference</th></tr></thead><tbody><tr><td>Mean E2E latency</td><td>275.9 ms</td><td>275.9 ms</td><td>+0.00% (same)</td></tr><tr><td>Mean output throughput</td><td>925.5 tok/s</td><td>925.5 tok/s</td><td>+0.00% (same)</td></tr><tr><td>Mean benchmark duration</td><td>6.618 s</td><td>6.618 s</td><td>+0.00% (same)</td></tr></tbody></table></div><h3>Mean duration by benchmark</h3><div class='table'><table><thead><tr><th>Benchmark</th><th>Baseline</th><th>Recommended</th><th>Difference</th></tr></thead><tbody><tr><td>short-chat</td><td>6.618 s</td><td>6.618 s</td><td>+0.00% (same)</td></tr></tbody></table></div><h3>short-chat / workload 0 — requests: 16 · concurrency: 8 · request rate: unlimited · burstiness: 1.0</h3><details><summary>Full workload configuration JSON</summary><pre>{
+  &quot;backend&quot;: &quot;vllm&quot;,
+  &quot;burstiness&quot;: 1.0,
+  &quot;max_concurrency&quot;: 8,
+  &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+  &quot;num_prompts&quot;: 16,
+  &quot;request_rate&quot;: &quot;inf&quot;
+}</pre></details><div class='table'><table><thead><tr><th>Metric</th><th>Baseline</th><th>Recommended</th><th>Change</th><th>Repeats (base / rec)</th></tr></thead><tbody><tr><td>Output throughput · Mean</td><td>925.5 tok/s</td><td>925.5 tok/s</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Request throughput · Mean</td><td>28.92 req/s</td><td>28.92 req/s</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>TTFT · Mean</td><td>35.81 ms</td><td>35.81 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>TTFT · P50</td><td>25.94 ms</td><td>25.94 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>TTFT · P95</td><td>52.3 ms</td><td>52.3 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>TTFT · P99</td><td>52.47 ms</td><td>52.47 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Time per output token · Mean</td><td>7.745 ms</td><td>7.745 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Time per output token · P50</td><td>7.773 ms</td><td>7.773 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Time per output token · P95</td><td>10.8 ms</td><td>10.8 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Time per output token · P99</td><td>11.28 ms</td><td>11.28 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Inter-token latency · Mean</td><td>7.97 ms</td><td>7.97 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Inter-token latency · P50</td><td>5.149 ms</td><td>5.149 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Inter-token latency · P99</td><td>22.79 ms</td><td>22.79 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>End-to-end latency · Mean</td><td>275.9 ms</td><td>275.9 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>End-to-end latency · P50</td><td>275.9 ms</td><td>275.9 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>End-to-end latency · P95</td><td>381.1 ms</td><td>381.1 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>End-to-end latency · P99</td><td>381.3 ms</td><td>381.3 ms</td><td>+0.00%</td><td>3 / 3</td></tr><tr><td>Failed + incomplete requests</td><td>0 requests</td><td>0 requests</td><td>Unavailable</td><td>3 / 3</td></tr></tbody></table></div></div></section></details>
+<details class='report-panel'><summary>Confidence and validation</summary>
+<section id='confidence'><h2>Confidence in the result</h2><p class='warning'>Repeat ranges favor the baseline in every matched workload; independent validation is still limited.</p><p>Descriptive repeat evidence for the optimization metric, per workload. Range overlap is a conservative inconclusive flag, not a statistical significance test. These measurements are not independent proof of production performance. Drift compares the first and second halves when at least four repeats exist.</p><p>At least 3 measured repeats are required by the configured confidence policy. Sequential drift of more than 5% triggers finalist validation.</p><div class='table'><table><thead><tr><th>Trial / phase</th><th>Workload</th><th>Individual repeats</th><th>n</th><th>Mean</th><th>Sample SD</th><th>Range</th><th>Drift</th></tr></thead><tbody><tr><td>baseline / Initial search (accepted)</td><td>short-chat / workload 0 — requests: 16 · concurrency: 8 · request rate: unlimited · burstiness: 1.0</td><td>1: 919.4; 2: 931.7; 3: 925.5</td><td>3</td><td>925.5</td><td>6.127</td><td>919.4 – 931.7</td><td>Unavailable (&lt;4 repeats)</td></tr><tr><td>trial-0001 / Initial search (accepted)</td><td>short-chat / workload 0 — requests: 16 · concurrency: 8 · request rate: unlimited · burstiness: 1.0</td><td>1: 205.9; 2: 187.6; 3: 207.7</td><td>3</td><td>200.4</td><td>11.1</td><td>187.6 – 207.7</td><td>Unavailable (&lt;4 repeats)</td></tr></tbody></table></div></section></details>
+<section id='leaderboard'><h2>All trials</h2><p>Every trial, including failures. Mean benchmark duration excludes server startup. Expand Full details for repeat timings, settings, errors, and all recorded metrics. Click a heading to sort.</p><div class='table'><table><thead><tr><th><button data-sort='0' data-type='number'>Rank</button></th><th><button data-sort='1' data-type='text'>Trial</button></th><th><button data-sort='2' data-type='text'>Status</button></th><th><button data-sort='3' data-type='number'>Score</button></th><th><button data-sort='4' data-type='number'>Baseline delta</button></th><th><button data-sort='5' data-type='number'>Mean benchmark duration</button></th><th>Details</th></tr></thead><tbody><tr><td data-value='1'>1</td><td data-value='baseline'>baseline (baseline)</td><td data-value='completed'>completed</td><td data-value='925.5437374195907'>925.5</td><td data-value='0.0'>+0.00%</td><td data-value='6.618133199333291'>6.618 s</td><td><details><summary>Full details</summary><p>Failed requests (all repeats): 0; Score SD (largest workload): 6.127</p><p>Duration vs baseline: +0.00% (same)</p><p>Changed settings: {}</p><p>short-chat / workload 0 — requests: 16 · concurrency: 8 · request rate: unlimited · burstiness: 1.0: score SD 6.127; n=3</p><p>short-chat, repeat 1: duration 6.621 s</p><p>short-chat, repeat 2: duration 6.635 s</p><p>short-chat, repeat 3: duration 6.599 s</p><pre>{
   &quot;host&quot;: &quot;127.0.0.1&quot;,
   &quot;port&quot;: 8766,
   &quot;dtype&quot;: &quot;float16&quot;,
@@ -53,7 +70,537 @@ VLLM_USE_V2_MODEL_RUNNER: &#x27;0&#x27;
   &quot;env.CUDA_VISIBLE_DEVICES&quot;: &quot;0&quot;,
   &quot;env.VLLM_USE_V2_MODEL_RUNNER&quot;: &quot;0&quot;,
   &quot;env.VLLM_USE_FLASHINFER_SAMPLER&quot;: &quot;0&quot;
-}</pre></details></td></tr><tr><td data-value='2'>2</td><td data-value='trial-0001'>trial-0001</td><td data-value='completed'>completed</td><td data-value='205.87429919717644'>205.9</td><td data-value='-77.75639433624687'>-77.76%</td><td data-value='8.488387037667659'>8.488 s</td><td data-value='28.25953757658998'>+28.26% (worse)</td><td data-value='0.0'>0</td><td data-value='11.10132136453813'>11.1</td><td data-value='{&quot;max-num-seqs&quot;: [16, 1]}'>{&quot;max-num-seqs&quot;: [16, 1]}</td><td><details><summary>Full details</summary><p>short-chat / workload 0 / {&quot;backend&quot;: &quot;vllm&quot;, &quot;burstiness&quot;: 1.0, &quot;max_concurrency&quot;: 8, &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;, &quot;num_prompts&quot;: 16, &quot;request_rate&quot;: &quot;inf&quot;}: score SD 11.1; n=3</p><p>short-chat, repeat 1: duration 8.373 s</p><p>short-chat, repeat 2: duration 8.684 s</p><p>short-chat, repeat 3: duration 8.409 s</p><pre>{
+}</pre><details><summary>All recorded trial data (JSON)</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;trial_id&quot;: &quot;baseline&quot;,
+  &quot;status&quot;: &quot;completed&quot;,
+  &quot;benchmarks&quot;: [
+    {
+      &quot;name&quot;: &quot;short-chat&quot;,
+      &quot;backend&quot;: &quot;vllm&quot;,
+      &quot;backend_version&quot;: &quot;0.28.0&quot;,
+      &quot;raw_artifact&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/001/short-chat/results.json&quot;,
+      &quot;repeat&quot;: 1,
+      &quot;elapsed_seconds&quot;: 6.6211034309963,
+      &quot;successful_requests&quot;: 16,
+      &quot;failed_requests&quot;: 0,
+      &quot;errored_requests&quot;: 0,
+      &quot;incomplete_requests&quot;: 0,
+      &quot;total_requests&quot;: 16,
+      &quot;failure_percentage&quot;: 0.0,
+      &quot;workloads&quot;: [
+        {
+          &quot;index&quot;: 0,
+          &quot;configuration&quot;: {
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8
+          },
+          &quot;metrics&quot;: {
+            &quot;date&quot;: &quot;20260914-001015&quot;,
+            &quot;endpoint_type&quot;: &quot;vllm&quot;,
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;label&quot;: null,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;tokenizer_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8,
+            &quot;duration&quot;: 0.5568704510005773,
+            &quot;completed&quot;: 16,
+            &quot;failed&quot;: 0,
+            &quot;total_input_tokens&quot;: 1024,
+            &quot;total_output_tokens&quot;: 512,
+            &quot;request_throughput&quot;: 28.731996770975037,
+            &quot;request_goodput&quot;: null,
+            &quot;output_throughput&quot;: 919.4238966712012,
+            &quot;total_token_throughput&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;ttfts&quot;: [
+              0.027390028000809252,
+              0.052197485994838644,
+              0.051786725998681504,
+              0.05180259900225792,
+              0.05179955500352662,
+              0.05132502799824579,
+              0.05124900900409557,
+              0.05118700999446446,
+              0.023685018997639418,
+              0.017565855996508617,
+              0.023381894003250636,
+              0.023378498997772112,
+              0.02286308899783762,
+              0.022546439002326224,
+              0.022504008004034404,
+              0.022462788998382166
+            ],
+            &quot;max_output_tokens_per_s&quot;: 498.0,
+            &quot;max_concurrent_requests&quot;: 16,
+            &quot;rtfx&quot;: 0.0,
+            &quot;mean_ttft_ms&quot;: 35.445314624666935,
+            &quot;median_ttft_ms&quot;: 25.537523499224335,
+            &quot;std_ttft_ms&quot;: 14.376934877886665,
+            &quot;p50_ttft_ms&quot;: 25.537523499224335,
+            &quot;p95_ttft_ms&quot;: 51.9013207504031,
+            &quot;p99_ttft_ms&quot;: 52.138252945951535,
+            &quot;mean_tpot_ms&quot;: 7.816520802422136,
+            &quot;median_tpot_ms&quot;: 7.843694241948411,
+            &quot;std_tpot_ms&quot;: 3.0229491101809094,
+            &quot;p50_tpot_ms&quot;: 7.843694241948411,
+            &quot;p95_tpot_ms&quot;: 10.935117975790373,
+            &quot;p99_tpot_ms&quot;: 11.418450975777946,
+            &quot;mean_itl_ms&quot;: 8.043560060169847,
+            &quot;median_itl_ms&quot;: 5.212225001741899,
+            &quot;std_itl_ms&quot;: 5.741247223539477,
+            &quot;p50_itl_ms&quot;: 5.212225001741899,
+            &quot;p95_itl_ms&quot;: 20.642403695092042,
+            &quot;p99_itl_ms&quot;: 21.952506191737484,
+            &quot;mean_e2el_ms&quot;: 277.75745949975317,
+            &quot;median_e2el_ms&quot;: 277.83887300029164,
+            &quot;std_e2el_ms&quot;: 106.66682276035688,
+            &quot;p50_e2el_ms&quot;: 277.83887300029164,
+            &quot;p95_e2el_ms&quot;: 384.9628047464648,
+            &quot;p99_e2el_ms&quot;: 385.07883214915637,
+            &quot;requests_per_second&quot;: {
+              &quot;average&quot;: 28.731996770975037
+            },
+            &quot;output_tokens_per_second&quot;: {
+              &quot;average&quot;: 919.4238966712012
+            },
+            &quot;total_tokens_per_second&quot;: {
+              &quot;average&quot;: 2758.271690013604
+            },
+            &quot;time_to_first_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;time_per_output_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;inter_token_latency_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;end_to_end_latency_ms&quot;: {
+              &quot;average&quot;: 277.75745949975317,
+              &quot;median&quot;: 277.83887300029164,
+              &quot;p99&quot;: 385.07883214915637
+            },
+            &quot;request_totals&quot;: {
+              &quot;successful&quot;: 16,
+              &quot;errored&quot;: 0,
+              &quot;incomplete&quot;: 0
+            },
+            &quot;request_total&quot;: 16,
+            &quot;requests&quot;: {
+              &quot;input&quot;: [
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64
+              ],
+              &quot;output&quot;: [
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32
+              ],
+              &quot;error_msg&quot;: {}
+            }
+          },
+          &quot;successful_requests&quot;: 16,
+          &quot;failed_requests&quot;: 0,
+          &quot;errored_requests&quot;: 0,
+          &quot;incomplete_requests&quot;: 0,
+          &quot;total_requests&quot;: 16,
+          &quot;failure_percentage&quot;: 0.0
+        }
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;short-chat&quot;,
+      &quot;backend&quot;: &quot;vllm&quot;,
+      &quot;backend_version&quot;: &quot;0.28.0&quot;,
+      &quot;raw_artifact&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/002/short-chat/results.json&quot;,
+      &quot;repeat&quot;: 2,
+      &quot;elapsed_seconds&quot;: 6.634794607001822,
+      &quot;successful_requests&quot;: 16,
+      &quot;failed_requests&quot;: 0,
+      &quot;errored_requests&quot;: 0,
+      &quot;incomplete_requests&quot;: 0,
+      &quot;total_requests&quot;: 16,
+      &quot;failure_percentage&quot;: 0.0,
+      &quot;workloads&quot;: [
+        {
+          &quot;index&quot;: 0,
+          &quot;configuration&quot;: {
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8
+          },
+          &quot;metrics&quot;: {
+            &quot;date&quot;: &quot;20260914-001021&quot;,
+            &quot;endpoint_type&quot;: &quot;vllm&quot;,
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;label&quot;: null,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;tokenizer_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8,
+            &quot;duration&quot;: 0.5495458990044426,
+            &quot;completed&quot;: 16,
+            &quot;failed&quot;: 0,
+            &quot;total_input_tokens&quot;: 1024,
+            &quot;total_output_tokens&quot;: 512,
+            &quot;request_throughput&quot;: 29.11494750299402,
+            &quot;request_goodput&quot;: null,
+            &quot;output_throughput&quot;: 931.6783200958087,
+            &quot;total_token_throughput&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;ttfts&quot;: [
+              0.028065067999705207,
+              0.05394198099384084,
+              0.05361263800296001,
+              0.05350894799630623,
+              0.053490347003389616,
+              0.052931407997675706,
+              0.05289208600152051,
+              0.05281375200138427,
+              0.02378148699790472,
+              0.017953021000721492,
+              0.02343496599496575,
+              0.02285615599976154,
+              0.02283722500578733,
+              0.02279422900028294,
+              0.022567385996808298,
+              0.022093879997555632
+            ],
+            &quot;max_output_tokens_per_s&quot;: 498.0,
+            &quot;max_concurrent_requests&quot;: 16,
+            &quot;rtfx&quot;: 0.0,
+            &quot;mean_ttft_ms&quot;: 36.22341112441063,
+            &quot;median_ttft_ms&quot;: 25.923277498804964,
+            &quot;std_ttft_ms&quot;: 15.183399028614506,
+            &quot;p50_ttft_ms&quot;: 25.923277498804964,
+            &quot;p95_ttft_ms&quot;: 53.69497375068022,
+            &quot;p99_ttft_ms&quot;: 53.89257954520872,
+            &quot;mean_tpot_ms&quot;: 7.6712394758003715,
+            &quot;median_tpot_ms&quot;: 7.694385887119889,
+            &quot;std_tpot_ms&quot;: 3.0112599328328096,
+            &quot;p50_tpot_ms&quot;: 7.694385887119889,
+            &quot;p95_tpot_ms&quot;: 10.779751007982169,
+            &quot;p99_tpot_ms&quot;: 11.274841298337934,
+            &quot;mean_itl_ms&quot;: 7.894058360980728,
+            &quot;median_itl_ms&quot;: 4.912910000712145,
+            &quot;std_itl_ms&quot;: 5.861273226742792,
+            &quot;p50_itl_ms&quot;: 4.912910000712145,
+            &quot;p95_itl_ms&quot;: 20.29182394981033,
+            &quot;p99_itl_ms&quot;: 23.307157570307027,
+            &quot;mean_e2el_ms&quot;: 274.0318348742221,
+            &quot;median_e2el_ms&quot;: 274.1764454985969,
+            &quot;std_e2el_ms&quot;: 107.08313900691736,
+            &quot;p50_e2el_ms&quot;: 274.1764454985969,
+            &quot;p95_e2el_ms&quot;: 381.49258849807666,
+            &quot;p99_e2el_ms&quot;: 381.66176569720847,
+            &quot;requests_per_second&quot;: {
+              &quot;average&quot;: 29.11494750299402
+            },
+            &quot;output_tokens_per_second&quot;: {
+              &quot;average&quot;: 931.6783200958087
+            },
+            &quot;total_tokens_per_second&quot;: {
+              &quot;average&quot;: 2795.0349602874257
+            },
+            &quot;time_to_first_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;time_per_output_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;inter_token_latency_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;end_to_end_latency_ms&quot;: {
+              &quot;average&quot;: 274.0318348742221,
+              &quot;median&quot;: 274.1764454985969,
+              &quot;p99&quot;: 381.66176569720847
+            },
+            &quot;request_totals&quot;: {
+              &quot;successful&quot;: 16,
+              &quot;errored&quot;: 0,
+              &quot;incomplete&quot;: 0
+            },
+            &quot;request_total&quot;: 16,
+            &quot;requests&quot;: {
+              &quot;input&quot;: [
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64
+              ],
+              &quot;output&quot;: [
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32
+              ],
+              &quot;error_msg&quot;: {}
+            }
+          },
+          &quot;successful_requests&quot;: 16,
+          &quot;failed_requests&quot;: 0,
+          &quot;errored_requests&quot;: 0,
+          &quot;incomplete_requests&quot;: 0,
+          &quot;total_requests&quot;: 16,
+          &quot;failure_percentage&quot;: 0.0
+        }
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;short-chat&quot;,
+      &quot;backend&quot;: &quot;vllm&quot;,
+      &quot;backend_version&quot;: &quot;0.28.0&quot;,
+      &quot;raw_artifact&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/003/short-chat/results.json&quot;,
+      &quot;repeat&quot;: 3,
+      &quot;elapsed_seconds&quot;: 6.5985015600017505,
+      &quot;successful_requests&quot;: 16,
+      &quot;failed_requests&quot;: 0,
+      &quot;errored_requests&quot;: 0,
+      &quot;incomplete_requests&quot;: 0,
+      &quot;total_requests&quot;: 16,
+      &quot;failure_percentage&quot;: 0.0,
+      &quot;workloads&quot;: [
+        {
+          &quot;index&quot;: 0,
+          &quot;configuration&quot;: {
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8
+          },
+          &quot;metrics&quot;: {
+            &quot;date&quot;: &quot;20260914-001028&quot;,
+            &quot;endpoint_type&quot;: &quot;vllm&quot;,
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;label&quot;: null,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;tokenizer_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8,
+            &quot;duration&quot;: 0.5531883360017673,
+            &quot;completed&quot;: 16,
+            &quot;failed&quot;: 0,
+            &quot;total_input_tokens&quot;: 1024,
+            &quot;total_output_tokens&quot;: 512,
+            &quot;request_throughput&quot;: 28.92324179436221,
+            &quot;request_goodput&quot;: null,
+            &quot;output_throughput&quot;: 925.5437374195907,
+            &quot;total_token_throughput&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;ttfts&quot;: [
+              0.028088799001125153,
+              0.05140045999723952,
+              0.05126534100418212,
+              0.051071800000499934,
+              0.05112475399801042,
+              0.05063521500414936,
+              0.050631443002203014,
+              0.05025333400408272,
+              0.02461104199755937,
+              0.018343661999097094,
+              0.024472422002872918,
+              0.02450507799949264,
+              0.02393332299834583,
+              0.023918619997857604,
+              0.023928807000629604,
+              0.023920738000015263
+            ],
+            &quot;max_output_tokens_per_s&quot;: 498.0,
+            &quot;max_concurrent_requests&quot;: 16,
+            &quot;rtfx&quot;: 0.0,
+            &quot;mean_ttft_ms&quot;: 35.75655237546016,
+            &quot;median_ttft_ms&quot;: 26.34992049934226,
+            &quot;std_ttft_ms&quot;: 13.48343145010384,
+            &quot;p50_ttft_ms&quot;: 26.34992049934226,
+            &quot;p95_ttft_ms&quot;: 51.29912075244647,
+            &quot;p99_ttft_ms&quot;: 51.38019214828091,
+            &quot;mean_tpot_ms&quot;: 7.746803197615889,
+            &quot;median_tpot_ms&quot;: 7.782221758163595,
+            &quot;std_tpot_ms&quot;: 2.8557270133423724,
+            &quot;p50_tpot_ms&quot;: 7.782221758163595,
+            &quot;p95_tpot_ms&quot;: 10.693517096789888,
+            &quot;p99_tpot_ms&quot;: 11.151018412983243,
+            &quot;mean_itl_ms&quot;: 7.971818367236306,
+            &quot;median_itl_ms&quot;: 5.32274699799018,
+            &quot;std_itl_ms&quot;: 5.596056037418811,
+            &quot;p50_itl_ms&quot;: 5.32274699799018,
+            &quot;p95_itl_ms&quot;: 20.30544309855029,
+            &quot;p99_itl_ms&quot;: 23.110008718213066,
+            &quot;mean_e2el_ms&quot;: 275.9074515015527,
+            &quot;median_e2el_ms&quot;: 275.80378499988,
+            &quot;std_e2el_ms&quot;: 100.64567682264229,
+            &quot;p50_e2el_ms&quot;: 275.80378499988,
+            &quot;p95_e2el_ms&quot;: 376.9401125045988,
+            &quot;p99_e2el_ms&quot;: 377.24082650420314,
+            &quot;requests_per_second&quot;: {
+              &quot;average&quot;: 28.92324179436221
+            },
+            &quot;output_tokens_per_second&quot;: {
+              &quot;average&quot;: 925.5437374195907
+            },
+            &quot;total_tokens_per_second&quot;: {
+              &quot;average&quot;: 2776.631212258772
+            },
+            &quot;time_to_first_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;time_per_output_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;inter_token_latency_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;end_to_end_latency_ms&quot;: {
+              &quot;average&quot;: 275.9074515015527,
+              &quot;median&quot;: 275.80378499988,
+              &quot;p99&quot;: 377.24082650420314
+            },
+            &quot;request_totals&quot;: {
+              &quot;successful&quot;: 16,
+              &quot;errored&quot;: 0,
+              &quot;incomplete&quot;: 0
+            },
+            &quot;request_total&quot;: 16,
+            &quot;requests&quot;: {
+              &quot;input&quot;: [
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64
+              ],
+              &quot;output&quot;: [
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32
+              ],
+              &quot;error_msg&quot;: {}
+            }
+          },
+          &quot;successful_requests&quot;: 16,
+          &quot;failed_requests&quot;: 0,
+          &quot;errored_requests&quot;: 0,
+          &quot;incomplete_requests&quot;: 0,
+          &quot;total_requests&quot;: 16,
+          &quot;failure_percentage&quot;: 0.0
+        }
+      ]
+    }
+  ],
+  &quot;artifacts&quot;: {
+    &quot;vllm_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/vllm.log&quot;,
+    &quot;benchmark_short-chat_warmup_1_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/warmups/001/short-chat/benchmark.log&quot;,
+    &quot;benchmark_short-chat_warmup_1_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/warmups/001/short-chat/results.json&quot;,
+    &quot;benchmark_short-chat_warmup_1_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/warmups/001/short-chat/drain.json&quot;,
+    &quot;benchmark_short-chat_repeat_1_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/001/short-chat/benchmark.log&quot;,
+    &quot;benchmark_short-chat_repeat_1_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/001/short-chat/results.json&quot;,
+    &quot;benchmark_short-chat_repeat_1_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/001/short-chat/drain.json&quot;,
+    &quot;benchmark_short-chat_repeat_2_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/002/short-chat/benchmark.log&quot;,
+    &quot;benchmark_short-chat_repeat_2_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/002/short-chat/results.json&quot;,
+    &quot;benchmark_short-chat_repeat_2_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/002/short-chat/drain.json&quot;,
+    &quot;benchmark_short-chat_repeat_3_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/003/short-chat/benchmark.log&quot;,
+    &quot;benchmark_short-chat_repeat_3_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/003/short-chat/results.json&quot;,
+    &quot;benchmark_short-chat_repeat_3_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/003/short-chat/drain.json&quot;,
+    &quot;manifest&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/manifest.json&quot;
+  },
+  &quot;execution&quot;: {
+    &quot;mode&quot;: &quot;sequential&quot;
+  },
+  &quot;attempts&quot;: [
+    {
+      &quot;index&quot;: 1,
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;artifacts&quot;: {
+        &quot;vllm_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/vllm.log&quot;,
+        &quot;benchmark_short-chat_warmup_1_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/warmups/001/short-chat/benchmark.log&quot;,
+        &quot;benchmark_short-chat_warmup_1_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/warmups/001/short-chat/results.json&quot;,
+        &quot;benchmark_short-chat_warmup_1_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/warmups/001/short-chat/drain.json&quot;,
+        &quot;benchmark_short-chat_repeat_1_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/001/short-chat/benchmark.log&quot;,
+        &quot;benchmark_short-chat_repeat_1_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/001/short-chat/results.json&quot;,
+        &quot;benchmark_short-chat_repeat_1_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/001/short-chat/drain.json&quot;,
+        &quot;benchmark_short-chat_repeat_2_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/002/short-chat/benchmark.log&quot;,
+        &quot;benchmark_short-chat_repeat_2_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/002/short-chat/results.json&quot;,
+        &quot;benchmark_short-chat_repeat_2_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/002/short-chat/drain.json&quot;,
+        &quot;benchmark_short-chat_repeat_3_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/003/short-chat/benchmark.log&quot;,
+        &quot;benchmark_short-chat_repeat_3_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/003/short-chat/results.json&quot;,
+        &quot;benchmark_short-chat_repeat_3_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/baseline/attempts/001/repeats/003/short-chat/drain.json&quot;
+      },
+      &quot;failure&quot;: null
+    }
+  ]
+}</pre></details></details></td></tr><tr><td data-value='2'>2</td><td data-value='trial-0001'>trial-0001</td><td data-value='completed'>completed</td><td data-value='205.87429919717644'>205.9</td><td data-value='-77.75639433624687'>-77.76%</td><td data-value='8.488387037667659'>8.488 s</td><td><details><summary>Full details</summary><p>Failed requests (all repeats): 0; Score SD (largest workload): 11.1</p><p>Duration vs baseline: +28.26% (worse)</p><p>Changed settings: {&quot;max-num-seqs&quot;: [16, 1]}</p><p>short-chat / workload 0 — requests: 16 · concurrency: 8 · request rate: unlimited · burstiness: 1.0: score SD 11.1; n=3</p><p>short-chat, repeat 1: duration 8.373 s</p><p>short-chat, repeat 2: duration 8.684 s</p><p>short-chat, repeat 3: duration 8.409 s</p><pre>{
   &quot;host&quot;: &quot;127.0.0.1&quot;,
   &quot;port&quot;: 8766,
   &quot;dtype&quot;: &quot;float16&quot;,
@@ -68,7 +615,537 @@ VLLM_USE_V2_MODEL_RUNNER: &#x27;0&#x27;
   &quot;env.CUDA_VISIBLE_DEVICES&quot;: &quot;0&quot;,
   &quot;env.VLLM_USE_V2_MODEL_RUNNER&quot;: &quot;0&quot;,
   &quot;env.VLLM_USE_FLASHINFER_SAMPLER&quot;: &quot;0&quot;
-}</pre></details></td></tr></tbody></table></div></section><details><summary>Detailed diagnostics and exploratory analysis</summary><section><h2>Accepted score comparison</h2><div class='bars'><div class='hbar'><span>Baseline</span><i style='width:70.0%'></i><b>925.5437</b></div><div class='hbar'><span>trial-0001</span><i style='width:10.0%'></i><b>205.8743</b></div></div><h3>Accepted scores in recorded trial order</h3><svg viewBox='0 0 600 310' role='img' aria-label='Trial score history'><path d='M40 20V280H580' fill='none' stroke='#94a3b8'/><text x='310' y='305' text-anchor='middle'>Trial order</text><text x='14' y='155' text-anchor='middle' transform='rotate(-90 14 155)'>Score</text><polyline points='40.0,280.0' fill='none' stroke='#2563eb' stroke-width='3'/><circle cx='40.0' cy='280.0' r='5'><title>trial-0001: 205.8743</title></circle></svg><p>This is trial order, not elapsed time. Superseded search executions are excluded.</p></section><section><h2>Parameter associations</h2><p class='muted'>Not shown: fewer than 5 eligible tuned trials. A percentage here would look precise without enough evidence.</p><p>Observed score means by tested value, with sample counts; associations, not controlled ablations.</p><p class='muted'>No parameter had multiple evaluated values.</p></section><section><h2>Failures and interruptions</h2><p>No failed or interrupted trials.</p></section><section><h2>How metrics are calculated</h2>
+}</pre><details><summary>All recorded trial data (JSON)</summary><pre>{
+  &quot;schema_version&quot;: 1,
+  &quot;trial_id&quot;: &quot;trial-0001&quot;,
+  &quot;status&quot;: &quot;completed&quot;,
+  &quot;benchmarks&quot;: [
+    {
+      &quot;name&quot;: &quot;short-chat&quot;,
+      &quot;backend&quot;: &quot;vllm&quot;,
+      &quot;backend_version&quot;: &quot;0.28.0&quot;,
+      &quot;raw_artifact&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/001/short-chat/results.json&quot;,
+      &quot;repeat&quot;: 1,
+      &quot;elapsed_seconds&quot;: 8.37268743399909,
+      &quot;successful_requests&quot;: 16,
+      &quot;failed_requests&quot;: 0,
+      &quot;errored_requests&quot;: 0,
+      &quot;incomplete_requests&quot;: 0,
+      &quot;total_requests&quot;: 16,
+      &quot;failure_percentage&quot;: 0.0,
+      &quot;workloads&quot;: [
+        {
+          &quot;index&quot;: 0,
+          &quot;configuration&quot;: {
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8
+          },
+          &quot;metrics&quot;: {
+            &quot;date&quot;: &quot;20260914-001101&quot;,
+            &quot;endpoint_type&quot;: &quot;vllm&quot;,
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;label&quot;: null,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;tokenizer_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8,
+            &quot;duration&quot;: 2.4869544280008995,
+            &quot;completed&quot;: 16,
+            &quot;failed&quot;: 0,
+            &quot;total_input_tokens&quot;: 1024,
+            &quot;total_output_tokens&quot;: 512,
+            &quot;request_throughput&quot;: 6.433571849911764,
+            &quot;request_goodput&quot;: null,
+            &quot;output_throughput&quot;: 205.87429919717644,
+            &quot;total_token_throughput&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;ttfts&quot;: [
+              0.025231797000742517,
+              0.2852520300002652,
+              0.43206471799931023,
+              0.5842921779985772,
+              0.7439827830021386,
+              0.8861063029980869,
+              1.0314784820002387,
+              1.1794528050013469,
+              1.054604721000942,
+              1.0508805669960566,
+              1.0448919800037402,
+              1.0369755889987573,
+              1.0383470980013954,
+              1.041974866995588,
+              1.0434260529946187,
+              1.0364189360043383
+            ],
+            &quot;max_output_tokens_per_s&quot;: 211.0,
+            &quot;max_concurrent_requests&quot;: 13,
+            &quot;rtfx&quot;: 0.0,
+            &quot;mean_ttft_ms&quot;: 844.7113066872589,
+            &quot;median_ttft_ms&quot;: 1036.6972625015478,
+            &quot;std_ttft_ms&quot;: 325.7372667708726,
+            &quot;p50_ttft_ms&quot;: 1036.6972625015478,
+            &quot;p95_ttft_ms&quot;: 1085.8167420010432,
+            &quot;p99_ttft_ms&quot;: 1160.7255924012861,
+            &quot;mean_tpot_ms&quot;: 4.64734799395721,
+            &quot;median_tpot_ms&quot;: 4.4128143549202035,
+            &quot;std_tpot_ms&quot;: 0.8932748656185375,
+            &quot;p50_tpot_ms&quot;: 4.4128143549202035,
+            &quot;p95_tpot_ms&quot;: 5.615733750023685,
+            &quot;p99_tpot_ms&quot;: 7.575070233912312,
+            &quot;mean_itl_ms&quot;: 4.792281725544825,
+            &quot;median_itl_ms&quot;: 4.464744997676462,
+            &quot;std_itl_ms&quot;: 1.791302287169032,
+            &quot;p50_itl_ms&quot;: 4.464744997676462,
+            &quot;p95_itl_ms&quot;: 5.91104799968889,
+            &quot;p99_itl_ms&quot;: 15.239301000838166,
+            &quot;mean_e2el_ms&quot;: 988.7790944999324,
+            &quot;median_e2el_ms&quot;: 1170.17078400022,
+            &quot;std_e2el_ms&quot;: 307.3709691693757,
+            &quot;p50_e2el_ms&quot;: 1170.17078400022,
+            &quot;p95_e2el_ms&quot;: 1220.3382165007497,
+            &quot;p99_e2el_ms&quot;: 1299.0667041009144,
+            &quot;requests_per_second&quot;: {
+              &quot;average&quot;: 6.433571849911764
+            },
+            &quot;output_tokens_per_second&quot;: {
+              &quot;average&quot;: 205.87429919717644
+            },
+            &quot;total_tokens_per_second&quot;: {
+              &quot;average&quot;: 617.6228975915293
+            },
+            &quot;time_to_first_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;time_per_output_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;inter_token_latency_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;end_to_end_latency_ms&quot;: {
+              &quot;average&quot;: 988.7790944999324,
+              &quot;median&quot;: 1170.17078400022,
+              &quot;p99&quot;: 1299.0667041009144
+            },
+            &quot;request_totals&quot;: {
+              &quot;successful&quot;: 16,
+              &quot;errored&quot;: 0,
+              &quot;incomplete&quot;: 0
+            },
+            &quot;request_total&quot;: 16,
+            &quot;requests&quot;: {
+              &quot;input&quot;: [
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64
+              ],
+              &quot;output&quot;: [
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32
+              ],
+              &quot;error_msg&quot;: {}
+            }
+          },
+          &quot;successful_requests&quot;: 16,
+          &quot;failed_requests&quot;: 0,
+          &quot;errored_requests&quot;: 0,
+          &quot;incomplete_requests&quot;: 0,
+          &quot;total_requests&quot;: 16,
+          &quot;failure_percentage&quot;: 0.0
+        }
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;short-chat&quot;,
+      &quot;backend&quot;: &quot;vllm&quot;,
+      &quot;backend_version&quot;: &quot;0.28.0&quot;,
+      &quot;raw_artifact&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/002/short-chat/results.json&quot;,
+      &quot;repeat&quot;: 2,
+      &quot;elapsed_seconds&quot;: 8.683645363002142,
+      &quot;successful_requests&quot;: 16,
+      &quot;failed_requests&quot;: 0,
+      &quot;errored_requests&quot;: 0,
+      &quot;incomplete_requests&quot;: 0,
+      &quot;total_requests&quot;: 16,
+      &quot;failure_percentage&quot;: 0.0,
+      &quot;workloads&quot;: [
+        {
+          &quot;index&quot;: 0,
+          &quot;configuration&quot;: {
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8
+          },
+          &quot;metrics&quot;: {
+            &quot;date&quot;: &quot;20260914-001109&quot;,
+            &quot;endpoint_type&quot;: &quot;vllm&quot;,
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;label&quot;: null,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;tokenizer_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8,
+            &quot;duration&quot;: 2.7290979890021845,
+            &quot;completed&quot;: 16,
+            &quot;failed&quot;: 0,
+            &quot;total_input_tokens&quot;: 1024,
+            &quot;total_output_tokens&quot;: 512,
+            &quot;request_throughput&quot;: 5.862742951875442,
+            &quot;request_goodput&quot;: null,
+            &quot;output_throughput&quot;: 187.60777446001416,
+            &quot;total_token_throughput&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;ttfts&quot;: [
+              0.029022063994489145,
+              0.368944341003953,
+              0.5336852059990633,
+              0.6980273760054843,
+              0.8487287270036177,
+              0.9976122059961199,
+              1.1448938110042945,
+              1.2886425090036937,
+              1.0797745699965162,
+              1.0644910979972337,
+              1.055728701998305,
+              1.0519022369990125,
+              1.1245925199982594,
+              1.167566356001771,
+              1.1626358499997878,
+              1.1670223960027215
+            ],
+            &quot;max_output_tokens_per_s&quot;: 201.0,
+            &quot;max_concurrent_requests&quot;: 13,
+            &quot;rtfx&quot;: 0.0,
+            &quot;mean_ttft_ms&quot;: 923.9543730627702,
+            &quot;median_ttft_ms&quot;: 1060.1098999977694,
+            &quot;std_ttft_ms&quot;: 335.2804852002237,
+            &quot;p50_ttft_ms&quot;: 1060.1098999977694,
+            &quot;p95_ttft_ms&quot;: 1197.8353942522517,
+            &quot;p99_ttft_ms&quot;: 1270.4810860534053,
+            &quot;mean_tpot_ms&quot;: 5.1072168528281185,
+            &quot;median_tpot_ms&quot;: 4.47684332257561,
+            &quot;std_tpot_ms&quot;: 1.5371002345284,
+            &quot;p50_tpot_ms&quot;: 4.47684332257561,
+            &quot;p95_tpot_ms&quot;: 7.653173596824467,
+            &quot;p99_tpot_ms&quot;: 9.989521145231969,
+            &quot;mean_itl_ms&quot;: 5.2774638187808405,
+            &quot;median_itl_ms&quot;: 4.631096999219153,
+            &quot;std_itl_ms&quot;: 4.900567988974282,
+            &quot;p50_itl_ms&quot;: 4.631096999219153,
+            &quot;p95_itl_ms&quot;: 7.124159847808186,
+            &quot;p99_itl_ms&quot;: 15.161198868227075,
+            &quot;mean_e2el_ms&quot;: 1082.2780955004419,
+            &quot;median_e2el_ms&quot;: 1215.7386344988481,
+            &quot;std_e2el_ms&quot;: 305.81978883766527,
+            &quot;p50_e2el_ms&quot;: 1215.7386344988481,
+            &quot;p95_e2el_ms&quot;: 1333.8289702496695,
+            &quot;p99_e2el_ms&quot;: 1405.9156804545637,
+            &quot;requests_per_second&quot;: {
+              &quot;average&quot;: 5.862742951875442
+            },
+            &quot;output_tokens_per_second&quot;: {
+              &quot;average&quot;: 187.60777446001416
+            },
+            &quot;total_tokens_per_second&quot;: {
+              &quot;average&quot;: 562.8233233800424
+            },
+            &quot;time_to_first_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;time_per_output_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;inter_token_latency_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;end_to_end_latency_ms&quot;: {
+              &quot;average&quot;: 1082.2780955004419,
+              &quot;median&quot;: 1215.7386344988481,
+              &quot;p99&quot;: 1405.9156804545637
+            },
+            &quot;request_totals&quot;: {
+              &quot;successful&quot;: 16,
+              &quot;errored&quot;: 0,
+              &quot;incomplete&quot;: 0
+            },
+            &quot;request_total&quot;: 16,
+            &quot;requests&quot;: {
+              &quot;input&quot;: [
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64
+              ],
+              &quot;output&quot;: [
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32
+              ],
+              &quot;error_msg&quot;: {}
+            }
+          },
+          &quot;successful_requests&quot;: 16,
+          &quot;failed_requests&quot;: 0,
+          &quot;errored_requests&quot;: 0,
+          &quot;incomplete_requests&quot;: 0,
+          &quot;total_requests&quot;: 16,
+          &quot;failure_percentage&quot;: 0.0
+        }
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;short-chat&quot;,
+      &quot;backend&quot;: &quot;vllm&quot;,
+      &quot;backend_version&quot;: &quot;0.28.0&quot;,
+      &quot;raw_artifact&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/003/short-chat/results.json&quot;,
+      &quot;repeat&quot;: 3,
+      &quot;elapsed_seconds&quot;: 8.408828316001745,
+      &quot;successful_requests&quot;: 16,
+      &quot;failed_requests&quot;: 0,
+      &quot;errored_requests&quot;: 0,
+      &quot;incomplete_requests&quot;: 0,
+      &quot;total_requests&quot;: 16,
+      &quot;failure_percentage&quot;: 0.0,
+      &quot;workloads&quot;: [
+        {
+          &quot;index&quot;: 0,
+          &quot;configuration&quot;: {
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8
+          },
+          &quot;metrics&quot;: {
+            &quot;date&quot;: &quot;20260914-001118&quot;,
+            &quot;endpoint_type&quot;: &quot;vllm&quot;,
+            &quot;backend&quot;: &quot;vllm&quot;,
+            &quot;label&quot;: null,
+            &quot;model_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;tokenizer_id&quot;: &quot;/var/tmp/vllm-optimizer-demo/models/opt-125m&quot;,
+            &quot;num_prompts&quot;: 16,
+            &quot;request_rate&quot;: &quot;inf&quot;,
+            &quot;burstiness&quot;: 1.0,
+            &quot;max_concurrency&quot;: 8,
+            &quot;duration&quot;: 2.4654356940009166,
+            &quot;completed&quot;: 16,
+            &quot;failed&quot;: 0,
+            &quot;total_input_tokens&quot;: 1024,
+            &quot;total_output_tokens&quot;: 512,
+            &quot;request_throughput&quot;: 6.489725138210825,
+            &quot;request_goodput&quot;: null,
+            &quot;output_throughput&quot;: 207.6712044227464,
+            &quot;total_token_throughput&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;ttfts&quot;: [
+              0.030523202003678307,
+              0.2954079150003963,
+              0.4415855539991753,
+              0.588207856999361,
+              0.7314118879949092,
+              0.873938390002877,
+              1.0248617409961298,
+              1.1753475999939837,
+              1.038549677003175,
+              1.036741397001606,
+              1.0322472370025935,
+              1.0308321389966295,
+              1.0319554329980747,
+              1.0245435350007028,
+              1.0203452959976858,
+              1.0163023899949621
+            ],
+            &quot;max_output_tokens_per_s&quot;: 214.0,
+            &quot;max_concurrent_requests&quot;: 13,
+            &quot;rtfx&quot;: 0.0,
+            &quot;mean_ttft_ms&quot;: 837.0500781866212,
+            &quot;median_ttft_ms&quot;: 1022.4444154991943,
+            &quot;std_ttft_ms&quot;: 318.1408527960537,
+            &quot;p50_ttft_ms&quot;: 1022.4444154991943,
+            &quot;p95_ttft_ms&quot;: 1072.7491577508772,
+            &quot;p99_ttft_ms&quot;: 1154.8279115453624,
+            &quot;mean_tpot_ms&quot;: 4.590657264147481,
+            &quot;median_tpot_ms&quot;: 4.335310887155731,
+            &quot;std_tpot_ms&quot;: 0.9334812561006373,
+            &quot;p50_tpot_ms&quot;: 4.335310887155731,
+            &quot;p95_tpot_ms&quot;: 5.456045596738771,
+            &quot;p99_tpot_ms&quot;: 7.646020087087243,
+            &quot;mean_itl_ms&quot;: 4.743685393774891,
+            &quot;median_itl_ms&quot;: 4.442456003744155,
+            &quot;std_itl_ms&quot;: 1.7213657403808786,
+            &quot;p50_itl_ms&quot;: 4.442456003744155,
+            &quot;p95_itl_ms&quot;: 5.589907550165662,
+            &quot;p99_itl_ms&quot;: 15.319291791602154,
+            &quot;mean_e2el_ms&quot;: 979.3604533751932,
+            &quot;median_e2el_ms&quot;: 1156.675633501436,
+            &quot;std_e2el_ms&quot;: 299.95692985065455,
+            &quot;p50_e2el_ms&quot;: 1156.675633501436,
+            &quot;p95_e2el_ms&quot;: 1208.2840897528513,
+            &quot;p99_e2el_ms&quot;: 1290.5742139504582,
+            &quot;requests_per_second&quot;: {
+              &quot;average&quot;: 6.489725138210825
+            },
+            &quot;output_tokens_per_second&quot;: {
+              &quot;average&quot;: 207.6712044227464
+            },
+            &quot;total_tokens_per_second&quot;: {
+              &quot;average&quot;: 623.0136132682392
+            },
+            &quot;time_to_first_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;time_per_output_token_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;inter_token_latency_ms&quot;: &quot;&lt;redacted&gt;&quot;,
+            &quot;end_to_end_latency_ms&quot;: {
+              &quot;average&quot;: 979.3604533751932,
+              &quot;median&quot;: 1156.675633501436,
+              &quot;p99&quot;: 1290.5742139504582
+            },
+            &quot;request_totals&quot;: {
+              &quot;successful&quot;: 16,
+              &quot;errored&quot;: 0,
+              &quot;incomplete&quot;: 0
+            },
+            &quot;request_total&quot;: 16,
+            &quot;requests&quot;: {
+              &quot;input&quot;: [
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                64
+              ],
+              &quot;output&quot;: [
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32,
+                32
+              ],
+              &quot;error_msg&quot;: {}
+            }
+          },
+          &quot;successful_requests&quot;: 16,
+          &quot;failed_requests&quot;: 0,
+          &quot;errored_requests&quot;: 0,
+          &quot;incomplete_requests&quot;: 0,
+          &quot;total_requests&quot;: 16,
+          &quot;failure_percentage&quot;: 0.0
+        }
+      ]
+    }
+  ],
+  &quot;artifacts&quot;: {
+    &quot;vllm_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/vllm.log&quot;,
+    &quot;benchmark_short-chat_warmup_1_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/warmups/001/short-chat/benchmark.log&quot;,
+    &quot;benchmark_short-chat_warmup_1_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/warmups/001/short-chat/results.json&quot;,
+    &quot;benchmark_short-chat_warmup_1_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/warmups/001/short-chat/drain.json&quot;,
+    &quot;benchmark_short-chat_repeat_1_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/001/short-chat/benchmark.log&quot;,
+    &quot;benchmark_short-chat_repeat_1_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/001/short-chat/results.json&quot;,
+    &quot;benchmark_short-chat_repeat_1_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/001/short-chat/drain.json&quot;,
+    &quot;benchmark_short-chat_repeat_2_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/002/short-chat/benchmark.log&quot;,
+    &quot;benchmark_short-chat_repeat_2_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/002/short-chat/results.json&quot;,
+    &quot;benchmark_short-chat_repeat_2_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/002/short-chat/drain.json&quot;,
+    &quot;benchmark_short-chat_repeat_3_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/003/short-chat/benchmark.log&quot;,
+    &quot;benchmark_short-chat_repeat_3_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/003/short-chat/results.json&quot;,
+    &quot;benchmark_short-chat_repeat_3_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/003/short-chat/drain.json&quot;,
+    &quot;manifest&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/manifest.json&quot;
+  },
+  &quot;execution&quot;: {
+    &quot;mode&quot;: &quot;sequential&quot;
+  },
+  &quot;attempts&quot;: [
+    {
+      &quot;index&quot;: 1,
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;artifacts&quot;: {
+        &quot;vllm_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/vllm.log&quot;,
+        &quot;benchmark_short-chat_warmup_1_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/warmups/001/short-chat/benchmark.log&quot;,
+        &quot;benchmark_short-chat_warmup_1_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/warmups/001/short-chat/results.json&quot;,
+        &quot;benchmark_short-chat_warmup_1_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/warmups/001/short-chat/drain.json&quot;,
+        &quot;benchmark_short-chat_repeat_1_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/001/short-chat/benchmark.log&quot;,
+        &quot;benchmark_short-chat_repeat_1_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/001/short-chat/results.json&quot;,
+        &quot;benchmark_short-chat_repeat_1_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/001/short-chat/drain.json&quot;,
+        &quot;benchmark_short-chat_repeat_2_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/002/short-chat/benchmark.log&quot;,
+        &quot;benchmark_short-chat_repeat_2_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/002/short-chat/results.json&quot;,
+        &quot;benchmark_short-chat_repeat_2_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/002/short-chat/drain.json&quot;,
+        &quot;benchmark_short-chat_repeat_3_log&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/003/short-chat/benchmark.log&quot;,
+        &quot;benchmark_short-chat_repeat_3_json&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/003/short-chat/results.json&quot;,
+        &quot;benchmark_short-chat_repeat_3_drain&quot;: &quot;/var/tmp/vllm-optimizer-demo/public/baseline-control/20260913-210946-683068/trials/trial-0001/attempts/001/repeats/003/short-chat/drain.json&quot;
+      },
+      &quot;failure&quot;: null
+    }
+  ]
+}</pre></details></details></td></tr></tbody></table></div></section><details class='report-panel'><summary>Diagnostics and methodology</summary><section><h2>Accepted score comparison</h2><div class='bars'><div class='hbar'><span>Baseline</span><i style='width:70.0%'></i><b>925.5437</b></div><div class='hbar'><span>trial-0001</span><i style='width:10.0%'></i><b>205.8743</b></div></div><h3>Accepted scores in recorded trial order</h3><svg viewBox='0 0 600 310' role='img' aria-label='Trial score history'><path d='M40 20V280H580' fill='none' stroke='#94a3b8'/><text x='310' y='305' text-anchor='middle'>Trial order</text><text x='14' y='155' text-anchor='middle' transform='rotate(-90 14 155)'>Score</text><polyline points='40.0,280.0' fill='none' stroke='#2563eb' stroke-width='3'/><circle cx='40.0' cy='280.0' r='5'><title>trial-0001: 205.8743</title></circle></svg><p>This is trial order, not elapsed time. Superseded search executions are excluded.</p></section><section><h2>Parameter associations</h2><p class='muted'>Not shown: fewer than 5 eligible tuned trials. A percentage here would look precise without enough evidence.</p><p>Observed score means by tested value, with sample counts; associations, not controlled ablations.</p><p class='muted'>No parameter had multiple evaluated values.</p></section><section><h2>Failures and interruptions</h2><p>No failed or interrupted trials.</p></section><section><h2>How metrics are calculated</h2>
 <dl class='definitions'>
 <dt>Requests/s</dt><dd>Completed requests divided by the benchmark measurement time.</dd>
 <dt>Output tokens/s</dt><dd>Generated output tokens divided by measurement time. Total tokens/s includes prompt and output tokens.</dd>
@@ -86,16 +1163,25 @@ VLLM_USE_V2_MODEL_RUNNER: &#x27;0&#x27;
 document.querySelectorAll('[data-copy]').forEach(button => {
   button.addEventListener('click', async () => {
     const target = document.getElementById(button.dataset.copy);
-    const status = target.nextElementSibling;
+    const status = button.nextElementSibling?.matches('.copy-status')
+      ? button.nextElementSibling : target.nextElementSibling;
     try {
       await navigator.clipboard.writeText(target.textContent);
       status.textContent = 'Copied';
     } catch {
+      let parent = target.parentElement;
+      while (parent) { if (parent.tagName === 'DETAILS') parent.open = true; parent = parent.parentElement; }
       const selection = window.getSelection();
       const range = document.createRange();
       range.selectNodeContents(target); selection.removeAllRanges(); selection.addRange(range);
       status.textContent = 'Text selected. Press Ctrl+C or Cmd+C to copy.';
     }
+  });
+});
+document.querySelectorAll('nav a').forEach(link => {
+  link.addEventListener('click', () => {
+    let target = document.querySelector(link.getAttribute('href'));
+    while (target) { if (target.tagName === 'DETAILS') target.open = true; target = target.parentElement; }
   });
 });
 document.querySelectorAll('[data-sort]').forEach(button => {
