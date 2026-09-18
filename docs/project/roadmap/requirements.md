@@ -1,6 +1,8 @@
 # Cross-cutting future requirements
 
-## Cross-cutting future requirements
+Existing foundations include versioned records, deterministic tests, and a
+[dated compatibility matrix](../../reference/compatibility.md). The requirements
+below also describe future guarantees; they are not a list of supported features.
 
 ### Schema evolution
 

@@ -96,7 +96,7 @@ baseline:
   enabled: true  # Default: true. Tests the fixed configuration first.
 
 optimization:
-  maximize: output_tokens_per_second  # Required GuideLLM result metric.
+  maximize: output_tokens_per_second  # Required metric from the selected backend.
   sampler: tpe                        # grid, random, or tpe. Default: grid.
   trials: 20                          # Required for random/tpe; invalid for grid.
   # For exhaustive Grid search, replace the two lines above with:

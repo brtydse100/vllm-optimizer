@@ -2,7 +2,8 @@
 
 ## Phase 1: Harden the local experiment engine
 
-These features should follow immediately after the first working release.
+This phase mixes completed foundations with future extensions. Code examples
+under unfinished features are proposals and are not accepted by the current CLI.
 
 ### Offline report regeneration — completed in v0.1.0a2
 
@@ -49,6 +50,9 @@ should not retry by default.
 
 ### Baseline scheduling and drift detection
 
+Implemented: within-trial sequential drift checks, drift-triggered reruns, and
+optional fixed-budget finalist validation. The following extensions are future work:
+
 - Periodically rerun the baseline during long experiments.
 - Compare baseline measurements over time.
 - Warn when performance drift exceeds a configured threshold.
@@ -57,7 +61,9 @@ should not retry by default.
 
 ### Statistical measurement controls
 
-- Confidence intervals.
+Implemented: repeat summaries, Student's t intervals, descriptive overlap
+guards, and adaptive stopping for weak search candidates. Future extensions:
+
 - Bootstrap comparisons.
 - Outlier policies.
 - Adaptive repeat counts when variance is high.
@@ -122,6 +128,10 @@ Safety and correctness requirements:
 
 ### Dataset adapters
 
+Current backends already support local files, Hugging Face references, and
+synthetic distributions through their dataset options. This list describes
+broader adapter contracts and remaining extensions:
+
 - Multiple datasets within one named benchmark run.
 - Hugging Face dataset references with pinned revisions.
 - Local JSONL and compatible benchmark formats.
@@ -133,12 +143,11 @@ Safety and correctness requirements:
 ### Correctness and quality gates
 
 Performance alone is insufficient for settings that may affect output quality.
-Add optional evaluators for:
+Request-failure thresholds already gate ranking. Additional evaluators could cover:
 
 - Response validity.
 - Exact-match or task-specific correctness.
 - Output truncation and completion length.
-- Error-rate thresholds.
 - User-provided evaluation commands.
 
 Quality metrics may act as constraints or later as multi-objective targets.

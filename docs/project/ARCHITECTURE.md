@@ -22,11 +22,11 @@ CLI → YAML loader → Orchestrator → SearchSession
                                       └→ GuideLLM or vLLM Bench JSON
 
 Trial results → RunAccumulator → result.json / CSV / HTML / Optuna SQLite
+```
 
 The run-level `result.json` stores the effective repeat, warmup, drift, and
 request-failure policy. Offline regeneration and reclassification reuse that
 policy; legacy results derive compatible defaults from the trial manifest.
-```
 
 ## Ownership
 

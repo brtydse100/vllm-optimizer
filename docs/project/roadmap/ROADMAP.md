@@ -2,7 +2,10 @@
 
 This roadmap lists capabilities that follow the first MVP described in
 [MVP_SPEC.md](../mvp/MVP_SPEC.md). It is organized by dependency and product value,
-not by promised release dates.
+not by promised release dates. Some items have already shipped; completed
+capabilities are called out in each phase. Proposed commands and YAML are
+design sketches, not supported interfaces. Use the [CLI reference](../../reference/cli.md)
+and [configuration guide](../../guides/configuration.md) for current behavior.
 
 ## Guiding rules
 
@@ -44,6 +47,9 @@ The roadmap can be grouped into practical releases:
 | 0.7 | Distributed execution | Remote workers and shared artifacts |
 | 1.0 | Stable platform | Versioned APIs, plugins, migrations, compatibility guarantees |
 
+Several listed building blocks, including vLLM Bench Serve, drift checks,
+fresh finalist validation, and explicit local GPU workers, already exist.
+The table is a historical grouping of themes, not the current release schedule.
 Version numbers are illustrative. Reliability gates should determine release
 timing rather than the number of accumulated features.
 

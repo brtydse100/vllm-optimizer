@@ -10,8 +10,9 @@ The project was renamed before its first stable release.
 | `import vtune` | `import vllm_optimizer` |
 | `vtune --config experiment.yaml` | `vllm-opt --config experiment.yaml` |
 
-The `vtune` import and command remain compatibility aliases for one release
-cycle. New code, automation, and documentation should use the new names.
+The `vtune` import and command are deprecated compatibility aliases still
+present in the current package. Use `vllm_optimizer` and `vllm-opt`; this guide
+does not promise an alias removal version. New code, automation, and documentation should use the new names.
 
 Existing run directories and YAML files do not need conversion. Reproduction
 metadata retains the legacy `vtune_version` field and adds

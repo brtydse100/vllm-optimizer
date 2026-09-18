@@ -25,12 +25,14 @@ The normal workflow is one command:
 vllm-opt --config experiment.yaml
 ```
 
-Every invocation creates a timestamped run. A completed or interrupted run is
+Every experiment invocation creates a timestamped run; validation and
+command-display actions do not. A completed or interrupted run is
 never resumed or overwritten. Manual retries create a new linked run.
 
 ## Included behavior
 
-- One local vLLM instance at a time.
+- Sequential local execution by default, or explicit non-overlapping GPU workers
+  for concurrent local trials.
 - Arbitrary fixed and tunable vLLM flags and environment variables.
 - Grid, seeded Random, and seeded TPE search.
 - Duplicate-free execution within Random and TPE runs.
@@ -39,7 +41,8 @@ never resumed or overwritten. Manual retries create a new linked run.
 - Exactly one dataset definition per benchmark run.
 - GuideLLM profiles, constraints, datasets, and request formats.
 - Forward-compatible `vllm bench serve` arguments and normalized JSON results.
-- Optional baseline, benchmark repeats, and median repeat aggregation.
+- Optional baseline, benchmark repeats, and arithmetic-mean repeat aggregation.
+- Adaptive search repeats and fresh sequential finalist validation.
 - Health-based readiness, automatic benchmark timeouts, and owned cleanup.
 - Retry attempts for failures classified as transient.
 - Immutable manual retry runs for one or several trial IDs.
@@ -49,11 +52,12 @@ never resumed or overwritten. Manual retries create a new linked run.
 
 ## Not in the MVP
 
-- Concurrent, distributed, or remote trials.
+- Distributed or remote trials; automatic GPU allocation and GPU sharing.
 - Multiple datasets inside one benchmark run.
 - A benchmark backend other than GuideLLM or vLLM Bench Serve.
 - Minimize, weighted, constrained, or multi-objective optimization.
-- Conditional search spaces, pruning, or server reuse.
+- Conditional search spaces, mid-benchmark pruning, or cross-trial server reuse.
+  Adaptive repeats can skip whole remaining repeats after an initial budget.
 - Cross-run comparison or a web service.
 - Automatic correctness or response-quality evaluation.
 - Windows or macOS execution guarantees.

@@ -1,6 +1,6 @@
 # vLLM Optimizer
 
-> **Alpha status:** native Linux, real vLLM 0.28, L40/H100,
+> **Alpha status:** native Linux, L40/H100,
 > tensor-parallel, and multi-GPU evidence remain **hardware validation pending**.
 
 vLLM Optimizer is a local-first benchmarking and optimization tool for vLLM
@@ -10,7 +10,7 @@ explores the search space, and reports which configurations performed best.
 
 vLLM Optimizer is alpha software targeting Linux with NVIDIA GPUs and
 Python 3.11–3.12. Install `vllm-optimizer`, import `vllm_optimizer`, and run
-`vllm-opt`. The former `vtune` aliases remain available for one release cycle.
+`vllm-opt`. The former `vtune` aliases are deprecated; see the [migration guide](docs/guides/migration-vllm-optimizer.md).
 
 This independent community project is not affiliated with the vLLM project.
 
@@ -33,23 +33,13 @@ output tokens/s (+456.89%)** on its deliberately small RTX 3080 workloads. It
 also reports latency trade-offs, repeat evidence, validation drift, and failed
 configurations; it is a reporting demonstration, not a production benchmark.
 
-The current code is verified with vLLM 0.28.0 and GuideLLM 0.7.3 on WSL2
-with an RTX 3080. That host required
+Published runtime evidence records vLLM 0.28.0 and GuideLLM 0.7.3 on WSL2
+with an RTX 3080; see the [dated compatibility matrix](docs/reference/compatibility.md). That host required
   `VLLM_USE_V2_MODEL_RUNNER: "0"` because UVA was unavailable and
   `VLLM_USE_FLASHINFER_SAMPLER: "0"` because the CUDA compiler toolkit was
   not installed. Native Linux systems may not require these settings.
 
 Other combinations may work but are not yet verified.
-
-Each new trial stores a typed `execution` assignment in its trial result and
-manifest. a5/a6 runs may lack it. Reports show only statistics supplied by the
-benchmark backend; a7 offline regeneration corrects derived a6 summaries in a
-new destination without changing the source run.
-
-The published `py3-none-any` wheel installs on Linux and Windows. Configuration
-validation and stored-result inspection work on Windows, but starting an
-experiment is supported only on Linux because vLLM has no native Windows
-runtime.
 
 ## Installation
 
@@ -78,7 +68,8 @@ vllm --help
 guidellm --help
 ```
 
-Create `experiment.yaml`:
+Replace `/models/opt-125m` with an existing local model directory, then create
+`experiment.yaml`. The CLI does not download models:
 
 ```yaml
 experiment:
@@ -116,6 +107,7 @@ timeouts:
 Run it:
 
 ```bash
+vllm-opt validate --config experiment.yaml
 vllm-opt --config experiment.yaml
 ```
 
@@ -124,52 +116,21 @@ runs the experiment, persists results, and generates its exports and report.
 The `vllm-opt` CLI binds vLLM to `127.0.0.1` by default. Set `server.host` explicitly
 only when the benchmark server must be reachable from another host.
 
-Already have a native `vllm serve` YAML file? Reference it instead of copying
-its values into `experiment.yaml`:
-
-```yaml
-server:
-  config: ./vllm-config.yaml
-  gpu-memory-utilization: 0.9  # Optional CLI override of the native file.
-```
-
-The path is resolved relative to `experiment.yaml`. The native file must define
-`model`; any other `server` settings, tuned values, and runtime-assigned values
-are passed on the command line and take precedence over the native file.
-
-LMCache runtime verification was completed on an RTX 3080 with vLLM 0.28.0,
-LMCache 0.5.5, and Qwen2.5-0.5B-Instruct. Both the native YAML form above, with
-a nested `kv-transfer-config`, and the legacy inline JSON form launched
-successfully, completed two shared-prefix inference requests, stored 160
-tokens, and reported a 160-token LMCache hit. The Ubuntu WSL test environment
-used `VLLM_USE_V2_MODEL_RUNNER=0` to work around vLLM's WSL UVA limitation;
-this setting is not required by the configuration mapping feature.
+Already have a native `vllm serve` YAML file? Use `server.config` to reuse it.
+See [native server configuration and LMCache](docs/reference/yaml/full-example-server.md#native-server-configuration-and-lmcache)
+for precedence, paths, and copyable examples.
 
 Fixed vLLM flags go directly under `server`; tunable flags use top-level
 `tune`. Fixed and tunable environment variables use `env` and `tune_env`.
-See the [configuration guide](https://brtydse100.github.io/vllm-optimizer/configuration/)
+See the [configuration guide](https://brtydse100.github.io/vllm-optimizer/guides/configuration/)
 for categorical, boolean, integer-range, float-range, list, and environment
-examples. The [complete YAML](https://brtydse100.github.io/vllm-optimizer/full-example/)
-and [benchmark guide](https://brtydse100.github.io/vllm-optimizer/benchmarking/) show
+examples. The [complete YAML](https://brtydse100.github.io/vllm-optimizer/reference/yaml/full-example/)
+and [benchmark guide](https://brtydse100.github.io/vllm-optimizer/guides/benchmarks/benchmarking/) show
 every supported control with copyable examples.
 
-To use vLLM's native benchmark, set `benchmark.engine: vllm`. Its `args`
-map directly to `vllm bench serve` flags; the `vllm-opt` CLI supplies the model, server
-address, and JSON output path:
-
-```yaml
-benchmark:
-  engine: vllm
-  runs:
-    - name: throughput
-      args:
-        dataset-name: random
-        random-input-len: 32
-        random-output-len: 16
-        num-prompts: 100
-        request-rate: inf
-        max-concurrency: 16
-```
+To use vLLM's native benchmark, set `benchmark.engine: vllm` and configure
+`args` for each run. See the [vLLM Bench Serve example](docs/reference/yaml/full-example-vllm-bench.md).
+The CLI supplies the model, server address, and JSON output path.
 
 Interactive terminal output uses color and remains concise by default. Set the
 standard `NO_COLOR` environment variable to disable color. To stream server and
@@ -179,18 +140,9 @@ benchmark logs:
 vllm-opt --config experiment.yaml --verbose
 ```
 
-The persistent equivalent uses GuideLLM's logging level names:
-
-```yaml
-logging:
-  level: DEBUG
-```
-
-Supported levels are `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
-Full per-trial log files are always saved and benchmark logs are flushed while
-the command runs. Request-limited runs show a live request counter; duration-only
-runs show an elapsed/limit timer. `--verbose` also mirrors subprocess output to
-the terminal and overrides the configured level with `DEBUG` for that invocation.
+Set `logging.level: DEBUG` in YAML for persistent verbose output. Full logs are
+saved for every trial regardless of terminal verbosity. See
+[logging and timeouts](docs/guides/configuration.md#logging-and-timeouts).
 
 Retry one or more selected trials into a new immutable linked run:
 
@@ -201,7 +153,7 @@ vllm-opt retry --run runs/EXPERIMENT/RUN_ID \
 
 The source run is never modified.
 
-Display every stored vLLM and GuideLLM command for a trial without executing
+Display every stored vLLM and benchmark command for a trial without executing
 anything:
 
 ```bash
@@ -223,7 +175,7 @@ Multiple independent trials can run on explicitly assigned, non-overlapping
 GPU sets and ports. A sequential or tensor-parallel server receives port 8000
 unless `server.port` overrides it; local-parallel trials use their configured
 port range. Sequential execution remains the default. See
-[parallel trials](https://brtydse100.github.io/vllm-optimizer/parallel-trials/) for the
+[parallel trials](https://brtydse100.github.io/vllm-optimizer/guides/parallel-trials/) for the
 YAML and measurement caveats.
 
 ## Product documents

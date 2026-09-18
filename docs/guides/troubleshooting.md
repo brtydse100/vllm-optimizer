@@ -4,8 +4,9 @@
 
 Open the trial's `vllm.log`. CUDA OOM, invalid flags, backend incompatibility,
 and unexpected exits are classified on the trial while the study continues.
-Reduce memory pressure or remove the incompatible setting, then create a linked
-retry run.
+If the configuration must change, edit the experiment YAML and start a new
+experiment. Use `retry` only to rerun the same saved configurations after
+resolving a transient or environmental problem; it does not accept edited YAML.
 
 ## Startup never becomes ready
 
@@ -24,13 +25,15 @@ reaches a worker, report the YAML and the first error line as a bug.
 
 ## Benchmark times out
 
-Set an explicit duration such as `30m` for GuideLLM runs constrained only by
+Set an explicit duration such as `90m` for GuideLLM runs constrained only by
 `max_requests` when the one-hour hard cap is insufficient. Request count does
 not provide a safe workload-duration estimate. Inspect the timeout message and
 `benchmark.log` path it prints.
 
 Request-count GuideLLM and vLLM Bench Serve runs are rejected unless their
-normalized totals show every expected request completed successfully. vLLM
+normalized totals account for the expected requests. Errored or incomplete
+requests are then subject to the configured failure-percentage policy; the
+default zero tolerance requires all requests to succeed. vLLM
 must also drain its running and waiting queues before the trial is accepted.
 Inspect `results.json`, `drain.json`, `benchmark.log`, and `vllm.log` when that
 gate fails. For long generations, still compare requested and observed output
