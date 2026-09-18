@@ -29,3 +29,4 @@ class VTuneConfig:
     timeouts: ConfigMapping = field(default_factory=dict)
     logging: ConfigMapping = field(default_factory=dict)
     execution: ConfigMapping = field(default_factory=dict)
+    external_server_config: ConfigMapping | None = None

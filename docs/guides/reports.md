@@ -29,7 +29,9 @@ The settings section shows changed arguments and environment values with a
 **Copy launch command** button. Expand **Full configuration and launch command**
 for resolved explicit vLLM YAML, selected environment variables, and the POSIX
 command. Unspecified vLLM internal defaults are not captured. Replace redacted
-values before launching.
+values before launching. When `server.config` points to an external vLLM YAML,
+the command uses the immutable copy stored in the accepted trial directory,
+not the original file.
 
 **Performance breakdown**, **Confidence and validation**, and **Diagnostics and
 methodology** start collapsed. Open them for detailed comparisons, repeat
@@ -122,6 +124,9 @@ observed tuned score; consumers must use `selection_decision` for the conclusion
 After validation starts, rankings and CSV scores exclude search-only candidates.
 Offline regeneration recomputes the conclusion from accepted measurements;
 reclassification preserves the validation budget and selected-candidate boundary.
+Manual retries also use the accepted execution manifest. After finalist
+validation, this preserves its fixed repeat budget instead of reverting to the
+initial search budget.
 
 If `analysis.llm_summary` is configured, the report also includes a short
 OpenAI-compatible summary. Its API key is read only from the named environment
