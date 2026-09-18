@@ -32,6 +32,51 @@ async def http_health_probe(url: str, timeout: float) -> bool:
     return await asyncio.to_thread(request)
 
 
+class EndpointGuardWorker:
+    """Reject a healthy endpoint that predates the managed server process."""
+
+    name = "endpoint_guard"
+
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        path: str = "/health",
+        request_timeout: float = 2.0,
+        health_probe: HealthProbe = http_health_probe,
+    ) -> None:
+        if request_timeout <= 0:
+            raise ValueError("endpoint guard request timeout must be positive")
+        self._endpoint = f"http://{host}:{port}"
+        self._health_url = f"{self._endpoint}/{path.lstrip('/')}"
+        self._request_timeout = request_timeout
+        self._health_probe = health_probe
+
+    @property
+    def endpoint(self) -> str:
+        return self._endpoint
+
+    async def execute(self, context: TrialContext) -> WorkerResult[None]:
+        del context
+        try:
+            healthy = await asyncio.wait_for(
+                self._health_probe(self._health_url, self._request_timeout), timeout=self._request_timeout
+            )
+        except TimeoutError:
+            healthy = False
+        if healthy:
+            return WorkerResult.failed(
+                Failure(
+                    "server_endpoint_in_use",
+                    f"Health endpoint {self._health_url} was already serving before vLLM started",
+                )
+            )
+        return WorkerResult.completed()
+
+    async def cleanup(self, context: TrialContext) -> None:
+        """The endpoint guard owns no resources."""
+
+
 class ReadinessWorker:
     """Poll server health while watching for early process termination."""
 
@@ -55,6 +100,10 @@ class ReadinessWorker:
         self._poll_interval = poll_interval
         self._request_timeout = request_timeout
         self._health_probe = health_probe
+
+    @property
+    def endpoint(self) -> str:
+        return self._endpoint
 
     async def execute(self, context: TrialContext) -> WorkerResult[None]:
         marker = context.values.get("vllm_started_at")

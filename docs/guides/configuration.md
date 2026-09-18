@@ -105,7 +105,9 @@ first; tuned trials then run concurrently. See
 
 For sequential execution, including one vLLM server using tensor parallelism
 across several GPUs, the `vllm-opt` CLI always passes a concrete port. It defaults to 8000;
-set `server.port` only when another port is required.
+set `server.port` only when another port is required. Tuned `host` and `port`
+values drive both the launched server and its readiness endpoint. Local-parallel
+worker ports override trial values as described above.
 
 ## Benchmark runs
 

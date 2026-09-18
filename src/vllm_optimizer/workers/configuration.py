@@ -25,13 +25,11 @@ def build_process_spec(
     _validate_selected_keys(chosen_args, config.tune, "argument")
     _validate_selected_keys(chosen_env, config.tune_env, "environment")
 
-    arguments = {
-        "host": config.execution.get("host", "127.0.0.1"),
-        "port": server_port(config),
-        **{name: value for name, value in config.server.items() if name != "model"},
-    }
+    arguments = {name: value for name, value in config.server.items() if name != "model"}
     arguments.update(chosen_args)
     arguments.update(runtime_args or {})
+    host, port = resolved_server_endpoint(config, chosen_args, runtime_args)
+    arguments.update({"host": host, "port": port})
     argv = ["vllm", "serve", model_path(config)]
     for name in sorted(arguments):
         argv.extend(_render_argument(name, arguments[name]))
@@ -41,6 +39,26 @@ def build_process_spec(
     environment.update(_string_environment(runtime_env or {}))
     environment["VLLM_LOGGING_LEVEL"] = logging_level(config)
     return ProcessSpec(argv=tuple(argv), env=environment)
+
+
+def resolved_server_endpoint(
+    config: VTuneConfig,
+    selected_args: Mapping[str, object] | None = None,
+    runtime_args: Mapping[str, object] | None = None,
+) -> tuple[str, int]:
+    values = {
+        "host": config.execution.get("host", "127.0.0.1"),
+        "port": server_port(config),
+        **{name: value for name, value in config.server.items() if name in {"host", "port"}},
+        **{name: value for name, value in (selected_args or {}).items() if name in {"host", "port"}},
+        **{name: value for name, value in (runtime_args or {}).items() if name in {"host", "port"}},
+    }
+    host, port = values["host"], values["port"]
+    if not isinstance(host, str) or not host.strip():
+        raise ValueError("resolved server host must be a non-empty string")
+    if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535:
+        raise ValueError("resolved server port must be a valid integer port")
+    return host, port
 
 
 @dataclass(slots=True)
