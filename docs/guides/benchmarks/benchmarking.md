@@ -4,19 +4,21 @@ Set `benchmark.engine` to `guidellm` (the default) or `vllm`. Each run invokes
 the selected engine against the same vLLM trial. vLLM Optimizer saves raw
 JSON and `benchmark.log`, then normalizes the result for scoring and reporting.
 
-Use `benchmark.warmup_repeats` for measured-but-discarded requests before each
-benchmark repeat. Set `benchmark.repeats` to at least `benchmark.min_repeats`
+Use `benchmark.warmup_repeats` for discarded benchmark executions. Each named
+benchmark receives these warmups once per trial attempt, before measured repeats. Set `benchmark.repeats` to at least `benchmark.min_repeats`
 for a ranking with the configured confidence policy. Warmups default to zero;
-the default repeat count and minimum are both 4.
-Reports show sample variance, a 95% Student's t confidence
+the default repeat count and minimum are both 4 for fixed-repeat runs.
+Reports show sample standard deviation, a 95% Student's t confidence
 interval, and flag sequential drift above `analysis.drift_threshold` (5% by
-default). The top two flagged finalists are automatically rerun sequentially
-before a winner is recommended; validation artifacts are stored under
-`validation-001`.
+default). Without `analysis.finalist_validation`, the top two affected finalists are
+rerun sequentially when drift is detected; artifacts are stored under
+`validation-001`. Optional [fresh finalist validation](benchmark-repeats.md#fresh-finalist-validation)
+uses a fixed budget even without drift and stores evidence under
+`finalist-validation`. Neither path guarantees a conclusive winner.
 
 Both adapters expose the same canonical fields: requests/s, output and total
 tokens/s, TTFT, TPOT, ITL, end-to-end latency, and successful/errored/incomplete
-request totals. Statistical metrics use `average`, `median`, and `p99`. Values
+request totals. Statistical metrics use `average`, `median`, `p95`, and `p99`. Values
 remain absent when the backend did not supply them; vLLM Optimizer never
 relabels an average as a percentile. GuideLLM request latency is converted from
 seconds to milliseconds. The raw backend JSON remains available unchanged.
@@ -70,21 +72,27 @@ args:
   dataset-name: sharegpt
   dataset-path: /benchmarks/ShareGPT_V3.json
   num-prompts: 500
+```
 
+```yaml
 # Hugging Face dataset
 args:
   dataset-name: hf
   dataset-path: organization/dataset
   hf-split: test
   num-prompts: 500
+```
 
+```yaml
 # Custom JSON or JSONL supported by the installed vLLM
 args:
   dataset-name: custom
   dataset-path: /benchmarks/requests.jsonl
   custom-output-len: 128
   num-prompts: 500
+```
 
+```yaml
 # Prefix-repetition workload
 args:
   dataset-name: prefix_repetition
@@ -103,7 +111,7 @@ its flags under `args`.
 
 The adapter maps `output_throughput`, `request_throughput`, and
 `total_token_throughput` to `output_tokens_per_second`,
-`requests_per_second`, and `total_tokens_per_second`. Flat mean, median, and
+`requests_per_second`, and `total_tokens_per_second`. Flat mean, median, P95, and
 P99 latency fields are combined into the canonical statistical objects.
 Completed, failed, and missing requests use the same error-aware ranking as
 GuideLLM.

@@ -2,7 +2,8 @@
 
 The trusted default is four measured repeats with no discarded warmup; all four
 are required for ranking. Add `warmup_repeats` only when the workload needs
-warmup. Explicit lower values remain available for smoke tests.
+warmup; each named benchmark receives its warmup executions once per trial
+attempt, before the measured repeat phase. Explicit lower values remain available for smoke tests.
 Confidence intervals use Student's t distribution. Critical values through 30
 degrees of freedom use a table; larger samples use a finite-degree Student's t
 quantile expansion rather than switching to a normal interval. Drift detection requires at
@@ -25,8 +26,9 @@ is excluded. The decision is made after each benchmark finishes, using its
 final request counts. Set `accept_any_request_failures: true` to ignore the
 percentage while still requiring at least one successful request and a usable
 metric. Request-count runs also require the expected total to be present. A
-trial with no eligible workload is not ranked. Remaining trials are ordered by
-lowest error percentage, lowest error count, then highest configured metric.
+trial must meet the minimum eligible repeat count for every named benchmark.
+Eligible trials rank by highest configured metric, then lowest error percentage,
+lowest error count, and trial identifier as tie-breakers.
 
 When failures occur, each benchmark artifact directory contains
 `failed_requests.json` with the errored and incomplete details exposed by the

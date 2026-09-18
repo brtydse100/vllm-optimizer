@@ -23,12 +23,25 @@ server flags. Keep both raw JSON files; never compare a hand-normalized copy.
 ## Run
 
 From the repository root on native Linux, set an absolute model path and create
-an empty evidence directory:
+a new evidence directory. These Bash snippets require `curl` and should be
+run in the same shell; the readiness check stops if startup fails:
 
 ```bash
+set -e
 MODEL=/models/your-model
-rm -rf comparison-evidence
-mkdir -p comparison-evidence/guidellm comparison-evidence/vllm
+mkdir comparison-evidence  # Fails if evidence already exists; choose a new directory.
+mkdir comparison-evidence/guidellm comparison-evidence/vllm
+
+wait_for_server() {
+  for attempt in $(seq 1 900); do
+    kill -0 "$SERVER_PID" 2>/dev/null || return 1
+    if curl --fail --silent --max-time 2 http://127.0.0.1:8000/health >/dev/null; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
 ```
 
 Restart the same server before each client. Save the server log separately for
@@ -39,6 +52,7 @@ vllm serve "$MODEL" --host 127.0.0.1 --port 8000 \
   > comparison-evidence/guidellm/vllm.log 2>&1 &
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+wait_for_server
 guidellm run \
   --backend '{"kind":"openai_http","target":"http://127.0.0.1:8000","model":"'"$MODEL"'","request_format":"/v1/completions","extras":{"body":{"temperature":0,"top_p":1,"ignore_eos":true}}}' \
   --profile kind=synchronous \
@@ -56,6 +70,7 @@ vllm serve "$MODEL" --host 127.0.0.1 --port 8000 \
   > comparison-evidence/vllm/vllm.log 2>&1 &
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+wait_for_server
 vllm bench serve --backend vllm --model "$MODEL" \
   --host 127.0.0.1 --port 8000 --endpoint /v1/completions \
   --dataset-name custom --dataset-path docs/assets/backend-comparison.jsonl \

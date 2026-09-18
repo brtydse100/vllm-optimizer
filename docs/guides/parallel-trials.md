@@ -54,6 +54,9 @@ throughput. Reports therefore label parallel measurements and warn that the
 baseline ran alone.
 
 Use parallel mode to search faster, then rerun important finalists sequentially
-before making production decisions. Automatic sequential finalist validation,
-automatic GPU allocation, GPU sharing, heterogeneous GPU comparison, and
-multi-host execution remain roadmap work.
+before making production decisions. Enable
+[`analysis.finalist_validation`](benchmarks/benchmark-repeats.md#fresh-finalist-validation)
+for automatic sequential measurement of the baseline and selected candidates
+after search. It retains assigned devices, so heterogeneous workers still need
+careful interpretation. Automatic GPU allocation, GPU sharing, heterogeneous
+GPU comparison policies, and multi-host execution remain roadmap work.

@@ -17,9 +17,12 @@ available in this workspace. They remain explicitly unvalidated:
 | 2026-09-01 | H100 | 2+ | tensor parallel | — | — | — | — | Not run: host unavailable |
 | 2026-09-01 | RTX 3080 | 1 | WSL2 attempt | 596.36 / CUDA 13.2 | 3.12.3 | 0.28.0 / 0.7.3 | facebook/opt-125m | Failed: vLLM reports `UVA is not available` |
 | 2026-09-02 | RTX 3080 | 1 | WSL2 V0 smoke | 596.36 | 3.12.3 | 0.19.0 / 0.7.3 | local OPT-125M | Passed: two repeats/backend, 10/10 requests/backend, clean drains |
+| 2026-09-13 | RTX 3080 | 1 | WSL2 showcase and baseline control | 616.64 / CUDA 13.0 | 3.12.3 | 0.28.0 / 0.7.3 installed | facebook/opt-125m | Completed: published vLLM Bench Serve evidence; showcase drift remains inconclusive |
 
 The RTX 3080 rows are environment diagnostics, not supported native-Linux
-validation. The 0.28.0 attempt produced no accepted benchmark result. The V0
+validation. The September 1 attempt produced no accepted benchmark result;
+the later September 13 runs did. See the [published results and provenance](../results/rtx3080/index.md).
+The V0
 smoke verified streaming, final counters, request totals, reports, cleanup, and
 offline reclassification, but used a vLLM version outside the supported range.
 
@@ -31,7 +34,7 @@ used by the reproducibility procedure. Workload arguments are passed through,
 so consult the documentation for the installed engine version when adopting
 newer options.
 
-On the WSL2 attempt, vLLM 0.28.0 also exposed these optional server settings:
+The published WSL2 experiments used these environment workarounds:
 
 ```yaml
 env:

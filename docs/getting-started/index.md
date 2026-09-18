@@ -27,6 +27,10 @@ without launching experiments. See [installation choices](installation.md).
 
 ## 3. Create `experiment.yaml`
 
+Replace `/models/opt-125m` with your existing local model directory. The CLI
+validates that the directory exists but does not download or verify model
+weights; startup checks whether vLLM can load them.
+
 ```yaml
 experiment:
   name: first-run
@@ -36,17 +40,8 @@ server:
 tune:
   max-num-seqs:
     values: [8, 16]
-  enforce-eager:
-    values: [true, false]
-  max-num-batched-tokens:
-    min: 4096
-    max: 8192
-    step: 4096
 env:
   CUDA_VISIBLE_DEVICES: "0"
-tune_env:
-  VLLM_USE_FLASHINFER_SAMPLER:
-    values: ["0", "1"]
 benchmark:
   runs:
     - name: throughput
@@ -71,8 +66,13 @@ timeouts:
 ## 4. Run
 
 ```bash
+vllm-opt validate --config experiment.yaml
 vllm-opt --config experiment.yaml
 ```
+
+`validate` checks configuration and command construction without starting
+servers or loading weights. It does not verify GPU capacity or upstream flag
+support.
 
 Open `report.html` in the printed run directory when the run completes. Add
 `--verbose` to stream server and benchmark logs while trials execute.

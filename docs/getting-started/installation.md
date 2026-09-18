@@ -9,7 +9,7 @@ vLLM Optimizer has two intentionally different installations:
 
 ## Run experiments
 
-Use Linux or WSL with an NVIDIA GPU. Create a virtual environment so Ubuntu's
+Use Python 3.11 or 3.12 on Linux or WSL with an NVIDIA GPU. Create a virtual environment so Ubuntu's
 system Python remains untouched:
 
 ```bash

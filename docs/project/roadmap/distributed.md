@@ -50,12 +50,15 @@ single scheduler becomes the domain model.
 
 ### Interactive local report
 
+Already available: self-contained HTML, sortable trials, expandable full data,
+confidence/drift evidence, and offline request-failure reclassification.
+The remaining interactive extensions include:
+
 - Filter trials by status, scenario, dataset, and parameter values.
 - Inspect a trial and open its logs.
 - Select ranking policies without rerunning benchmarks.
 - Explore throughput/latency Pareto frontiers.
 - Compare any two configurations.
-- Display uncertainty and baseline drift.
 - Remain buildable as a self-contained local artifact where practical.
 
 ### Optional local web UI
@@ -76,7 +79,9 @@ single scheduler becomes the domain model.
 
 ### Recommendation export
 
-- Export vLLM CLI snippets.
+Already available: `vllm-opt export` prints a saved vLLM launch command, and the
+HTML report includes YAML, environment values, and a copyable command. Future work:
+
 - Export environment files with secret placeholders.
 - Export container arguments.
 - Export Helm-value or deployment fragments through optional adapters.

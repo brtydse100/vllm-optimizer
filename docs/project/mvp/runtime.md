@@ -13,6 +13,10 @@ vllm-opt reproduce --run runs/NAME/RUN_ID --trial trial-0001
 # Export only the stored vLLM command
 vllm-opt export --run runs/NAME/RUN_ID --trial trial-0001
 
+# Regenerate or rescore stored evidence without running a benchmark
+vllm-opt report --run runs/NAME/RUN_ID
+vllm-opt reclassify --run runs/NAME/RUN_ID --max-failure-percentage 2
+
 # Retry selected configurations in a new linked run
 vllm-opt retry --run runs/NAME/RUN_ID --trial trial-0001 --trial trial-0004
 ```
@@ -69,12 +73,14 @@ inherited process environment is never persisted.
 The static HTML report shows the best observed result, tuned delta from
 baseline, changed settings, reproduction command, trial history,
 per-benchmark elapsed time and latency statistics, metric definitions,
-throughput/TTFT plot when available, exploratory parameter importance,
-observed parameter effects, per-benchmark winners, distinct top
-configurations, and failure summaries.
+exploratory parameter associations, repeat confidence evidence, and failure
+summaries. Every trial remains visible with its average benchmark duration;
+full recorded trial data and supporting analysis are expandable. See the
+[reports guide](../../guides/reports.md) for the current layout and calculations.
 
-Effect and importance views are observational, not causal. Fewer than five
-successful tuned trials are explicitly labeled low confidence.
+Effect and importance views are observational, not causal. Recommendation
+confidence depends on repeat coverage, drift, and overlap; parameter-importance
+views separately flag limited numbers of successful trials.
 
 ## MVP acceptance
 

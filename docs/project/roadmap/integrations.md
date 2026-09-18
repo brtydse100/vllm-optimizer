@@ -4,6 +4,8 @@
 
 ### CI regression mode
 
+Proposed interface only: `compare` and `--fail-if` are not implemented.
+
 ```bash
 vllm-opt compare current-run reference-run \
   --fail-if "throughput_change < -5%" \

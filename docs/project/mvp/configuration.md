@@ -25,8 +25,8 @@ env:
   CUDA_VISIBLE_DEVICES: "0,1,2,3"
 
 tune_env:
-  VLLM_USE_V1:
-    values: ["0", "1"]
+  VLLM_LOGGING_LEVEL:
+    values: ["INFO", "WARNING"]
 
 benchmark:
   repeats: 4
@@ -73,12 +73,14 @@ logging:
 experiment also requires at least one `benchmark.runs` entry and a non-empty
 `optimization.maximize` metric.
 
-`server.model` must be an existing local directory. Relative paths are resolved
-from the YAML file. The `vllm-opt` CLI never downloads a model.
+`server.model` (inline or inherited from `server.config`) must be an existing
+local directory. Inline paths are relative to the experiment YAML; paths in a
+native server config are relative to that native file. The `vllm-opt` CLI never downloads a model.
 
 ### Server values
 
-Entries under `server` other than `model` are fixed vLLM arguments. Top-level
+Use `server.config` for a native vLLM YAML file; explicit server and tuned flags
+override its values. Other entries under `server` are fixed vLLM arguments. Top-level
 `tune` and `tune_env` accept either:
 
 ```yaml
@@ -104,8 +106,9 @@ and defaults to the same loopback address.
 
 ### Benchmark runs
 
-Each run requires a unique filesystem-safe `name`, one `profile` mapping, and
-exactly one item in `data`. `constraints` may contain any GuideLLM constraint
+GuideLLM runs require a unique filesystem-safe `name`, one `profile` mapping,
+and exactly one item in `data`. With `benchmark.engine: vllm`, use `name` and
+`args` instead; do not include GuideLLM-only fields. `constraints` may contain any GuideLLM constraint
 mapping. Nested GuideLLM values are flattened to GuideLLM's CLI format.
 
 GuideLLM always writes `results.json`; its console output is preserved in
@@ -124,18 +127,19 @@ passed through without a vLLM Optimizer allowlist.
 
 ### Scoring
 
-`optimization.maximize` names one GuideLLM metric. For each benchmark repeat,
+`optimization.maximize` names one metric supplied by the selected backend. For each benchmark repeat,
 the `vllm-opt` CLI averages that metric across the workloads returned by the profile. It
-then takes the median across repeats for each named benchmark run and the
+then takes the arithmetic mean across eligible repeats for each named benchmark run and the
 arithmetic mean across benchmark runs for the overall trial score.
 
-Only completed tuned trials enter the ranking. The baseline is reported
+Every named benchmark must meet the minimum eligible repeat count and request
+failure policy. Legacy stored runs without an aggregation policy retain median
+scoring during regeneration. Only completed tuned trials enter the ranking. The baseline is reported
 separately and can still be the best observed recommendation in HTML.
 
 ### Timeouts and retries
 
-`timeouts.startup` is a positive number of seconds. `timeouts.benchmark` is a
-positive duration. Durations accept seconds or strings such as
+`timeouts.startup` and `timeouts.benchmark` are positive durations. Durations accept seconds or strings such as
 `30s`, `2m`, and `1h`.
 
 When `timeouts.benchmark` is omitted, the `vllm-opt` CLI uses the GuideLLM duration

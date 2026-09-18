@@ -6,6 +6,7 @@ execution:
   host: 127.0.0.1       # Interface used by readiness and GuideLLM.
   health_path: /health  # vLLM readiness endpoint.
   shutdown_grace: 15    # Seconds allowed for owned processes to stop.
+  drain_grace: 15       # Positive seconds to wait for idle vLLM request queues.
   retry:
     max_attempts: 2     # Default: 1. Only transient failures are retried.
 

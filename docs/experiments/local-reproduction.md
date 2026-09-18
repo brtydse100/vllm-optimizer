@@ -22,7 +22,7 @@ and RTX 3080. Other hardware produces new measurements, not the recorded results
 Do not run other inference jobs alongside these measurements.
 
 From the repository root, create a fresh virtual environment and install the
-captured package versions and this checkout:
+captured runtime package versions and the checkout you intend to evaluate:
 
 ```bash
 python3.12 -m venv /var/tmp/vllm-optimizer-demo-venv
@@ -51,13 +51,20 @@ vllm-opt -c docs/experiments/report-showcase.yaml
 vllm-opt -c docs/experiments/baseline-control.yaml
 ```
 
-The showcase intentionally reports failures. Inspect the persisted run status
-and its two invalid configurations before treating a nonzero exit as unexpected.
+The showcase intentionally includes two invalid configurations. The CLI can
+return 0 when other trials complete, so inspect the persisted run status and
+trial counts. A nonzero exit needs investigation; the two planned failures
+alone do not imply it.
 Each run prints its timestamped directory under `/var/tmp/vllm-optimizer-demo/runs`.
 Copy the results off the rented machine **before shutting it down**.
 
-For exact reproduction, preserve the model, workloads, seeds, and serving settings.
-New H100 scenarios can use different models and GPU allocations.
+Preserve the model, workloads, seeds, serving settings, and optimizer source
+revision when reproducing historical behavior. Current code ranks new runs by
+arithmetic mean; these archived examples used median repeat scores. Reusing
+their YAML with current code does not reproduce that historical scoring rule.
+[Offline report regeneration](../guides/reports.md#offline-regeneration) preserves
+the legacy rule for the stored artifacts. New H100 scenarios can use different
+models and GPU allocations.
 
 ## Publish the evidence
 

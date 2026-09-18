@@ -2,6 +2,9 @@
 
 ## Phase 3: Richer optimization and rankings
 
+The target schema below is proposed, not accepted configuration. Current runs
+use one maximize-only metric and Grid, Random, or TPE.
+
 ### Multiple optimization targets
 
 Support several named targets that share the same evaluation cache:
@@ -51,6 +54,10 @@ Repeated OOM or incompatible regions should provide useful information:
   parameter region is inherently invalid.
 
 ### Pruning and early stopping
+
+Implemented: adaptive search repeats can skip whole remaining repeats when an
+initial score falls below a fraction of the baseline mean. Mid-benchmark
+pruning and the following broader policies remain future work:
 
 - Stop obviously poor trials after selected scenarios.
 - Stop a study after convergence or a no-improvement window.

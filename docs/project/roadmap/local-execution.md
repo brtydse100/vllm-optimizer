@@ -52,14 +52,15 @@ Status: the first explicit local implementation is available on `main`.
 It supports exclusive declared GPU workers, deterministic ports, bounded
 concurrency, coordinator-owned persistence, failure isolation, cancellation,
 and resolved assignment metadata. Automatic allocation, sharing,
-heterogeneous comparison, and sequential finalist validation remain future
-work.
+and heterogeneous comparison remain future work. Optional fresh finalist
+validation already measures selected candidates sequentially after search;
+see the [parallel guide](../../guides/parallel-trials.md).
 
 Allow several independent vLLM instances and their benchmark processes to run
 at the same time on one host. Each active instance executes a different trial;
 this is separate from tensor parallelism inside one vLLM instance.
 
-An intended configuration shape is:
+The supported explicit configuration is:
 
 ```yaml
 execution:
@@ -67,7 +68,7 @@ execution:
   max_parallel_trials: 2
 
   gpu_allocation:
-    strategy: explicit       # explicit | automatic
+    strategy: explicit       # Automatic allocation is not implemented.
     allow_sharing: false
 
     workers:
@@ -82,17 +83,19 @@ execution:
     max: 8199
 ```
 
-`max_parallel_trials: 1` retains the original sequential behavior. Explicit
-allocation is the safest initial implementation. Automatic allocation may use
+Use `execution.mode: sequential` for sequential execution. In `local_parallel`
+mode, `max_parallel_trials` must equal the worker count; setting it to 1 does
+not change modes. Explicit allocation is the current implementation. Automatic allocation may use
 a declared per-trial GPU requirement but must produce and persist the resolved
 device assignment before launching a server.
 
-Required scheduling behavior:
+Scheduling requirements below include future guarantees beyond the current
+implementation (such as worker leases and port reservation):
 
 - Run no more than `max_parallel_trials` active trials.
 - Give every worker a stable identity and an exclusive GPU set by default.
-- Reject overlapping explicit device assignments unless `allow_sharing: true`
-  is intentionally configured.
+- Reject overlapping explicit device assignments. `allow_sharing: true` is
+  currently rejected; a sharing policy would require a separate future design.
 - Account for a trial's tensor-parallel requirement before assigning it.
 - Keep a trial queued when no compatible worker is available.
 - Allocate a unique port without a check-then-launch race.

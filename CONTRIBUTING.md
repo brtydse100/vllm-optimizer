@@ -25,13 +25,16 @@ accepted changes after the required package and documentation checks pass.
 
 ## Development setup
 
-Requirements are Python 3.11+, Linux, and—only for real benchmark runs—an
-NVIDIA GPU with working `vllm` and `guidellm` commands.
+Configuration/report development also works on Windows; POSIX process tests
+require Linux or WSL. Install documentation dependencies before the docs check.
+
+Requirements are Python 3.11 or 3.12 and—only for real benchmark runs—a Linux or WSL host with an
+NVIDIA GPU and working `vllm` and `guidellm` commands.
 
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-pip install -e ".[test]"
+pip install -e ".[test]" -r requirements-docs.txt
 vllm-opt --help
 ```
 

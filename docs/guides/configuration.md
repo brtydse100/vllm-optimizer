@@ -35,43 +35,15 @@ server:
 ```
 
 The path is resolved relative to the vLLM Optimizer configuration file. The
-native file must contain `model`, which remains subject to the existing local
-model-directory validation. vLLM Optimizer launches `vllm serve` with both the
+native file must contain `model` unless supplied inline; either form is subject
+to local model-directory validation. vLLM Optimizer launches `vllm serve` with both the
 resolved model and `--config`. Other `server` settings, selected `tune` values,
 and runtime-assigned settings are command-line arguments, so they override the
 corresponding native values. If an inline `server.model` is supplied too, it
 overrides the native model.
 
-### LMCache with either server form
-
-A native vLLM YAML can preserve LMCache's nested transfer configuration:
-
-```yaml
-# vllm-config.yaml
-model: /models/qwen
-kv-transfer-config:
-  kv_connector: LMCacheConnectorV1
-  kv_role: kv_both
-```
-
-```yaml
-# experiment.yaml
-server:
-  config: ./vllm-config.yaml
-env:
-  LMCACHE_CONFIG_FILE: /configs/lmcache-config.yaml
-```
-
-The legacy inline form remains supported by quoting the transfer configuration
-as JSON so it is rendered as one CLI value:
-
-```yaml
-server:
-  model: /models/qwen
-  kv-transfer-config: '{"kv_connector":"LMCacheConnectorV1","kv_role":"kv_both"}'
-env:
-  LMCACHE_CONFIG_FILE: /configs/lmcache-config.yaml
-```
+See [native server configuration and LMCache](../reference/yaml/full-example-server.md#native-server-configuration-and-lmcache)
+for nested transfer settings and inline JSON examples.
 
 Unknown vLLM flags are intentionally allowed. The `vllm-opt` CLI renders keys as CLI flags,
 which keeps new vLLM options usable without a vLLM Optimizer release.
@@ -96,53 +68,13 @@ server:
 `--no-` form. Scalars emit a flag/value pair, and lists repeat the flag once
 for each item.
 
-### Tunable vLLM arguments
+### Tunable arguments and environment
 
-Categorical values can contain strings, numbers, or booleans:
-
-```yaml
-tune:
-  attention-backend:
-    values: [FLASH_ATTN, FLASHINFER]
-  max-num-seqs:
-    values: [64, 128, 256]
-  enforce-eager:
-    values: [true, false]
-```
-
-Integer and float ranges are inclusive when the step reaches the maximum:
-
-```yaml
-tune:
-  max-num-batched-tokens:
-    min: 4096
-    max: 16384
-    step: 4096
-  gpu-memory-utilization:
-    min: 0.85
-    max: 0.95
-    step: 0.05
-```
-
-### Environment variables
-
-Fixed environment values belong in `env`; tunable ones use `tune_env`:
-
-```yaml
-env:
-  CUDA_VISIBLE_DEVICES: "0,1"
-  VLLM_LOG_STATS_INTERVAL: 5
-tune_env:
-  VLLM_USE_FLASHINFER_SAMPLER:
-    values: ["0", "1"]
-  WORKER_COUNT:
-    min: 1
-    max: 4
-    step: 1
-```
-
-Environment values are converted to strings before process launch. Quoting
-values such as `"0"` and `"1"` avoids YAML treating them as numbers.
+`tune` and `tune_env` accept categorical `values` or inclusive `min`, `max`,
+`step` ranges. Fixed environment values use `env`. Environment values are
+converted to strings; quote `"0"` and `"1"` for clarity. See the
+[server and tuning reference](../reference/yaml/full-example-server.md) for
+complete categorical, boolean, range, and environment examples.
 
 ## Parallel local trials
 
@@ -187,7 +119,8 @@ Set `benchmark.warmup_repeats` to a positive number when discarded warmups are
 needed; warmups are disabled when this setting is omitted. Set
 `benchmark.min_repeats` to require enough measured repeats for ranking. The
 default minimum is 4 for fixed-repeat runs and 2 when `adaptive_repeats` is
-enabled. Every configured run must meet the minimum and failure policy or the
+enabled. The effective default minimum is capped at `repeats`. Every configured run
+must meet the minimum and failure policy or the
 trial is not ranked. Set
 `analysis.drift_threshold` to change the sequential finalist rerun threshold
 (default 0.05).
@@ -229,7 +162,7 @@ accepted benchmark must still contain at least one successful request and a
 usable metric. Normalized JSON, CSV, and HTML results show successful and
 failed request counts and the failure percentage for every repeat.
 
-Every supported profile, constraint, request format, and dataset form has a
+Every supported profile, constraint, request format, and dataset form has
 copyable examples in [benchmark configuration](benchmarks/benchmarking.md). See the
 [complete YAML](../reference/yaml/full-example.md) for all configuration sections together.
 
