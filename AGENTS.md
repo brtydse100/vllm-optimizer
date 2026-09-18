@@ -58,6 +58,8 @@
 - The quick start must take no more than 5–10 minutes to understand and follow.
 - Examples should demonstrate the simplest supported workflow.
 - Update relevant documentation when user-facing behavior changes.
+- When creating a new release note, include the package version updates and
+  release-artifact details, including install commands and attached artifacts.
 
 ## Completion report
 

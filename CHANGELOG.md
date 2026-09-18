@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.1.0a17 — Documentation and report usability
+
+_September 18, 2026_
+
 - Corrected documentation for scoring order, repeat aggregation, warmups, CLI workflows, local parallel validation, and supported Python
   versions.
 - Fixed stale guide links, simplified first-run setup, and distinguished published hardware evidence from pending validation and roadmap

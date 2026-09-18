@@ -1,6 +1,6 @@
 """vLLM Optimizer package."""
 
-__version__ = "0.1.0a16"
+__version__ = "0.1.0a17"
 
 from .orchestrator import Orchestrator, RunOutcome
 
