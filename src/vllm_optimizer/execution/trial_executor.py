@@ -16,6 +16,7 @@ from vllm_optimizer.execution.slots import WorkerSlot, execution_mode
 from vllm_optimizer.managers.results import ResultsManager
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
 from vllm_optimizer.managers.trial import TrialManager
+from vllm_optimizer.reproduction.external_config import snapshot_external_config
 from vllm_optimizer.reproduction.manifest import ManifestWriter
 from vllm_optimizer.search.grid import TrialParameters
 from vllm_optimizer.terminal import TerminalLogger
@@ -54,6 +55,7 @@ class TrialExecutor:
         trial_dir = directory / "trials" / parameters.trial_id
         if artifact_subdirectory:
             trial_dir /= artifact_subdirectory
+        config = snapshot_external_config(config, trial_dir)
         context = TrialContext(parameters.trial_id)
         context.execution["mode"] = execution_mode(self._config)
         if artifact_subdirectory:

@@ -47,7 +47,7 @@ def _build_config(raw: Any, config_directory: Path) -> VTuneConfig:
         raise ConfigValidationError("'schema_version' must be 1")
 
     experiment = _build_experiment(_required_mapping(root, "experiment"))
-    server = _build_server(_required_mapping(root, "server"), config_directory)
+    server, external_server_config = _build_server(_required_mapping(root, "server"), config_directory)
     tune = dict(_mapping(root.get("tune", {}), "'tune'"))
     env = dict(_mapping(root.get("env", {}), "'env'"))
     tune_env = dict(_mapping(root.get("tune_env", {}), "'tune_env'"))
@@ -55,7 +55,14 @@ def _build_config(raw: Any, config_directory: Path) -> VTuneConfig:
         raise ConfigValidationError("'server.model' cannot be tuned")
     optional = {name: dict(_mapping(root.get(name, {}), f"'{name}'")) for name in _OPTIONAL_SECTIONS}
     config = VTuneConfig(
-        schema_version=1, experiment=experiment, server=server, tune=tune, env=env, tune_env=tune_env, **optional
+        schema_version=1,
+        experiment=experiment,
+        server=server,
+        tune=tune,
+        env=env,
+        tune_env=tune_env,
+        external_server_config=external_server_config,
+        **optional,
     )
     logging_level(config)
     from .preflight import validate_config
@@ -77,9 +84,10 @@ def _build_experiment(raw: dict[str, Any]) -> ExperimentConfig:
     )
 
 
-def _build_server(raw: dict[str, Any], config_directory: Path) -> dict[str, Any]:
+def _build_server(raw: dict[str, Any], config_directory: Path) -> tuple[dict[str, Any], dict[str, Any] | None]:
     server = dict(raw)
     model_directory = config_directory
+    native = None
     if "config" in server:
         config_path = _resolve_file(server["config"], "server.config", config_directory)
         native = _load_vllm_config(config_path)
@@ -98,7 +106,7 @@ def _build_server(raw: dict[str, Any], config_directory: Path) -> dict[str, Any]
     resolved = resolved.resolve()
     if not resolved.is_dir():
         raise ConfigValidationError(f"'server.model' is not a directory: {resolved}")
-    return {**server, "model": str(resolved)}
+    return {**server, "model": str(resolved)}, native
 
 
 def _resolve_file(value: Any, label: str, directory: Path) -> Path:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -37,6 +38,14 @@ def load_retry_source(
         trial_dir = source / "trials" / trial_id
         if not trial_dir.is_dir():
             raise ValueError(f"source trial directory was deleted or is missing: {trial_dir}")
+        execution = indexed[trial_id].get("execution", {})
+        if not isinstance(execution, Mapping):
+            raise ValueError(f"trial '{trial_id}' has an invalid accepted execution")
+        subdirectory = execution.get("artifact_subdirectory")
+        if subdirectory is not None:
+            if not isinstance(subdirectory, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", subdirectory):
+                raise ValueError(f"trial '{trial_id}' has an invalid accepted artifact subdirectory")
+            trial_dir /= subdirectory
         manifest_path = trial_dir / "manifest.json"
         manifest = _read_json(manifest_path, f"manifest for trial '{trial_id}'")
         _schema(manifest, f"manifest for trial '{trial_id}'")
@@ -64,15 +73,15 @@ def _schema(document: Mapping[str, object], label: str) -> None:
         raise ValueError(f"{label} has an unsupported or missing schema_version")
 
 
-def _indexed_trials(result: Mapping[str, object]) -> set[str]:
+def _indexed_trials(result: Mapping[str, object]) -> dict[str, dict[str, object]]:
     values = result.get("trials")
     if not isinstance(values, list):
         raise ValueError("source result.json has an invalid trials list")
-    indexed = set()
+    indexed = {}
     for value in values:
         if not isinstance(value, dict) or not isinstance(value.get("trial_id"), str):
             raise ValueError("source result.json has an invalid trial entry")
-        indexed.add(value["trial_id"])
+        indexed[value["trial_id"]] = value
     return indexed
 
 
