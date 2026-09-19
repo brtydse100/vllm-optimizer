@@ -37,7 +37,7 @@ def load_retry_plan(run: Path, trial_ids: list[str]) -> RetryPlan:
     model = _same(manifests, "model_path")
     benchmark = _same(manifests, "benchmark")
     selected = [_parameters(manifest) for manifest in manifests]
-    fixed_args = _mapping(_same(selected, "fixed_args"), "fixed_args")
+    fixed_args, external_server_config = _fixed_arguments(manifests, selected)
     fixed_env = _restore_env(_mapping(_same(selected, "fixed_env"), "fixed_env"))
     tune = _definitions(selected, "selected_args")
     tune_env = _definitions(selected, "selected_env")
@@ -56,6 +56,7 @@ def load_retry_plan(run: Path, trial_ids: list[str]) -> RetryPlan:
         optimization={"maximize": _text(result.get("maximize"), "maximize")},
         timeouts=_policy(manifests[0], "timeouts"),
         execution=_policy(manifests[0], "execution"),
+        external_server_config=external_server_config,
     )
     trials = tuple(
         TrialParameters(
@@ -72,6 +73,45 @@ def load_retry_plan(run: Path, trial_ids: list[str]) -> RetryPlan:
 
 def _parameters(manifest: Mapping[str, object]) -> dict[str, object]:
     return _mapping(manifest.get("parameters"), "parameters")
+
+
+def _fixed_arguments(
+    manifests: list[dict[str, object]], selected: list[dict[str, object]]
+) -> tuple[dict[str, object], dict[str, object] | None]:
+    arguments = [_mapping(item.get("fixed_args"), "fixed_args") for item in selected]
+    external = [manifest.get("external_config") for manifest in manifests]
+    if not any(item is not None for item in external):
+        return _mapping(_same(selected, "fixed_args"), "fixed_args"), None
+    if any(not isinstance(item, dict) for item in external):
+        raise ValueError("selected trials have incompatible external_config")
+    snapshots = [_mapping(item, "external_config") for item in external]
+    settings = _mapping(_same(snapshots, "settings"), "external_config.settings")
+    if redacted_path := _redacted_path(settings, "external_config.settings"):
+        raise ValueError(
+            f"retry cannot restore redacted external YAML setting '{redacted_path}'; "
+            "start a new run with the original secret"
+        )
+    paths = [_text(item.pop("config", None), "fixed_args.config") for item in arguments]
+    for snapshot, path in zip(snapshots, paths, strict=True):
+        if _text(snapshot.get("path"), "external_config.path") != path:
+            raise ValueError("external_config path does not match fixed_args.config")
+    if any(item != arguments[0] for item in arguments[1:]):
+        raise ValueError("selected trials have incompatible fixed_args")
+    return {**arguments[0], "config": paths[0]}, settings
+
+
+def _redacted_path(value: object, path: str) -> str | None:
+    if value == REDACTED:
+        return path
+    if isinstance(value, Mapping):
+        for name, item in value.items():
+            if found := _redacted_path(item, f"{path}.{name}"):
+                return found
+    elif isinstance(value, list | tuple):
+        for index, item in enumerate(value):
+            if found := _redacted_path(item, f"{path}.{index}"):
+                return found
+    return None
 
 
 def _mapping(value: object, label: str) -> dict[str, object]:

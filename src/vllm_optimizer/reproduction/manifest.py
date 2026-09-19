@@ -70,10 +70,12 @@ def _external_config(config: VTuneConfig) -> dict[str, object] | None:
     if configured is None:
         return None
     path = Path(str(configured))
-    try:
-        settings = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, yaml.YAMLError) as error:
-        raise ValueError(f"Cannot snapshot external vLLM configuration '{path}': {error}") from error
+    settings = config.external_server_config
+    if settings is None:
+        try:
+            settings = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, yaml.YAMLError) as error:
+            raise ValueError(f"Cannot snapshot external vLLM configuration '{path}': {error}") from error
     if not isinstance(settings, Mapping):
         raise ValueError(f"External vLLM configuration '{path}' must be a mapping")
     return {"path": str(path), "settings": redact(settings)}

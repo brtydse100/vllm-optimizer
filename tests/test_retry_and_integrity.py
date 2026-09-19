@@ -114,3 +114,59 @@ def test_manifest_snapshots_external_config_for_resolved_export(tmp_path: Path) 
     assert exported["port"] == 8200
     assert exported["model"] == str(tmp_path)
     assert "config" not in exported
+
+
+def test_retry_uses_accepted_finalist_validation_manifest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    run, artifact = _source(tmp_path)
+    monkeypatch.setenv("API_KEY", "replacement")
+    original_path = artifact.parent / "manifest.json"
+    accepted_directory = artifact.parent / "finalist-validation"
+    accepted_directory.mkdir()
+    accepted = json.loads(original_path.read_text(encoding="utf-8"))
+    accepted["benchmark"] = {**accepted["benchmark"], "repeats": 6, "min_repeats": 6}
+    accepted["execution"] = {"mode": "sequential", "artifact_subdirectory": "finalist-validation"}
+    (accepted_directory / "manifest.json").write_text(json.dumps(accepted), encoding="utf-8")
+    result_path = run / "result.json"
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    result["trials"][0]["execution"] = accepted["execution"]
+    result_path.write_text(json.dumps(result), encoding="utf-8")
+
+    plan = load_retry_plan(run, ["trial-1"])
+
+    assert plan.config.benchmark["repeats"] == 6
+    assert plan.config.benchmark["min_repeats"] == 6
+
+
+def test_multi_trial_retry_accepts_distinct_external_snapshot_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    run, artifact = _source(tmp_path)
+    monkeypatch.setenv("API_KEY", "replacement")
+    first_manifest_path = artifact.parent / "manifest.json"
+    first = json.loads(first_manifest_path.read_text(encoding="utf-8"))
+    settings = {"dtype": "float16"}
+    first_snapshot = artifact.parent / "vllm-config.yaml"
+    first_snapshot.write_text(yaml.safe_dump(settings), encoding="utf-8")
+    first["parameters"]["fixed_args"]["config"] = str(first_snapshot)
+    first["external_config"] = {"path": str(first_snapshot), "settings": settings}
+    first_manifest_path.write_text(json.dumps(first), encoding="utf-8")
+
+    second_directory = run / "trials" / "trial-2"
+    second_directory.mkdir()
+    second_snapshot = second_directory / "vllm-config.yaml"
+    second_snapshot.write_text(yaml.safe_dump(settings), encoding="utf-8")
+    second = json.loads(json.dumps(first))
+    second["trial_id"] = "trial-2"
+    second["parameters"]["fixed_args"]["config"] = str(second_snapshot)
+    second["external_config"]["path"] = str(second_snapshot)
+    (second_directory / "manifest.json").write_text(json.dumps(second), encoding="utf-8")
+    result_path = run / "result.json"
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    result["trials"].append({"trial_id": "trial-2"})
+    result_path.write_text(json.dumps(result), encoding="utf-8")
+
+    plan = load_retry_plan(run, ["trial-1", "trial-2"])
+
+    assert plan.config.external_server_config == settings
+    assert plan.config.server["config"] == str(first_snapshot)
+    assert [trial.trial_id for trial in plan.trials] == ["trial-1", "trial-2"]
