@@ -86,6 +86,11 @@ def _fixed_arguments(
         raise ValueError("selected trials have incompatible external_config")
     snapshots = [_mapping(item, "external_config") for item in external]
     settings = _mapping(_same(snapshots, "settings"), "external_config.settings")
+    if redacted_path := _redacted_path(settings, "external_config.settings"):
+        raise ValueError(
+            f"retry cannot restore redacted external YAML setting '{redacted_path}'; "
+            "start a new run with the original secret"
+        )
     paths = [_text(item.pop("config", None), "fixed_args.config") for item in arguments]
     for snapshot, path in zip(snapshots, paths, strict=True):
         if _text(snapshot.get("path"), "external_config.path") != path:
@@ -93,6 +98,20 @@ def _fixed_arguments(
     if any(item != arguments[0] for item in arguments[1:]):
         raise ValueError("selected trials have incompatible fixed_args")
     return {**arguments[0], "config": paths[0]}, settings
+
+
+def _redacted_path(value: object, path: str) -> str | None:
+    if value == REDACTED:
+        return path
+    if isinstance(value, Mapping):
+        for name, item in value.items():
+            if found := _redacted_path(item, f"{path}.{name}"):
+                return found
+    elif isinstance(value, list | tuple):
+        for index, item in enumerate(value):
+            if found := _redacted_path(item, f"{path}.{index}"):
+                return found
+    return None
 
 
 def _mapping(value: object, label: str) -> dict[str, object]:
