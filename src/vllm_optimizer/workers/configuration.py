@@ -25,13 +25,12 @@ def build_process_spec(
     _validate_selected_keys(chosen_args, config.tune, "argument")
     _validate_selected_keys(chosen_env, config.tune_env, "environment")
 
-    arguments = {
-        "host": config.execution.get("host", "127.0.0.1"),
-        "port": server_port(config),
-        **{name: value for name, value in config.server.items() if name != "model"},
-    }
-    arguments.update(chosen_args)
-    arguments.update(runtime_args or {})
+    arguments = {"host": config.execution.get("host", "127.0.0.1"), "port": server_port(config)}
+    arguments.update(
+        _normalized_arguments({name: value for name, value in config.server.items() if name != "model"}, "server")
+    )
+    arguments.update(_normalized_arguments(chosen_args, "selected arguments"))
+    arguments.update(_normalized_arguments(runtime_args or {}, "runtime arguments"))
     argv = ["vllm", "serve", model_path(config)]
     for name in sorted(arguments):
         argv.extend(_render_argument(name, arguments[name]))
@@ -69,21 +68,23 @@ class ConfigurationBuilderWorker:
 
 
 def _validate_selected_keys(selected: Mapping[str, object], allowed: Mapping[str, object], label: str) -> None:
-    unknown = sorted(set(selected) - set(allowed))
+    if label == "argument":
+        selected_names = set(_normalized_arguments(selected, "selected arguments"))
+        allowed_names = set(_normalized_arguments(allowed, "tunable arguments"))
+    else:
+        selected_names, allowed_names = set(selected), set(allowed)
+    unknown = sorted(selected_names - allowed_names)
     if unknown:
         names = ", ".join(unknown)
         raise ValueError(f"Unknown tunable {label} key(s): {names}")
 
 
 def _render_argument(name: str, value: object) -> list[str]:
-    if not isinstance(name, str) or not name.strip():
-        raise ValueError("vLLM argument names must be non-empty strings")
-    normalized = name[2:] if name.startswith("--") else name
-    flag = f"--{normalized.replace('_', '-')}"
+    flag = f"--{_argument_name(name)}"
     if value is True:
         return [flag]
     if value is False:
-        return [f"--no-{normalized.replace('_', '-')}"]
+        return [f"--no-{flag[2:]}"]
     if value is None:
         return []
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
@@ -91,11 +92,32 @@ def _render_argument(name: str, value: object) -> list[str]:
         for item in value:
             if item is None or isinstance(item, (Mapping, Sequence)) and not isinstance(item, (str, bytes, bytearray)):
                 raise ValueError(f"Argument '{name}' contains a non-scalar value")
-            rendered.extend((flag, str(item)))
-        return rendered
+            rendered.append(str(item))
+        return [flag, *rendered] if rendered else []
     if isinstance(value, Mapping):
         raise ValueError(f"Argument '{name}' must be a scalar or list")
     return [flag, str(value)]
+
+
+def _normalized_arguments(values: Mapping[str, object], label: str) -> dict[str, object]:
+    normalized: dict[str, object] = {}
+    sources: dict[str, str] = {}
+    for raw_name, value in values.items():
+        name = _argument_name(raw_name)
+        if name in normalized:
+            raise ValueError(f"{label} contains duplicate aliases for '{name}': '{sources[name]}' and '{raw_name}'")
+        normalized[name] = value
+        sources[name] = raw_name
+    return normalized
+
+
+def _argument_name(name: object) -> str:
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError("vLLM argument names must be non-empty strings")
+    normalized = name.removeprefix("--").replace("_", "-")
+    if not normalized:
+        raise ValueError("vLLM argument names must be non-empty strings")
+    return normalized
 
 
 def _string_environment(values: Mapping[str, object]) -> dict[str, str]:

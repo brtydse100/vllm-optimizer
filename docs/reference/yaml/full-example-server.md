@@ -19,7 +19,7 @@ server:
   enforce-eager: false          # false emits --no-enforce-eager; null omits it.
   enable-prefix-caching: true   # true emits a presence-only flag.
   # served-model-name: qwen     # Scalars emit --flag value.
-  # lora-modules:               # Lists repeat the flag for every item.
+  # lora-modules:               # Lists emit one flag followed by every item.
   #   - adapter-a=/models/a
   #   - adapter-b=/models/b
 
