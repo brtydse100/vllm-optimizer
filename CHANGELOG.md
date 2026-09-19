@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## v0.1.0a18 — Reliable results and reproducible runs
+
+_September 19, 2026_
+
+- Made workload matching dataset- and configuration-aware, preserved failed-repeat evidence, rejected non-finite scores, and retained
+  baseline identity during reclassification.
+- Snapshotted external vLLM YAML before execution and made retries use accepted finalist-validation manifests and repeat budgets.
+- Fixed CLI alias precedence and preserved every value in list arguments.
+- Unified launch and readiness endpoints, verified listener ownership by process and address, and validated every GPU requirement against
+  configured workers for Random and TPE searches.
+- Retries containing redacted external YAML secrets are rejected with an error naming the unavailable setting instead of launching with a
+  placeholder value.
+
 ## v0.1.0a17 — Documentation and report usability
 
 _September 18, 2026_
