@@ -3,11 +3,11 @@
 from dataclasses import replace
 
 from vllm_optimizer.domain.trial_report import TrialReport
-from vllm_optimizer.reporting.workloads import number, scenarios
+from vllm_optimizer.reporting.workloads import ScenarioKey, number, scenarios
 
 
 def matching_workloads(before: TrialReport | None, after: TrialReport | None, name: str | None = None) -> bool:
-    def counts(report: TrialReport | None) -> dict[str, int]:
+    def counts(report: TrialReport | None) -> dict[ScenarioKey, int]:
         if report and name is not None:
             report = replace(report, benchmarks=tuple(b for b in report.benchmarks if b.get("name") == name))
         return {key: len(values) for key, values in scenarios(report).items()}

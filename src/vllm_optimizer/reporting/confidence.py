@@ -111,7 +111,7 @@ def _rows(report: TrialReport, phase: str, metric: str, context: ReportContext) 
         drift = _drift_label(drift_value)
         cells = (
             f"{report.trial_id} / {phase}",
-            key,
+            str(key),
             individual,
             str(summary.count),
             formatted(summary.mean),

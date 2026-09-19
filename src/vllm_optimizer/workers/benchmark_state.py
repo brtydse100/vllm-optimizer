@@ -26,9 +26,14 @@ def ownership_key(engine: str, run_name: str, repeat: int | None, warmup: int | 
 def remember_result(context: TrialContext, result: object, observed: bool = False, warmup: int | None = None) -> None:
     if warmup is not None:
         return
-    key = "observed_benchmark_results" if observed else "benchmark_results"
-    previous = context.values.get(key, ())
-    context.values[key] = (*(previous if isinstance(previous, tuple) else ()), result)
+    previous_observed = context.values.get("observed_benchmark_results", ())
+    context.values["observed_benchmark_results"] = (
+        *(previous_observed if isinstance(previous_observed, tuple) else ()),
+        result,
+    )
+    if not observed:
+        previous = context.values.get("benchmark_results", ())
+        context.values["benchmark_results"] = (*(previous if isinstance(previous, tuple) else ()), result)
 
 
 def artifact_directory(base: Path, context: TrialContext, repeat: int | None, warmup: int | None) -> Path:
