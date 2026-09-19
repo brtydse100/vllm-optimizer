@@ -13,10 +13,12 @@ from urllib.request import urlopen
 from vllm_optimizer.domain.results import Failure, WorkerResult
 from vllm_optimizer.reproduction.models import StartupRecord
 from vllm_optimizer.workers.base import TrialContext
+from vllm_optimizer.workers.endpoint_ownership import process_owns_listener
 from vllm_optimizer.workers.failure_details import classified_failure
 from vllm_optimizer.workers.process import ManagedProcess
 
 HealthProbe = Callable[[str, float], Awaitable[bool]]
+OwnershipProbe = Callable[[int, int], Awaitable[bool]]
 
 
 async def http_health_probe(url: str, timeout: float) -> bool:
@@ -30,6 +32,11 @@ async def http_health_probe(url: str, timeout: float) -> bool:
             return False
 
     return await asyncio.to_thread(request)
+
+
+async def listener_owned_by_process(pid: int, port: int) -> bool:
+    """Return whether the managed process session owns the listening port."""
+    return await asyncio.to_thread(process_owns_listener, pid, port)
 
 
 class EndpointGuardWorker:
@@ -91,15 +98,18 @@ class ReadinessWorker:
         poll_interval: float = 0.5,
         request_timeout: float = 2.0,
         health_probe: HealthProbe = http_health_probe,
+        ownership_probe: OwnershipProbe = listener_owned_by_process,
     ) -> None:
         if startup_timeout <= 0 or poll_interval <= 0 or request_timeout <= 0:
             raise ValueError("readiness timeouts and poll interval must be positive")
         self._endpoint = f"http://{host}:{port}"
+        self._port = port
         self._health_url = f"{self._endpoint}/{path.lstrip('/')}"
         self._startup_timeout = startup_timeout
         self._poll_interval = poll_interval
         self._request_timeout = request_timeout
         self._health_probe = health_probe
+        self._ownership_probe = ownership_probe
 
     @property
     def endpoint(self) -> str:
@@ -148,6 +158,14 @@ class ReadinessWorker:
             if process.returncode is not None:
                 return self._early_exit(process.returncode, context)
             if healthy:
+                owned = await self._ownership_probe(process.pid, self._port)
+                if not owned:
+                    return WorkerResult.failed(
+                        Failure(
+                            "server_endpoint_in_use",
+                            f"Health endpoint {self._health_url} is not owned by the managed vLLM process",
+                        )
+                    )
                 context.values["server_endpoint"] = self._endpoint
                 return WorkerResult.completed()
             remaining = deadline - monotonic()

@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from vllm_optimizer.search.grid import TrialParameters
 from vllm_optimizer.workers.base import TrialContext
 from vllm_optimizer.workers.configuration import ConfigurationBuilderWorker
 from vllm_optimizer.workers.factory import build_trial_workers
+from vllm_optimizer.workers.process import ProcessRunner, ProcessSpec
 from vllm_optimizer.workers.readiness import EndpointGuardWorker, ReadinessWorker
 
 
@@ -34,6 +36,35 @@ def test_endpoint_guard_rejects_an_already_healthy_server() -> None:
     worker = EndpointGuardWorker("127.0.0.1", 8000, health_probe=healthy)
 
     result = asyncio.run(worker.execute(TrialContext("trial")))
+
+    assert result.status is WorkerStatus.FAILED
+    assert result.failure is not None
+    assert result.failure.code == "server_endpoint_in_use"
+
+
+def test_readiness_rejects_unrelated_server_that_becomes_healthy(tmp_path: Path) -> None:
+    async def scenario():
+        process = await ProcessRunner().start(
+            ProcessSpec((sys.executable, "-c", "import time; time.sleep(30)")), tmp_path / "server.log"
+        )
+        probes = iter((False, True))
+
+        async def health(url: str, timeout: float) -> bool:
+            return next(probes)
+
+        async def unrelated(pid: int, port: int) -> bool:
+            return False
+
+        context = TrialContext("trial", {"server_process": process, "attempt_index": 1})
+        worker = ReadinessWorker(
+            startup_timeout=1, poll_interval=0.001, request_timeout=0.1, health_probe=health, ownership_probe=unrelated
+        )
+        try:
+            return await worker.execute(context)
+        finally:
+            await process.stop(0.05)
+
+    result = asyncio.run(scenario())
 
     assert result.status is WorkerStatus.FAILED
     assert result.failure is not None
