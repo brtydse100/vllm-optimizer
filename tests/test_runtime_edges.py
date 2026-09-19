@@ -23,7 +23,7 @@ def test_readiness_success_timeout_and_early_exit(tmp_path: Path) -> None:
         context = TrialContext("trial", {"server_process": process, "attempt_index": 1})
         context.artifacts["vllm_log"] = str(tmp_path / f"{id(probe)}.log")
 
-        async def owned(pid, port):
+        async def owned(pid, host, port):
             return True
 
         worker = ReadinessWorker(

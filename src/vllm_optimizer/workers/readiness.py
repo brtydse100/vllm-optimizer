@@ -18,7 +18,7 @@ from vllm_optimizer.workers.failure_details import classified_failure
 from vllm_optimizer.workers.process import ManagedProcess
 
 HealthProbe = Callable[[str, float], Awaitable[bool]]
-OwnershipProbe = Callable[[int, int], Awaitable[bool]]
+OwnershipProbe = Callable[[int, str, int], Awaitable[bool]]
 
 
 async def http_health_probe(url: str, timeout: float) -> bool:
@@ -34,9 +34,9 @@ async def http_health_probe(url: str, timeout: float) -> bool:
     return await asyncio.to_thread(request)
 
 
-async def listener_owned_by_process(pid: int, port: int) -> bool:
+async def listener_owned_by_process(pid: int, host: str, port: int) -> bool:
     """Return whether the managed process session owns the listening port."""
-    return await asyncio.to_thread(process_owns_listener, pid, port)
+    return await asyncio.to_thread(process_owns_listener, pid, host, port)
 
 
 class EndpointGuardWorker:
@@ -103,6 +103,7 @@ class ReadinessWorker:
         if startup_timeout <= 0 or poll_interval <= 0 or request_timeout <= 0:
             raise ValueError("readiness timeouts and poll interval must be positive")
         self._endpoint = f"http://{host}:{port}"
+        self._host = host
         self._port = port
         self._health_url = f"{self._endpoint}/{path.lstrip('/')}"
         self._startup_timeout = startup_timeout
@@ -158,7 +159,7 @@ class ReadinessWorker:
             if process.returncode is not None:
                 return self._early_exit(process.returncode, context)
             if healthy:
-                owned = await self._ownership_probe(process.pid, self._port)
+                owned = await self._ownership_probe(process.pid, self._host, self._port)
                 if not owned:
                     return WorkerResult.failed(
                         Failure(

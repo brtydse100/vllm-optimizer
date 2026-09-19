@@ -48,11 +48,13 @@ def test_readiness_rejects_unrelated_server_that_becomes_healthy(tmp_path: Path)
             ProcessSpec((sys.executable, "-c", "import time; time.sleep(30)")), tmp_path / "server.log"
         )
         probes = iter((False, True))
+        ownership_checks = []
 
         async def health(url: str, timeout: float) -> bool:
             return next(probes)
 
-        async def unrelated(pid: int, port: int) -> bool:
+        async def unrelated(pid: int, host: str, port: int) -> bool:
+            ownership_checks.append((host, port))
             return False
 
         context = TrialContext("trial", {"server_process": process, "attempt_index": 1})
@@ -60,15 +62,16 @@ def test_readiness_rejects_unrelated_server_that_becomes_healthy(tmp_path: Path)
             startup_timeout=1, poll_interval=0.001, request_timeout=0.1, health_probe=health, ownership_probe=unrelated
         )
         try:
-            return await worker.execute(context)
+            return await worker.execute(context), ownership_checks
         finally:
             await process.stop(0.05)
 
-    result = asyncio.run(scenario())
+    result, ownership_checks = asyncio.run(scenario())
 
     assert result.status is WorkerStatus.FAILED
     assert result.failure is not None
     assert result.failure.code == "server_endpoint_in_use"
+    assert ownership_checks == [("127.0.0.1", 8000)]
 
 
 def test_tuned_endpoint_drives_launch_guard_and_readiness(tmp_path: Path) -> None:

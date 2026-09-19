@@ -2,34 +2,66 @@
 
 from __future__ import annotations
 
+import ipaddress
 import os
 import re
+import socket
 from pathlib import Path
 
 _SOCKET = re.compile(r"socket:\[(\d+)\]")
+IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
-def process_owns_listener(pid: int, port: int, proc: Path = Path("/proc")) -> bool:
-    """Return whether a process session owns a listening TCP socket."""
-    listeners = _listener_inodes(proc, port)
+def process_owns_listener(pid: int, host: str, port: int, proc: Path = Path("/proc")) -> bool:
+    """Return whether a process session owns the addressed listening socket."""
+    listeners = _listener_inodes(proc, host, port)
     if not listeners:
         return False
     return any(listeners.intersection(_socket_inodes(proc / str(member) / "fd")) for member in _session_pids(proc, pid))
 
 
-def _listener_inodes(proc: Path, port: int) -> set[str]:
+def _listener_inodes(proc: Path, host: str, port: int) -> set[str]:
     inodes: set[str] = set()
     expected = f"{port:04X}"
-    for name in ("tcp", "tcp6"):
+    addresses = _resolved_addresses(host)
+    for name, version in (("tcp", 4), ("tcp6", 6)):
         try:
             lines = (proc / "net" / name).read_text(encoding="ascii").splitlines()[1:]
         except (OSError, UnicodeError):
             continue
         for line in lines:
             fields = line.split()
-            if len(fields) > 9 and fields[1].rsplit(":", 1)[-1].upper() == expected and fields[3] == "0A":
+            local_address, local_port = fields[1].rsplit(":", 1) if len(fields) > 9 else ("", "")
+            address = _decoded_address(local_address, version)
+            if (
+                address is not None
+                and local_port.upper() == expected
+                and fields[3] == "0A"
+                and (
+                    address in addresses
+                    or address.is_unspecified
+                    and any(item.version == version for item in addresses)
+                )
+            ):
                 inodes.add(fields[9])
     return inodes
+
+
+def _resolved_addresses(host: str) -> set[IPAddress]:
+    try:
+        records = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)
+    except socket.gaierror:
+        return set()
+    return {ipaddress.ip_address(str(record[4][0]).split("%", 1)[0]) for record in records}
+
+
+def _decoded_address(encoded: str, version: int) -> IPAddress | None:
+    try:
+        raw = bytes.fromhex(encoded)
+        packed = raw[::-1] if version == 4 else b"".join(raw[index : index + 4][::-1] for index in range(0, 16, 4))
+        return ipaddress.ip_address(packed)
+    except ValueError:
+        return None
 
 
 def _session_pids(proc: Path, leader: int) -> tuple[int, ...]:
