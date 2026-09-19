@@ -37,6 +37,8 @@ GPU sets must be unique, and GPU sets cannot overlap.
 - The baseline runs alone on one compatible worker.
 - The coordinator suggests each unique configuration and assigns it to a free
   worker whose GPU count can satisfy its `tensor-parallel-size`.
+- Preflight checks every possible `tensor-parallel-size`, including Random and
+  TPE search values, and rejects the run if no worker can support one of them.
 - Random and TPE can have several pending trials. The coordinator alone updates
   Optuna when results return; workers never write optimizer state.
 - A failed trial releases only its own worker. Other trials continue.

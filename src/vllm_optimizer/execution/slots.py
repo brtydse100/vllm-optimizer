@@ -6,6 +6,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from vllm_optimizer.config.arguments import normalized_arguments
 from vllm_optimizer.config.models import VTuneConfig
 
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
@@ -18,12 +19,9 @@ class WorkerSlot:
     port: int
 
     def supports(self, server_args: Mapping[str, object], fixed: Mapping[str, object]) -> bool:
-        value = server_args.get(
-            "tensor-parallel-size",
-            server_args.get(
-                "tensor_parallel_size", fixed.get("tensor-parallel-size", fixed.get("tensor_parallel_size", 1))
-            ),
-        )
+        values = normalized_arguments(fixed, "server arguments")
+        values.update(normalized_arguments(server_args, "selected arguments"))
+        value = values.get("tensor-parallel-size", 1)
         return isinstance(value, int) and not isinstance(value, bool) and value <= len(self.devices)
 
 

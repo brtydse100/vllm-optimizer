@@ -81,6 +81,9 @@ def test_explicit_worker_slot_validation() -> None:
     assert slots == (WorkerSlot("a", (0,), 8100), WorkerSlot("b", (1, 2), 8101))
     assert slots[0].supports({}, {})
     assert not slots[0].supports({"tensor-parallel-size": 2}, {})
+    assert not slots[0].supports({"--tensor-parallel-size": 2}, {})
+    assert not slots[0].supports({}, {"--tensor-parallel-size": 2})
+    assert slots[0].supports({"--tensor-parallel-size": 1}, {"tensor_parallel_size": 2})
 
 
 @pytest.mark.parametrize(

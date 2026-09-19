@@ -17,6 +17,7 @@ from vllm_optimizer.benchmarks.guidellm import build_plan as build_guidellm_plan
 from vllm_optimizer.benchmarks.timing import timeout_for_run
 from vllm_optimizer.benchmarks.vllm import build_plan as build_vllm_plan
 from vllm_optimizer.config.adaptive_repeats import adaptive_repeat_policy
+from vllm_optimizer.config.arguments import canonical_argument_name, normalized_arguments
 from vllm_optimizer.config.errors import ConfigValidationError
 from vllm_optimizer.config.finalist_validation import finalist_policy
 from vllm_optimizer.config.models import VTuneConfig
@@ -31,7 +32,7 @@ from vllm_optimizer.config.runtime import (
 from vllm_optimizer.execution.slots import WorkerSlot, worker_slots
 from vllm_optimizer.reporting.llm_summary import settings as llm_settings
 from vllm_optimizer.search.factory import validate_search
-from vllm_optimizer.search.grid import TrialParameters, iter_grid
+from vllm_optimizer.search.grid import TrialParameters, definition_values, iter_grid
 from vllm_optimizer.workers.configuration import build_process_spec
 
 _EXECUTION_KEYS = {
@@ -88,6 +89,7 @@ def _validate(config: VTuneConfig) -> None:
     positive(config.execution, "drain_grace", 15)
 
     slots = worker_slots(config)
+    _validate_worker_search_space(config, slots)
     trials = iter_grid(config)
     if sampler != "grid":
         trials = islice(trials, trial_count)
@@ -101,6 +103,22 @@ def _validate(config: VTuneConfig) -> None:
     for run in runs:
         timeout_for_run(run, config.timeouts.get("benchmark"))
         builder(config, run, endpoint, Path("."))
+
+
+def _validate_worker_search_space(config: VTuneConfig, slots: tuple[WorkerSlot, ...]) -> None:
+    if not slots:
+        return
+    definitions = normalized_arguments(config.tune, "tunable arguments")
+    if "tensor-parallel-size" not in definitions:
+        return
+    name, definition = next(
+        (name, definition)
+        for name, definition in config.tune.items()
+        if canonical_argument_name(name) == "tensor-parallel-size"
+    )
+    values = definition_values(definition, "tune.tensor-parallel-size")
+    for value in values:
+        _validate_process(config, TrialParameters("preflight", {name: value}, {}), slots)
 
 
 def _validate_process(config: VTuneConfig, trial: TrialParameters, slots: tuple[WorkerSlot, ...]) -> None:
