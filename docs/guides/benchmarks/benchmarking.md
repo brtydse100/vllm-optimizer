@@ -61,7 +61,7 @@ The `vllm-opt` CLI automatically uses `--backend vllm` and also owns `model`, `h
 `port`, `base-url`, `save-result`, `append-result`, `result-dir`, and
 `result-filename`; do not put them under `args`. Underscores
 and hyphens are both accepted in keys. `true` adds a flag and `false` omits it.
-A list repeats its flag for every item. Other scalar values are passed as
+A list emits one flag followed by every item. Other scalar values are passed as
 strings, so new vLLM options do not require a vLLM Optimizer release.
 
 Common dataset forms:
