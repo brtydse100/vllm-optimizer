@@ -21,10 +21,10 @@ from vllm_optimizer.search.grid import TrialParameters
 from vllm_optimizer.workers.adaptive_repeats import AdaptiveRepeatGate, OptionalRepeatWorker
 from vllm_optimizer.workers.base import Worker
 from vllm_optimizer.workers.benchmark import GuideLLMBenchmarkWorker
-from vllm_optimizer.workers.configuration import ConfigurationBuilderWorker
+from vllm_optimizer.workers.configuration import ConfigurationBuilderWorker, resolved_server_endpoint
 from vllm_optimizer.workers.drain import VLLMDrainWorker
 from vllm_optimizer.workers.process import ProcessRunner
-from vllm_optimizer.workers.readiness import ReadinessWorker
+from vllm_optimizer.workers.readiness import EndpointGuardWorker, ReadinessWorker
 from vllm_optimizer.workers.vllm import VLLMRunnerWorker
 from vllm_optimizer.workers.vllm_benchmark import VLLMBenchmarkWorker
 
@@ -45,14 +45,14 @@ def build_trial_workers(
     port = slot.port if slot else server_port(config)
     runtime_args = {"port": port} if slot else {}
     runtime_env = {"CUDA_VISIBLE_DEVICES": ",".join(map(str, slot.devices))} if slot else {}
+    host, port = resolved_server_endpoint(config, parameters.server_args, runtime_args)
+    health_path = str(execution.get("health_path", "/health"))
     workers: list[Worker] = [
         ConfigurationBuilderWorker(config, parameters.server_args, parameters.server_env, runtime_args, runtime_env),
+        EndpointGuardWorker(host, port, health_path),
         VLLMRunnerWorker(ProcessRunner(debug, "vllm"), directory / "vllm.log", grace),
         ReadinessWorker(
-            host=str(execution.get("host", "127.0.0.1")),
-            port=port,
-            path=str(execution.get("health_path", "/health")),
-            startup_timeout=duration(config.timeouts, "startup", 900),
+            host=host, port=port, path=health_path, startup_timeout=duration(config.timeouts, "startup", 900)
         ),
     ]
     repeats = configured_repeats(config)

@@ -47,6 +47,9 @@ for nested transfer settings and inline JSON examples.
 
 Unknown vLLM flags are intentionally allowed. The `vllm-opt` CLI renders keys as CLI flags,
 which keeps new vLLM options usable without a vLLM Optimizer release.
+Underscores and hyphens identify the same CLI argument, and tuned values override
+fixed aliases. Defining both spellings in the same section is rejected as
+ambiguous. Environment-variable names remain exact and case-sensitive.
 
 The complete configuration is validated before a run directory or process is
 created. This includes nested benchmark options, search values, ports, GPU
@@ -61,12 +64,12 @@ server:
   model: /models/qwen
   enforce-eager: true       # emits --enforce-eager
   enable-prefix-caching: false  # emits --no-enable-prefix-caching
-  lora-modules: [a=/a, b=/b]   # repeats --lora-modules
+  lora-modules: [a=/a, b=/b]   # emits one flag with both values
 ```
 
 `null` omits a flag. `true` emits a presence flag and `false` emits its
-`--no-` form. Scalars emit a flag/value pair, and lists repeat the flag once
-for each item.
+`--no-` form. Scalars emit a flag/value pair. Lists emit one flag followed by
+all values so parsers retain the complete list.
 
 ### Tunable arguments and environment
 
@@ -105,7 +108,9 @@ first; tuned trials then run concurrently. See
 
 For sequential execution, including one vLLM server using tensor parallelism
 across several GPUs, the `vllm-opt` CLI always passes a concrete port. It defaults to 8000;
-set `server.port` only when another port is required.
+set `server.port` only when another port is required. Tuned `host` and `port`
+values drive both the launched server and its readiness endpoint. Local-parallel
+worker ports override trial values as described above.
 
 ## Benchmark runs
 

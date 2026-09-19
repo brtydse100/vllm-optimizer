@@ -105,7 +105,7 @@ def _argument(name: str, value: object) -> tuple[str, ...]:
     if isinstance(value, bool):
         return (flag,) if value else ()
     if isinstance(value, list):
-        return tuple(item for entry in value for item in (flag, str(entry)))
+        return (flag, *(str(entry) for entry in value)) if value else ()
     if value is None or not isinstance(value, str | int | float):
         raise ValueError(f"Unsupported vLLM benchmark value for '{name}'")
     return flag, str(value)
