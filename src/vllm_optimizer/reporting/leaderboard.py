@@ -48,7 +48,7 @@ def leaderboard(
                 counts.extend(failures)
             else:
                 counts.append(float("nan"))
-            details.append(f"<p>{escape(name)}: score SD {formatted(sd)}; n={len(values)}</p>")
+            details.append(f"<p>{escape(str(name))}: score SD {formatted(sd)}; n={len(values)}</p>")
         duration = mean_duration(trial)
         details.extend(_duration_details(trial))
         error_count = sum(counts) if counts and all(value == value for value in counts) else None

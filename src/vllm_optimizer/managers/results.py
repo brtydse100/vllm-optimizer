@@ -58,7 +58,7 @@ class ResultsManager:
 
     @staticmethod
     def _benchmark_results(context: TrialContext) -> tuple[BenchmarkResult, ...]:
-        values = context.values.get("benchmark_results", context.values.get("observed_benchmark_results", ()))
+        values = context.values.get("observed_benchmark_results", context.values.get("benchmark_results", ()))
         if not isinstance(values, tuple) or any(not isinstance(value, BenchmarkResult) for value in values):
             raise ValueError("trial benchmark results have an invalid shape")
         return values

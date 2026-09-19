@@ -59,9 +59,7 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
     accepted = tuple(item for item in trials if is_accepted(item))
     scores = [_trial_score(source, item, policy) for item in accepted]
     valid = [item for item in scores if item is not None]
-    baseline_id = (
-        "baseline" if validation and any(item.trial_id == "baseline" for item in stored) else _baseline_id(document)
-    )
+    baseline_id = "baseline" if any(item.trial_id == "baseline" for item in stored) else _baseline_id(document)
     baseline = next((item for item in valid if item.trial_id == baseline_id), None)
     ranking = policy.rank([item for item in valid if item.trial_id != baseline_id])
     by_benchmark = {
@@ -117,12 +115,18 @@ def _policy(
 
 
 def _reclassify(report: TrialReport, policy: ScoringManager) -> TrialReport:
-    score = policy.score(_results(report))
+    measurements = _results(report)
+    score = policy.score(measurements)
+    quality = policy.quality(measurements)
     request_failure = report.failure and report.failure.code in {
         "benchmark_requests_incomplete",
         "benchmark_no_completed_requests",
     }
-    if score is not None and (report.status is WorkerStatus.COMPLETED or request_failure):
+    if (
+        score is not None
+        and not quality.excluded_workloads
+        and (report.status is WorkerStatus.COMPLETED or request_failure)
+    ):
         return TrialReport(
             1,
             report.trial_id,

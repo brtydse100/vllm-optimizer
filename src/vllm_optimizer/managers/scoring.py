@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from math import isfinite
 from statistics import fmean, median
 
 from vllm_optimizer.domain.benchmark import BenchmarkResult
@@ -19,6 +21,10 @@ class TrialScore:
     errored_requests: int = 0
     incomplete_requests: int = 0
     excluded_workloads: int = 0
+
+    def __post_init__(self) -> None:
+        if isinstance(self.value, bool) or not isinstance(self.value, int | float) or not isfinite(self.value):
+            raise ValueError("trial score must be finite")
 
     @property
     def error_rate(self) -> float:
@@ -69,20 +75,34 @@ class ScoringManager:
         return fmean(values) if values else None
 
     def score_each(self, results: tuple[BenchmarkResult, ...]) -> dict[str, float]:
-        grouped: dict[str, list[float]] = {}
+        grouped: dict[str, list[dict[str, float | None]]] = {}
         for result in results:
-            values = [
-                value
+            result_values = {
+                _workload_identity(getattr(workload, "index", 0), getattr(workload, "configuration", {})): (
+                    _metric_value(workload.metrics.get(self.metric))
+                    if _eligible(workload.metrics, self.max_failure_percentage)
+                    else None
+                )
                 for workload in result.workloads
-                if _eligible(workload.metrics, self.max_failure_percentage)
-                if (value := _metric_value(workload.metrics.get(self.metric))) is not None
-            ]
-            if values:
-                grouped.setdefault(result.run_name, []).append(fmean(values))
-        aggregate = fmean if self.repeat_aggregation == "mean" else median
-        return {
-            name: float(aggregate(values)) for name, values in grouped.items() if len(values) >= self.minimum_repeats
-        }
+            }
+            if result_values:
+                grouped.setdefault(result.run_name, []).append(result_values)
+        scores: dict[str, float] = {}
+        for name, repeats in grouped.items():
+            identities = set(repeats[0])
+            if any(set(repeat) != identities for repeat in repeats[1:]):
+                continue
+            workload_scores: list[float] = []
+            for identity in identities:
+                repeat_values = [value for repeat in repeats if (value := repeat[identity]) is not None]
+                if len(repeat_values) < self.minimum_repeats:
+                    break
+                aggregate = fmean(repeat_values) if self.repeat_aggregation == "mean" else median(repeat_values)
+                workload_scores.append(float(aggregate))
+            else:
+                if workload_scores:
+                    scores[name] = fmean(workload_scores)
+        return scores
 
     @staticmethod
     def rank(scores: list[TrialScore]) -> tuple[TrialScore, ...]:
@@ -117,19 +137,35 @@ def _metric_value(value: object) -> float | None:
     if isinstance(value, bool):
         return None
     if isinstance(value, int | float):
-        return float(value)
+        return _finite(value)
     if not isinstance(value, Mapping):
         return None
     average = value.get("average")
     if isinstance(average, int | float) and not isinstance(average, bool):
-        return float(average)
+        return _finite(average)
     successful = value.get("successful")
     if isinstance(successful, Mapping):
         mean = successful.get("mean")
         if isinstance(mean, int | float) and not isinstance(mean, bool):
-            return float(mean)
+            return _finite(mean)
     mean = value.get("mean")
-    return float(mean) if isinstance(mean, int | float) and not isinstance(mean, bool) else None
+    return _finite(mean)
+
+
+def _finite(value: object) -> float | None:
+    return float(value) if isinstance(value, int | float) and not isinstance(value, bool) and isfinite(value) else None
+
+
+def _workload_identity(index: int, configuration: Mapping[str, object]) -> str:
+    return f"{index}:{json.dumps(_plain(configuration), sort_keys=True, separators=(',', ':'))}"
+
+
+def _plain(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {str(key): _plain(item) for key, item in value.items()}
+    if isinstance(value, tuple | list):
+        return [_plain(item) for item in value]
+    return value
 
 
 def _request_counts(metrics: Mapping[str, object]) -> tuple[int, int, int]:

@@ -20,15 +20,17 @@ class Observation:
     metrics: Mapping[str, object]
 
 
-class ScenarioKey(str):
+@dataclass(frozen=True)
+class ScenarioKey:
+    benchmark: str
+    index: str
     configuration: str
 
-    def __new__(cls, benchmark: str, index: str, configuration: str) -> ScenarioKey:
+    def __str__(self) -> str:
+        configuration = self.configuration
         summary = configuration_summary(json.loads(configuration))
         suffix = f" — {summary}" if summary else ""
-        instance = super().__new__(cls, f"{benchmark} / workload {index}{suffix}")
-        instance.configuration = configuration
-        return instance
+        return f"{self.benchmark} / workload {self.index}{suffix}"
 
     def pretty_configuration(self) -> str:
         return json.dumps(json.loads(self.configuration), indent=2, sort_keys=True)

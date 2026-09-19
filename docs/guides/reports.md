@@ -43,7 +43,8 @@ also compare mean benchmark execution duration regardless of the optimization
 objective. Values are arithmetic means across available
 repeats; P50/P95/P99 columns are means of supplied backend percentiles, **not pooled
 request percentiles**. Missing measurements and zero-denominator percentage
-changes are unavailable. Different workload configurations are not paired.
+changes are unavailable. Different workload configurations and datasets are
+not paired or combined to satisfy a repeat budget.
 
 The baseline comparison is inside Performance breakdown. Overall percentage changes
 require matching workload configurations and repeat counts on both sides.
@@ -173,6 +174,10 @@ This reads the stored benchmark measurements, evaluates request failures only
 after each stored repeat is complete, recalculates eligibility and rankings, and
 writes a new `result.json`, `results.csv`, and `report.html` below the source
 run's `reclassified` directory (or `--output`). The source run is not modified.
+Measurements from a failed repeat remain part of this evidence and must satisfy
+the selected failure policy before that trial can become eligible. A trial named
+`baseline` remains the baseline if reclassification makes it eligible; it is
+never moved into the tuned ranking.
 Missing or changed optional logs and raw artifacts generate visible integrity
 warnings. a5/a6 reports may have no execution assignment; a7 recomputes their
 derived summaries from normalized trial data without changing the source run.
