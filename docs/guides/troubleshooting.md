@@ -13,9 +13,11 @@ resolving a transient or environmental problem; it does not accept edited YAML.
 The `vllm-opt` CLI polls process and endpoint health rather than sleeping for a fixed time.
 Increase `timeouts.startup` only if logs show useful model-loading progress.
 
-The `vllm-opt` CLI always passes the same validated port to vLLM and its readiness probe.
+The `vllm-opt` CLI always passes the same resolved host and port to vLLM and its readiness probe.
 Sequential tensor-parallel servers default to port 8000. Local-parallel mode
 requires an `execution.ports` range because it starts several server instances.
+Before launching vLLM, the CLI rejects a target health endpoint that is already
+serving so an unrelated process cannot satisfy readiness for the new trial.
 
 ## Configuration error appears after work starts
 

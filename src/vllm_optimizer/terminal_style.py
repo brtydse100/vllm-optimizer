@@ -25,6 +25,7 @@ def styled(message: str, tone: str, stream: TextIO | None = None) -> str:
 def stage_label(worker: str) -> str:
     fixed = {
         "configuration_builder": "Building configuration",
+        "endpoint_guard": "Checking server endpoint",
         "vllm_runner": "Starting vLLM server",
         "readiness": "Waiting for server readiness",
         "cleanup": "Stopping owned processes",
