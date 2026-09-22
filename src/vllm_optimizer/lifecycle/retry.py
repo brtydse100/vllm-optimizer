@@ -100,16 +100,17 @@ def _fixed_arguments(
     return {**arguments[0], "config": paths[0]}, settings
 
 
-def _redacted_path(value: object, path: str) -> str | None:
-    if value == REDACTED:
+def _redacted_path(value: object, path: str, headers: bool = False) -> str | None:
+    if value == REDACTED or headers and isinstance(value, str) and REDACTED in value:
         return path
     if isinstance(value, Mapping):
         for name, item in value.items():
-            if found := _redacted_path(item, f"{path}.{name}"):
+            header_value = headers or str(name).lower().replace("_", "-") in {"header", "headers"}
+            if found := _redacted_path(item, f"{path}.{name}", header_value):
                 return found
     elif isinstance(value, list | tuple):
         for index, item in enumerate(value):
-            if found := _redacted_path(item, f"{path}.{index}"):
+            if found := _redacted_path(item, f"{path}.{index}", headers):
                 return found
     return None
 

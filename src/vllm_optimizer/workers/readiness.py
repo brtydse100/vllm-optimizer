@@ -10,6 +10,7 @@ from time import monotonic
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
+from vllm_optimizer.config.endpoints import http_endpoint
 from vllm_optimizer.domain.results import Failure, WorkerResult
 from vllm_optimizer.reproduction.models import StartupRecord
 from vllm_optimizer.workers.base import TrialContext
@@ -54,7 +55,7 @@ class EndpointGuardWorker:
     ) -> None:
         if request_timeout <= 0:
             raise ValueError("endpoint guard request timeout must be positive")
-        self._endpoint = f"http://{host}:{port}"
+        self._endpoint = http_endpoint(host, port)
         self._health_url = f"{self._endpoint}/{path.lstrip('/')}"
         self._request_timeout = request_timeout
         self._health_probe = health_probe
@@ -102,7 +103,7 @@ class ReadinessWorker:
     ) -> None:
         if startup_timeout <= 0 or poll_interval <= 0 or request_timeout <= 0:
             raise ValueError("readiness timeouts and poll interval must be positive")
-        self._endpoint = f"http://{host}:{port}"
+        self._endpoint = http_endpoint(host, port)
         self._host = host
         self._port = port
         self._health_url = f"{self._endpoint}/{path.lstrip('/')}"

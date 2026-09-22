@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
@@ -26,7 +26,7 @@ class ScheduledResult(Generic[T]):
 
 async def sequential_trials(
     search: SearchSession, execute: Execute[T], started: Started
-) -> AsyncIterator[ScheduledResult[T]]:
+) -> AsyncGenerator[ScheduledResult[T], None]:
     position = 0
     while (parameters := search.suggest()) is not None:
         position += 1
@@ -40,7 +40,7 @@ async def parallel_trials(
     fixed: dict[str, object],
     execute: Execute[T],
     started: Started,
-) -> AsyncIterator[ScheduledResult[T]]:
+) -> AsyncGenerator[ScheduledResult[T], None]:
     available = list(slots)
     pending: list[tuple[int, TrialParameters]] = []
     active: dict[asyncio.Future[T], tuple[int, TrialParameters, WorkerSlot]] = {}

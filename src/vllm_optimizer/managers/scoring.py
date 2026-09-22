@@ -75,6 +75,8 @@ class ScoringManager:
         return fmean(values) if values else None
 
     def score_each(self, results: tuple[BenchmarkResult, ...]) -> dict[str, float]:
+        if self.repeat_aggregation == "median":
+            return self._legacy_scores(results)
         grouped: dict[str, list[dict[str, float | None]]] = {}
         for result in results:
             result_values = {
@@ -103,6 +105,19 @@ class ScoringManager:
                 if workload_scores:
                     scores[name] = fmean(workload_scores)
         return scores
+
+    def _legacy_scores(self, results: tuple[BenchmarkResult, ...]) -> dict[str, float]:
+        grouped: dict[str, list[float]] = {}
+        for result in results:
+            values = [
+                value
+                for workload in result.workloads
+                if _eligible(workload.metrics, self.max_failure_percentage)
+                if (value := _metric_value(workload.metrics.get(self.metric))) is not None
+            ]
+            if values:
+                grouped.setdefault(result.run_name, []).append(fmean(values))
+        return {name: float(median(values)) for name, values in grouped.items() if len(values) >= self.minimum_repeats}
 
     @staticmethod
     def rank(scores: list[TrialScore]) -> tuple[TrialScore, ...]:

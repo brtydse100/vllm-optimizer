@@ -22,3 +22,22 @@ jobs:
       - run: python -m pytest -q tests
       - run: vllm --version
       - run: vllm-opt --help
+      - name: Download smoke model
+        run: python -c "from huggingface_hub import snapshot_download; snapshot_download('facebook/opt-125m', local_dir='.gpu-smoke-model')"
+      - name: Run real serving and benchmark cycle
+        run: vllm-opt -c .github/gpu-smoke.yaml
+      - name: Verify smoke artifacts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          results = list(Path(".gpu-smoke-runs/real-gpu-smoke").glob("*/result.json"))
+          assert len(results) == 1, results
+          document = json.loads(results[0].read_text(encoding="utf-8"))
+          assert document["status"] == "completed", document
+          assert document["ranking"], document
+          run = results[0].parent
+          assert (run / "results.csv").is_file()
+          assert (run / "report.html").is_file()
+          PY

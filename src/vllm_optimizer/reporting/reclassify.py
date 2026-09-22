@@ -19,6 +19,7 @@ from vllm_optimizer.reporting.reclassify_scores import results as _results
 from vllm_optimizer.reporting.reclassify_scores import trial_score as _trial_score
 from vllm_optimizer.reporting.reporter import Reporter
 from vllm_optimizer.reproduction.accepted import accepted_manifest
+from vllm_optimizer.workers.completion import max_requests, request_count_failure
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +45,7 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         raise ValueError(f"re-evaluation output must be a new directory: {destination}")
     benchmark_policy = _benchmark_policy(document, source, stored).with_maximum(maximum)
     policy = _policy(source, stored, str(document.get("maximize", "")), benchmark_policy)
+    expected_requests = _expected_requests(source, stored)
     raw_validation = document.get("finalist_validation")
     validation = raw_validation if isinstance(raw_validation, Mapping) else {}
     if validation:
@@ -55,7 +57,7 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
     def is_accepted(item: TrialReport) -> bool:
         return not validation or item.execution.get("artifact_subdirectory") == "finalist-validation"
 
-    trials = tuple(_reclassify(item, policy) if is_accepted(item) else item for item in stored)
+    trials = tuple(_reclassify(item, policy, expected_requests) if is_accepted(item) else item for item in stored)
     accepted = tuple(item for item in trials if is_accepted(item))
     scores = [_trial_score(source, item, policy) for item in accepted]
     valid = [item for item in scores if item is not None]
@@ -114,16 +116,24 @@ def _policy(
     )
 
 
-def _reclassify(report: TrialReport, policy: ScoringManager) -> TrialReport:
+def _reclassify(
+    report: TrialReport, policy: ScoringManager, expected_requests: Mapping[str, int] | None = None
+) -> TrialReport:
     measurements = _results(report)
     score = policy.score(measurements)
     quality = policy.quality(measurements)
+    counts_valid = all(
+        request_count_failure(result, expected, result.backend, policy.max_failure_percentage) is None
+        for result in measurements
+        if (expected := (expected_requests or {}).get(result.run_name)) is not None
+    )
     request_failure = report.failure and report.failure.code in {
         "benchmark_requests_incomplete",
         "benchmark_no_completed_requests",
     }
     if (
         score is not None
+        and counts_valid
         and not quality.excluded_workloads
         and (report.status is WorkerStatus.COMPLETED or request_failure)
     ):
@@ -150,6 +160,20 @@ def _reclassify(report: TrialReport, policy: ScoringManager) -> TrialReport:
             report.execution,
         )
     return report
+
+
+def _expected_requests(run: Path, trials: tuple[TrialReport, ...]) -> dict[str, int]:
+    manifest = accepted_manifest(run, trials[0].trial_id, trials[0].execution)
+    benchmark = manifest.get("benchmark", {})
+    runs = benchmark.get("runs", ()) if isinstance(benchmark, Mapping) else ()
+    expected: dict[str, int] = {}
+    for item in runs if isinstance(runs, list | tuple) else ():
+        if not isinstance(item, Mapping) or not item.get("name"):
+            continue
+        has_limit, count = max_requests(item)
+        if has_limit and count is not None:
+            expected[str(item["name"])] = count
+    return expected
 
 
 def _baseline_id(document: Mapping[str, object]) -> str | None:

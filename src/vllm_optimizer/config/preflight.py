@@ -18,6 +18,7 @@ from vllm_optimizer.benchmarks.timing import timeout_for_run
 from vllm_optimizer.benchmarks.vllm import build_plan as build_vllm_plan
 from vllm_optimizer.config.adaptive_repeats import adaptive_repeat_policy
 from vllm_optimizer.config.arguments import canonical_argument_name, normalized_arguments
+from vllm_optimizer.config.endpoints import http_endpoint
 from vllm_optimizer.config.errors import ConfigValidationError
 from vllm_optimizer.config.finalist_validation import finalist_policy
 from vllm_optimizer.config.models import VTuneConfig
@@ -98,7 +99,7 @@ def _validate(config: VTuneConfig) -> None:
         _validate_process(config, trial, slots)
 
     endpoint_port = slots[0].port if slots else port
-    endpoint = f"http://{host}:{endpoint_port}"
+    endpoint = http_endpoint(host, endpoint_port)
     builder = build_guidellm_plan if configured_engine(config) == "guidellm" else build_vllm_plan
     for run in runs:
         timeout_for_run(run, config.timeouts.get("benchmark"))

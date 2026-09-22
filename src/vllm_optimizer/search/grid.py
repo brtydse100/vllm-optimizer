@@ -68,6 +68,8 @@ def _range(definition: Mapping[str, object], label: str) -> tuple[object, ...]:
         step = Decimal(str(definition["step"]))
     except Exception as error:
         raise ValueError(f"'{label}' range values must be numeric") from error
+    if not all(value.is_finite() for value in (start, stop, step)):
+        raise ValueError(f"'{label}' range values must be finite")
     if step <= 0 or start > stop:
         raise ValueError(f"'{label}' requires step > 0 and min <= max")
     values = []
