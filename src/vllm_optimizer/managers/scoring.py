@@ -75,8 +75,6 @@ class ScoringManager:
         return fmean(values) if values else None
 
     def score_each(self, results: tuple[BenchmarkResult, ...]) -> dict[str, float]:
-        if self.repeat_aggregation == "median":
-            return self._legacy_scores(results)
         grouped: dict[str, list[dict[str, float | None]]] = {}
         for result in results:
             result_values = {
@@ -94,6 +92,15 @@ class ScoringManager:
             identities = set(repeats[0])
             if any(set(repeat) != identities for repeat in repeats[1:]):
                 continue
+            if self.repeat_aggregation == "median":
+                repeat_scores = [
+                    fmean(values)
+                    for repeat in repeats
+                    if (values := [value for value in repeat.values() if value is not None])
+                ]
+                if len(repeat_scores) >= self.minimum_repeats:
+                    scores[name] = float(median(repeat_scores))
+                continue
             workload_scores: list[float] = []
             for identity in identities:
                 repeat_values = [value for repeat in repeats if (value := repeat[identity]) is not None]
@@ -105,19 +112,6 @@ class ScoringManager:
                 if workload_scores:
                     scores[name] = fmean(workload_scores)
         return scores
-
-    def _legacy_scores(self, results: tuple[BenchmarkResult, ...]) -> dict[str, float]:
-        grouped: dict[str, list[float]] = {}
-        for result in results:
-            values = [
-                value
-                for workload in result.workloads
-                if _eligible(workload.metrics, self.max_failure_percentage)
-                if (value := _metric_value(workload.metrics.get(self.metric))) is not None
-            ]
-            if values:
-                grouped.setdefault(result.run_name, []).append(fmean(values))
-        return {name: float(median(values)) for name, values in grouped.items() if len(values) >= self.minimum_repeats}
 
     @staticmethod
     def rank(scores: list[TrialScore]) -> tuple[TrialScore, ...]:

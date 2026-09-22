@@ -19,7 +19,7 @@ from vllm_optimizer.reporting.reclassify_scores import results as _results
 from vllm_optimizer.reporting.reclassify_scores import trial_score as _trial_score
 from vllm_optimizer.reporting.reporter import Reporter
 from vllm_optimizer.reproduction.accepted import accepted_manifest
-from vllm_optimizer.workers.completion import max_requests, request_count_failure
+from vllm_optimizer.workers.completion import max_requests, reported_request_total, request_count_failure
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,11 +122,7 @@ def _reclassify(
     measurements = _results(report)
     score = policy.score(measurements)
     quality = policy.quality(measurements)
-    counts_valid = all(
-        request_count_failure(result, expected, result.backend, policy.max_failure_percentage) is None
-        for result in measurements
-        if (expected := (expected_requests or {}).get(result.run_name)) is not None
-    )
+    counts_valid = _request_counts_valid(measurements, expected_requests or {}, policy.max_failure_percentage)
     request_failure = report.failure and report.failure.code in {
         "benchmark_requests_incomplete",
         "benchmark_no_completed_requests",
@@ -160,6 +156,21 @@ def _reclassify(
             report.execution,
         )
     return report
+
+
+def _request_counts_valid(
+    measurements: tuple[object, ...], expected_requests: Mapping[str, int], maximum: float
+) -> bool:
+    for result in measurements:
+        name = str(getattr(result, "run_name", ""))
+        backend = str(getattr(result, "backend", "unknown"))
+        expected = expected_requests.get(name)
+        is_vllm = backend.lower().startswith("vllm")
+        if expected is None and is_vllm:
+            expected = reported_request_total(result)
+        if (expected is not None or is_vllm) and request_count_failure(result, expected, backend, maximum) is not None:
+            return False
+    return True
 
 
 def _expected_requests(run: Path, trials: tuple[TrialReport, ...]) -> dict[str, int]:

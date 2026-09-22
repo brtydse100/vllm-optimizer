@@ -70,7 +70,8 @@ class RunResultsManager:
             "best": _document(best) if best else None,
             "best_tuned": _document(best_tuned) if best_tuned else None,
             "baseline": _document(baseline) if baseline else None,
-            "improvement_percent": _improvement(ranking, baseline),
+            "improvement_percent": _improvement(best, baseline),
+            "best_tuned_improvement_percent": _improvement(best_tuned, baseline),
             "best_by_benchmark": {
                 name: _document(values[0]) if values else None for name, values in benchmark_rankings.items()
             },
@@ -128,9 +129,13 @@ class RunResultsManager:
             lines.append(f"{label}: unavailable")
         if baseline:
             lines.append(f"Baseline: {baseline.value:.4f}")
-            improvement = _improvement(ranking, baseline)
+            improvement = _improvement(best_tuned, baseline)
             if improvement is not None:
-                comparison = "Observed score change vs baseline" if finalist_validation else "Improvement over baseline"
+                comparison = (
+                    "Observed score change vs baseline (best tuned)"
+                    if finalist_validation
+                    else "Best tuned score change vs baseline"
+                )
                 lines.append(f"{comparison}: {improvement:+.2f}%")
         for report in trials:
             if report.failure:

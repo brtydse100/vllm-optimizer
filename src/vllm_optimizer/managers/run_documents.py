@@ -73,10 +73,10 @@ def status_counts(trials: tuple[TrialReport, ...]) -> dict[str, int]:
     }
 
 
-def improvement(ranking: tuple[TrialScore, ...], baseline: TrialScore | None) -> float | None:
-    if not ranking or baseline is None or baseline.value == 0:
+def improvement(candidate: TrialScore | None, baseline: TrialScore | None) -> float | None:
+    if candidate is None or baseline is None or baseline.value == 0:
         return None
-    return (ranking[0].value - baseline.value) / baseline.value * 100
+    return (candidate.value - baseline.value) / baseline.value * 100
 
 
 def duration(started_at: str | None, completed_at: str | None) -> float | None:
