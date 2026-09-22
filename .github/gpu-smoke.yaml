@@ -11,6 +11,9 @@ server:
 tune:
   max-num-seqs:
     values: [1]
+env:
+  VLLM_USE_V2_MODEL_RUNNER: "0"
+  VLLM_USE_FLASHINFER_SAMPLER: "0"
 benchmark:
   engine: vllm
   repeats: 1
