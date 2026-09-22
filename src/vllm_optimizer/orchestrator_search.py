@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
+from contextlib import aclosing
 from dataclasses import dataclass
 
 from vllm_optimizer.domain.results import WorkerStatus
@@ -58,24 +59,26 @@ async def run_search(
         if slots
         else sequential_trials(search, execute, started)
     )
-    async for completed in scheduled:
-        position, parameters = completed.position, completed.parameters
-        parameters_by_id[parameters.trial_id] = parameters
-        slots_by_id[parameters.trial_id] = completed.slot
-        report, score, scores_by_benchmark = completed.value
-        session.record(parameters, report, score, scores_by_benchmark)
-        owner = f"[{completed.slot.name}][{parameters.trial_id}] " if completed.slot else ""
-        if score is not None:
-            search.complete(parameters, score.value)
-            failed = score.errored_requests + score.incomplete_requests
-            terminal.info(
-                f"{owner}OK Trial completed — score={score.value:.4f}, errors={failed}, error_rate={score.error_rate:.2%}"
-            )
-        else:
-            search.fail(parameters, report.status is WorkerStatus.INTERRUPTED)
-            detail = f"{report.failure.code}: {report.failure.message}" if report.failure else report.status.value
-            terminal.warning(f"{owner}Trial {position} {report.status.value}: {detail}")
-        session.persist(results, run_id, metric, "running", started_at, None, source_run_id, sources)
-        if report.status is WorkerStatus.INTERRUPTED:
-            return SearchOutcome(parameters_by_id, slots_by_id, True)
+    async with aclosing(scheduled):
+        async for completed in scheduled:
+            position, parameters = completed.position, completed.parameters
+            parameters_by_id[parameters.trial_id] = parameters
+            slots_by_id[parameters.trial_id] = completed.slot
+            report, score, scores_by_benchmark = completed.value
+            session.record(parameters, report, score, scores_by_benchmark)
+            owner = f"[{completed.slot.name}][{parameters.trial_id}] " if completed.slot else ""
+            if score is not None:
+                search.complete(parameters, score.value)
+                failed = score.errored_requests + score.incomplete_requests
+                terminal.info(
+                    f"{owner}OK Trial completed — score={score.value:.4f}, errors={failed}, "
+                    f"error_rate={score.error_rate:.2%}"
+                )
+            else:
+                search.fail(parameters, report.status is WorkerStatus.INTERRUPTED)
+                detail = f"{report.failure.code}: {report.failure.message}" if report.failure else report.status.value
+                terminal.warning(f"{owner}Trial {position} {report.status.value}: {detail}")
+            session.persist(results, run_id, metric, "running", started_at, None, source_run_id, sources)
+            if report.status is WorkerStatus.INTERRUPTED:
+                return SearchOutcome(parameters_by_id, slots_by_id, True)
     return SearchOutcome(parameters_by_id, slots_by_id, False)

@@ -6,6 +6,7 @@ from typing import Any
 
 import yaml
 
+from .arguments import normalized_arguments
 from .errors import ConfigFileError, ConfigValidationError, ConfigYAMLError
 from .models import ExperimentConfig, VTuneConfig
 from .runtime import logging_level
@@ -85,15 +86,15 @@ def _build_experiment(raw: dict[str, Any]) -> ExperimentConfig:
 
 
 def _build_server(raw: dict[str, Any], config_directory: Path) -> tuple[dict[str, Any], dict[str, Any] | None]:
-    server = dict(raw)
+    server = normalized_arguments(raw, "server arguments")
     model_directory = config_directory
     native = None
     if "config" in server:
         config_path = _resolve_file(server["config"], "server.config", config_directory)
-        native = _load_vllm_config(config_path)
+        native = normalized_arguments(_load_vllm_config(config_path), "external vLLM arguments")
         server["config"] = str(config_path)
         model_directory = config_path.parent
-        for name in ("model", "host", "port", "tensor-parallel-size", "tensor_parallel_size"):
+        for name in ("model", "host", "port", "tensor-parallel-size"):
             if name not in server and name in native:
                 server[name] = native[name]
 

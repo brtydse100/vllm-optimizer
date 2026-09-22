@@ -92,6 +92,15 @@ class ScoringManager:
             identities = set(repeats[0])
             if any(set(repeat) != identities for repeat in repeats[1:]):
                 continue
+            if self.repeat_aggregation == "median":
+                repeat_scores = [
+                    fmean(values)
+                    for repeat in repeats
+                    if (values := [value for value in repeat.values() if value is not None])
+                ]
+                if len(repeat_scores) >= self.minimum_repeats:
+                    scores[name] = float(median(repeat_scores))
+                continue
             workload_scores: list[float] = []
             for identity in identities:
                 repeat_values = [value for repeat in repeats if (value := repeat[identity]) is not None]

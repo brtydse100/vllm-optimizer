@@ -14,6 +14,7 @@ from vllm_optimizer.managers.run_documents import status_counts as _status_count
 from vllm_optimizer.managers.run_documents import strings as _strings
 from vllm_optimizer.managers.run_documents import trial_document as _trial_document
 from vllm_optimizer.managers.scoring import TrialScore
+from vllm_optimizer.reporting.dashboard_selection import best_observed as _best_observed
 from vllm_optimizer.reporting.finalist_decision import decide
 from vllm_optimizer.reproduction.redaction import redact_environment, redact_values
 
@@ -52,6 +53,8 @@ class RunResultsManager:
         finalist_validation: Mapping[str, object] | None = None,
     ) -> Path:
         links = sources or {}
+        best_tuned = ranking[0] if ranking else None
+        best = _best_observed(best_tuned, baseline)
         document = {
             "schema_version": 1,
             "run_id": run_id,
@@ -64,9 +67,11 @@ class RunResultsManager:
             "trial_counts": _status_counts(trials),
             "trials": [_trial_document(item, links.get(item.trial_id)) for item in trials],
             "ranking": [_document(item) for item in ranking],
-            "best": _document(ranking[0]) if ranking else None,
+            "best": _document(best) if best else None,
+            "best_tuned": _document(best_tuned) if best_tuned else None,
             "baseline": _document(baseline) if baseline else None,
-            "improvement_percent": _improvement(ranking, baseline),
+            "improvement_percent": _improvement(best, baseline),
+            "best_tuned_improvement_percent": _improvement(best_tuned, baseline),
             "best_by_benchmark": {
                 name: _document(values[0]) if values else None for name, values in benchmark_rankings.items()
             },
@@ -105,26 +110,32 @@ class RunResultsManager:
         ]
         if finalist_validation:
             lines.append(decide(trials, ranking, baseline, metric, finalist_validation).reason)
+        best_tuned = ranking[0] if ranking else None
+        best = _best_observed(best_tuned, baseline)
         label = "Best observed tuned score" if finalist_validation else "Best overall"
-        if ranking:
-            best = ranking[0]
+        displayed = best_tuned if finalist_validation else best
+        if displayed:
             lines.extend(
                 (
-                    f"{label}: {best.trial_id} ({best.value:.4f})",
-                    f"Request quality: {best.successful_requests} successful, "
-                    f"{best.errored_requests} errored, "
-                    f"{best.incomplete_requests} incomplete",
-                    f"Server args: {redact_values(best.server_args)}",
-                    f"Server env: {redact_environment(_strings(best.server_env))}",
+                    f"{label}: {displayed.trial_id} ({displayed.value:.4f})",
+                    f"Request quality: {displayed.successful_requests} successful, "
+                    f"{displayed.errored_requests} errored, "
+                    f"{displayed.incomplete_requests} incomplete",
+                    f"Server args: {redact_values(displayed.server_args)}",
+                    f"Server env: {redact_environment(_strings(displayed.server_env))}",
                 )
             )
         else:
             lines.append(f"{label}: unavailable")
         if baseline:
             lines.append(f"Baseline: {baseline.value:.4f}")
-            improvement = _improvement(ranking, baseline)
+            improvement = _improvement(best_tuned, baseline)
             if improvement is not None:
-                comparison = "Observed score change vs baseline" if finalist_validation else "Improvement over baseline"
+                comparison = (
+                    "Observed score change vs baseline (best tuned)"
+                    if finalist_validation
+                    else "Best tuned score change vs baseline"
+                )
                 lines.append(f"{comparison}: {improvement:+.2f}%")
         for report in trials:
             if report.failure:

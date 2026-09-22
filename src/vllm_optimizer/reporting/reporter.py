@@ -33,7 +33,7 @@ class Reporter:
         html_path = self._directory / "report.html"
         safe_ranking = tuple(_redacted(score) for score in ranking)
         safe_baseline = _redacted(baseline) if baseline else None
-        self._write_csv(csv_path, trials, safe_ranking)
+        self._write_csv(csv_path, trials, safe_ranking, safe_baseline)
         html_path.write_text(
             render_dashboard(
                 self._artifact_directory, metric, trials, safe_ranking, safe_baseline, context or ReportContext()
@@ -43,7 +43,9 @@ class Reporter:
         return csv_path, html_path
 
     @staticmethod
-    def _write_csv(path: Path, trials: tuple[TrialReport, ...], ranking: tuple[TrialScore, ...]) -> None:
+    def _write_csv(
+        path: Path, trials: tuple[TrialReport, ...], ranking: tuple[TrialScore, ...], baseline: TrialScore | None
+    ) -> None:
         ranks = {item.trial_id: (index, item.value) for index, item in enumerate(ranking, start=1)}
         fields = (
             "rank",
@@ -65,7 +67,7 @@ class Reporter:
         with path.open("w", newline="", encoding="utf-8") as stream:
             writer = csv.DictWriter(stream, fieldnames=fields)
             writer.writeheader()
-            scores = {item.trial_id: item for item in ranking}
+            scores = {item.trial_id: item for item in (*ranking, *((baseline,) if baseline else ()))}
             for trial in trials:
                 score = scores.get(trial.trial_id)
                 settings = score or TrialScore(trial.trial_id, 0, {}, {})
@@ -82,7 +84,7 @@ class Reporter:
                                 "rank": ranks.get(trial.trial_id, ("",))[0],
                                 "trial_id": trial.trial_id,
                                 "status": trial.status.value,
-                                "score": ranks.get(trial.trial_id, ("", ""))[-1],
+                                "score": score.value if score else "",
                                 "benchmark": benchmark.get("name"),
                                 "backend": benchmark.get("backend"),
                                 "repeat": benchmark.get("repeat"),

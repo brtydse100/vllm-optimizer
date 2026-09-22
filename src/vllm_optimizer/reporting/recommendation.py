@@ -123,7 +123,9 @@ def resolved_yaml(manifest: Mapping[str, object], argv: list[str]) -> str:
     if not isinstance(inherited, Mapping):
         raise ValueError("Invalid external configuration settings")
     resolved = {str(k).removeprefix("--").replace("_", "-"): v for k, v in inherited.items()}
-    explicit = {str(k).removeprefix("--").replace("_", "-"): v for k, v in {**fixed, **selected}.items()}
+    explicit = {
+        str(k).removeprefix("--").replace("_", "-"): v for k, v in {**fixed, **selected}.items() if v is not None
+    }
     if inherited:
         explicit.pop("config", None)
     resolved.update(explicit)

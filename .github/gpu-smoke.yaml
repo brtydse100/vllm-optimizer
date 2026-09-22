@@ -1,0 +1,40 @@
+experiment:
+  name: real-gpu-smoke
+  output_dir: .gpu-smoke-runs
+  seed: 7
+server:
+  model: ../.gpu-smoke-model
+  dtype: float16
+  gpu-memory-utilization: 0.4
+  max-model-len: 128
+  enforce-eager: true
+tune:
+  max-num-seqs:
+    values: [1]
+env:
+  VLLM_USE_V2_MODEL_RUNNER: "0"
+  VLLM_USE_FLASHINFER_SAMPLER: "0"
+benchmark:
+  engine: vllm
+  repeats: 1
+  min_repeats: 1
+  runs:
+    - name: one-request
+      args:
+        dataset-name: random
+        random-input-len: 8
+        random-output-len: 8
+        num-prompts: 1
+        max-concurrency: 1
+        request-rate: inf
+        seed: 7
+        ignore-eos: true
+baseline:
+  enabled: false
+optimization:
+  maximize: output_tokens_per_second
+timeouts:
+  startup: 10m
+  benchmark: 5m
+logging:
+  level: INFO
