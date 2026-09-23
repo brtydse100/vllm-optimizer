@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## v0.1.0a19 — Audited runtime and reporting correctness
+
+_September 22, 2026_
+
+- Revalidated request completion during offline reclassification for GuideLLM and vLLM, including normalized totals and accounted requests.
+- Normalized configuration layers before merging, preserved inherited external YAML values when overrides are omitted, bracketed IPv6 literals,
+  and rejected embedded redaction placeholders during retries.
+- Awaited parallel scheduler cleanup before finalization and rejected non-finite search bounds before range expansion.
+- Preserved legacy median aggregation order while retaining workload-identity validation.
+- Made winner selection and baseline comparisons consistent across terminal, JSON, and HTML output, and included baseline data in CSV exports.
+- Added a real GPU smoke workflow that serves OPT-125M, runs a request through vLLM Bench Serve, verifies reports, and checks cleanup.
+
 ## v0.1.0a18 — Reliable results and reproducible runs
 
 _September 19, 2026_
