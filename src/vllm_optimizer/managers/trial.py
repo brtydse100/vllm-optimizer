@@ -63,8 +63,12 @@ class TrialManager:
             name = started[-1].name if started else "unknown"
             outcome = WorkerResult.failed(Failure("worker_execution_error", f"Worker '{name}' raised: {error}"))
         cleanup_errors, cleanup_interrupted = await self._finish_cleanup(started, context)
-        if cleanup_interrupted and outcome.status is WorkerStatus.COMPLETED:
-            outcome = WorkerResult.interrupted("Trial execution was interrupted during cleanup")
+        if cleanup_interrupted:
+            outcome = (
+                WorkerResult(status=WorkerStatus.INTERRUPTED, failure=outcome.failure)
+                if outcome.failure is not None
+                else WorkerResult.interrupted("Trial execution was interrupted during cleanup")
+            )
         if cleanup_errors and outcome.status is WorkerStatus.COMPLETED:
             return WorkerResult.failed(Failure("cleanup_failed", "; ".join(cleanup_errors)))
         return outcome
