@@ -8,6 +8,7 @@ from pathlib import Path
 
 import yaml
 
+from vllm_optimizer.config.arguments import normalized_arguments
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import TrialScore
 from vllm_optimizer.reporting.tables import _table
@@ -122,13 +123,21 @@ def resolved_yaml(manifest: Mapping[str, object], argv: list[str]) -> str:
     inherited = external.get("settings", {})
     if not isinstance(inherited, Mapping):
         raise ValueError("Invalid external configuration settings")
-    resolved = {str(k).removeprefix("--").replace("_", "-"): v for k, v in inherited.items()}
-    explicit = {
-        str(k).removeprefix("--").replace("_", "-"): v for k, v in {**fixed, **selected}.items() if v is not None
-    }
+    inherited_args = normalized_arguments({str(k): v for k, v in inherited.items()}, "external settings")
+    fixed_args = normalized_arguments({str(k): v for k, v in fixed.items()}, "fixed arguments")
+    selected_args = normalized_arguments({str(k): v for k, v in selected.items()}, "selected arguments")
+    resolved = dict(inherited_args)
+    resolved.update({name: value for name, value in fixed_args.items() if value is not None})
+    for name, value in selected_args.items():
+        if value is None:
+            if name in inherited_args:
+                resolved[name] = inherited_args[name]
+            else:
+                resolved.pop(name, None)
+        else:
+            resolved[name] = value
     if inherited:
-        explicit.pop("config", None)
-    resolved.update(explicit)
+        resolved.pop("config", None)
     resolved["model"] = manifest["model_path"]
     for index, token in enumerate(argv[:-1]):
         if token in {"--host", "--port"}:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from itertools import islice
 from pathlib import Path
 
@@ -49,17 +50,17 @@ _EXECUTION_KEYS = {
 }
 
 
-def validate_config(config: VTuneConfig) -> None:
+def validate_config(config: VTuneConfig, selected_trials: Sequence[TrialParameters] | None = None) -> None:
     """Validate every value that can be checked before a run starts."""
     try:
-        _validate(config)
+        _validate(config, selected_trials)
     except ConfigValidationError:
         raise
     except (TypeError, ValueError) as error:
         raise ConfigValidationError(f"Invalid configuration: {error}") from error
 
 
-def _validate(config: VTuneConfig) -> None:
+def _validate(config: VTuneConfig, selected_trials: Sequence[TrialParameters] | None) -> None:
     unknown = set(config.execution) - _EXECUTION_KEYS
     if unknown:
         raise ValueError(f"unknown execution setting(s): {', '.join(sorted(unknown))}")
@@ -82,7 +83,7 @@ def _validate(config: VTuneConfig) -> None:
     maximize_metric(config)
     sampler, trial_count = validate_search(config)
     port = server_port(config)
-    baseline_enabled(config)
+    has_baseline = baseline_enabled(config)
     llm_settings(config)
     max_attempts(config)
     duration(config.timeouts, "startup", 900)
@@ -90,11 +91,15 @@ def _validate(config: VTuneConfig) -> None:
     positive(config.execution, "drain_grace", 15)
 
     slots = worker_slots(config)
-    _validate_worker_search_space(config, slots)
-    trials = iter_grid(config)
-    if sampler != "grid":
-        trials = islice(trials, trial_count)
-    _validate_process(config, TrialParameters("baseline", {}, {}), slots)
+    if selected_trials is None:
+        _validate_worker_search_space(config, slots)
+        trials = iter_grid(config)
+        if sampler != "grid":
+            trials = islice(trials, trial_count)
+    else:
+        trials = iter(selected_trials)
+    if has_baseline:
+        _validate_process(config, TrialParameters("baseline", {}, {}), slots)
     for trial in trials:
         _validate_process(config, trial, slots)
 

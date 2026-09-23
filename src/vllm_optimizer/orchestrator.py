@@ -34,7 +34,7 @@ class Orchestrator:
         source_run_id: str | None = None,
         sources: Mapping[str, Mapping[str, str]] | None = None,
     ) -> None:
-        validate_config(config)
+        validate_config(config, trials)
         self._config = config
         self._metric = maximize_metric(config)
         run_names = tuple(str(run["name"]) for run in configured_runs(config))
@@ -48,7 +48,7 @@ class Orchestrator:
         self._finalizer = RunFinalizer(config, self._metric, self._terminal)
 
     def validate(self) -> None:
-        validate_config(self._config)
+        validate_config(self._config, self._retry_trials)
 
     async def run(self) -> RunOutcome:
         try:

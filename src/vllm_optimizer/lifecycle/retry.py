@@ -37,6 +37,7 @@ def load_retry_plan(run: Path, trial_ids: list[str]) -> RetryPlan:
     model = _same(manifests, "model_path")
     benchmark = _same(manifests, "benchmark")
     selected = [_parameters(manifest) for manifest in manifests]
+    _reject_redacted_arguments(selected)
     fixed_args, external_server_config = _fixed_arguments(manifests, selected)
     fixed_env = _restore_env(_mapping(_same(selected, "fixed_env"), "fixed_env"))
     tune = _definitions(selected, "selected_args")
@@ -73,6 +74,16 @@ def load_retry_plan(run: Path, trial_ids: list[str]) -> RetryPlan:
 
 def _parameters(manifest: Mapping[str, object]) -> dict[str, object]:
     return _mapping(manifest.get("parameters"), "parameters")
+
+
+def _reject_redacted_arguments(selected: list[dict[str, object]]) -> None:
+    for index, values in enumerate(selected):
+        for name in ("fixed_args", "selected_args"):
+            arguments = _mapping(values.get(name), name)
+            if path := _redacted_path(arguments, f"parameters[{index}].{name}"):
+                raise ValueError(
+                    f"retry cannot restore redacted server argument '{path}'; start a new run with the original secret"
+                )
 
 
 def _fixed_arguments(

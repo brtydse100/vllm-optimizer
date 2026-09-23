@@ -62,10 +62,26 @@ class TrialManager:
         except Exception as error:
             name = started[-1].name if started else "unknown"
             outcome = WorkerResult.failed(Failure("worker_execution_error", f"Worker '{name}' raised: {error}"))
-        cleanup_errors = await self._cleanup(started, context)
+        cleanup_errors, cleanup_interrupted = await self._finish_cleanup(started, context)
+        if cleanup_interrupted:
+            outcome = (
+                WorkerResult(status=WorkerStatus.INTERRUPTED, failure=outcome.failure)
+                if outcome.failure is not None
+                else WorkerResult.interrupted("Trial execution was interrupted during cleanup")
+            )
         if cleanup_errors and outcome.status is WorkerStatus.COMPLETED:
             return WorkerResult.failed(Failure("cleanup_failed", "; ".join(cleanup_errors)))
         return outcome
+
+    async def _finish_cleanup(self, workers: list[Worker], context: TrialContext) -> tuple[list[str], bool]:
+        task = asyncio.create_task(self._cleanup(workers, context))
+        interrupted = False
+        while not task.done():
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                interrupted = True
+        return task.result(), interrupted
 
     async def _cleanup(self, workers: list[Worker], context: TrialContext) -> list[str]:
         errors = []

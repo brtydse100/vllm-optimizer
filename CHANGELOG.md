@@ -13,6 +13,8 @@ _September 22, 2026_
 - Preserved legacy median aggregation order while retaining workload-identity validation.
 - Made winner selection and baseline comparisons consistent across terminal, JSON, and HTML output, and included baseline data in CSV exports.
 - Added a real GPU smoke workflow that serves OPT-125M, runs a request through vLLM Bench Serve, verifies reports, and checks cleanup.
+- Made cleanup cancellation-resistant so owned processes reach forced termination, bounded retry preflight to selected trials, rejected inline
+  redaction placeholders, and aligned resolved YAML alias/null handling with launched commands.
 
 ## v0.1.0a18 — Reliable results and reproducible runs
 
