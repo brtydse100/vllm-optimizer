@@ -62,6 +62,8 @@ def decide(
         ):
             return _unclear("a selected candidate has missing, failed, or ineligible validation evidence")
     ordered = ScoringManager.rank([scores[trial_id] for trial_id in selected])
+    if not ordered:
+        return _unclear("no validated candidate meets all performance targets")
     best = ordered[0]
     for other in ordered[1:]:
         if best.value <= other.value:

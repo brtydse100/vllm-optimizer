@@ -9,6 +9,7 @@ from typing import cast
 from vllm_optimizer.domain.benchmark import BenchmarkResult, WorkloadResult
 from vllm_optimizer.domain.results import WorkerStatus
 from vllm_optimizer.domain.trial_report import TrialReport
+from vllm_optimizer.managers.constraints import assess_constraints
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
 from vllm_optimizer.reproduction.accepted import accepted_manifest
 
@@ -62,6 +63,13 @@ def trial_score(run: Path, report: TrialReport, policy: ScoringManager) -> Trial
         quality.errored,
         quality.incomplete,
         quality.excluded_workloads,
+        assess_constraints(
+            results(report),
+            policy.constraints,
+            policy.minimum_repeats,
+            policy.required_runs,
+            policy.max_failure_percentage,
+        ).violations,
     )
 
 
@@ -80,6 +88,7 @@ def benchmark_score(run: Path, report: TrialReport, policy: ScoringManager, name
             score.errored_requests,
             score.incomplete_requests,
             score.excluded_workloads,
+            score.constraint_violations,
         )
         if score
         else None

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from vllm_optimizer.config.constraints import configured_constraints
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.search.grid import expand_grid, space_cardinality
 from vllm_optimizer.search.grid_session import GridSearchSession
@@ -10,7 +11,8 @@ from vllm_optimizer.search.strategy import SearchSession
 
 
 def validate_search(config: VTuneConfig) -> tuple[str, int]:
-    allowed = {"maximize", "sampler", "trials"}
+    allowed = {"maximize", "sampler", "trials", "constraints"}
+    configured_constraints(config)
     unknown = set(config.optimization) - allowed
     sampler = config.optimization.get("sampler", "grid")
     trials = config.optimization.get("trials")

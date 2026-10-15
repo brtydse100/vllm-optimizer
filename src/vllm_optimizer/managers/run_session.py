@@ -48,6 +48,7 @@ class RunAccumulator:
                     score.errored_requests if score else 0,
                     score.incomplete_requests if score else 0,
                     score.excluded_workloads if score else 0,
+                    score.constraint_violations if score else (),
                 )
             )
 

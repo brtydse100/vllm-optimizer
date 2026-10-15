@@ -12,7 +12,7 @@ def improvement(best: TrialScore | None, baseline: TrialScore | None) -> float |
 
 
 def best_observed(best_tuned: TrialScore | None, baseline: TrialScore | None) -> TrialScore | None:
-    candidates = [item for item in (baseline, best_tuned) if item is not None]
+    candidates = [item for item in (baseline, best_tuned) if item is not None and item.feasible]
     return (
         min(
             candidates,

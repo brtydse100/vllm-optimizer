@@ -8,6 +8,7 @@ from pathlib import Path
 
 import yaml
 
+from vllm_optimizer.config.constraints import configured_constraints
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.runtime import model_path
 from vllm_optimizer.lifecycle.integrity import describe_artifacts
@@ -49,6 +50,8 @@ class ManifestWriter:
             "startup": [record.to_dict() for record in context.startups],
             "metadata": self._metadata,
         }
+        if constraints := configured_constraints(config):
+            document["constraints"] = [item.to_dict() for item in constraints]
         external_config = _external_config(config)
         if external_config is not None:
             document["external_config"] = external_config

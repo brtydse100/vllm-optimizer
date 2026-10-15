@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from vllm_optimizer.benchmarks.configuration import configured_failure_percentage, configured_min_repeats
+from vllm_optimizer.config.constraints import configured_constraints
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.managers.scoring import ScoringManager
 
@@ -25,4 +26,10 @@ def run_identity(config: VTuneConfig) -> RunIdentity:
 
 
 def scoring(config: VTuneConfig, metric: str, run_names: tuple[str, ...]) -> ScoringManager:
-    return ScoringManager(metric, configured_min_repeats(config), run_names, configured_failure_percentage(config))
+    return ScoringManager(
+        metric,
+        configured_min_repeats(config),
+        run_names,
+        configured_failure_percentage(config),
+        constraints=configured_constraints(config),
+    )

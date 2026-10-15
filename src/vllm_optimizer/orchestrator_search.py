@@ -68,12 +68,17 @@ async def run_search(
             session.record(parameters, report, score, scores_by_benchmark)
             owner = f"[{completed.slot.name}][{parameters.trial_id}] " if completed.slot else ""
             if score is not None:
-                search.complete(parameters, score.value)
+                if score.constraint_violations:
+                    search.complete(parameters, score.value, score.constraint_violations)
+                else:
+                    search.complete(parameters, score.value)
                 failed = score.errored_requests + score.incomplete_requests
                 terminal.info(
                     f"{owner}OK Trial completed — score={score.value:.4f}, errors={failed}, "
                     f"error_rate={score.error_rate:.2%}"
                 )
+                if not score.feasible:
+                    terminal.warning(f"{owner}Performance targets not met; excluded from winner selection.")
             else:
                 search.fail(parameters, report.status is WorkerStatus.INTERRUPTED)
                 detail = f"{report.failure.code}: {report.failure.message}" if report.failure else report.status.value

@@ -6,6 +6,7 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 
+from vllm_optimizer.config.constraints import Constraint
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.run_documents import duration as _duration
 from vllm_optimizer.managers.run_documents import improvement as _improvement
@@ -14,6 +15,8 @@ from vllm_optimizer.managers.run_documents import status_counts as _status_count
 from vllm_optimizer.managers.run_documents import strings as _strings
 from vllm_optimizer.managers.run_documents import trial_document as _trial_document
 from vllm_optimizer.managers.scoring import TrialScore
+from vllm_optimizer.reporting.constraints import NO_TARGET_MATCH, constraint_documents, target_summary
+from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.dashboard_selection import best_observed as _best_observed
 from vllm_optimizer.reporting.finalist_decision import decide
 from vllm_optimizer.reproduction.redaction import redact_environment, redact_values
@@ -25,10 +28,12 @@ class RunResultsManager:
         output_path: Path,
         execution_mode: str = "sequential",
         benchmark_policy: Mapping[str, int | float | str] | None = None,
+        constraints: tuple[Constraint, ...] = (),
     ) -> None:
         self._output_path = Path(output_path)
         self._execution_mode = execution_mode
         self._benchmark_policy = dict(benchmark_policy or {})
+        self._constraints = constraints
 
     @property
     def output_path(self) -> Path:
@@ -78,6 +83,18 @@ class RunResultsManager:
             "benchmark_order": list(benchmark_rankings),
             "benchmark_policy": self._benchmark_policy,
         }
+        document.update(
+            constraint_documents(
+                trials,
+                ReportContext(
+                    constraints=self._constraints,
+                    benchmark_names=tuple(benchmark_rankings),
+                    minimum_repeats=int(self._benchmark_policy.get("minimum_repeats", 1)),
+                    maximum_failure_percentage=float(self._benchmark_policy.get("maximum_failure_percentage", 0)),
+                    finalist_validation=finalist_validation or {},
+                ),
+            )
+        )
         if source_run_id is not None:
             document["source_run_id"] = source_run_id
         if analysis_summary is not None:
@@ -112,6 +129,20 @@ class RunResultsManager:
             lines.append(decide(trials, ranking, baseline, metric, finalist_validation).reason)
         best_tuned = ranking[0] if ranking else None
         best = _best_observed(best_tuned, baseline)
+        if self._constraints and best is None:
+            lines.append(NO_TARGET_MATCH)
+        lines.extend(
+            target_summary(
+                trials,
+                ReportContext(
+                    constraints=self._constraints,
+                    benchmark_names=tuple(benchmark_rankings),
+                    minimum_repeats=int(self._benchmark_policy.get("minimum_repeats", 1)),
+                    maximum_failure_percentage=float(self._benchmark_policy.get("maximum_failure_percentage", 0)),
+                    finalist_validation=finalist_validation or {},
+                ),
+            )
+        )
         label = "Best observed tuned score" if finalist_validation else "Best overall"
         displayed = best_tuned if finalist_validation else best
         if displayed:

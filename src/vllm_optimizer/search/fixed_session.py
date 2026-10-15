@@ -19,7 +19,7 @@ class FixedSearchSession:
         self._position += 1
         return trial
 
-    def complete(self, trial: TrialParameters, value: float) -> None:
+    def complete(self, trial: TrialParameters, value: float, constraints: tuple[float, ...] = ()) -> None:
         pass
 
     def fail(self, trial: TrialParameters, interrupted: bool = False) -> None:

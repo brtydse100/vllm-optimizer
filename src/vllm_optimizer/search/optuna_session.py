@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from math import isfinite
 from pathlib import Path
 
 import optuna
 from optuna.trial import TrialState
 
+from vllm_optimizer.config.constraints import configured_constraints
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.search.grid import TrialParameters, definition_values, iter_grid, space_cardinality
 
@@ -18,8 +20,13 @@ class OptunaSearchSession:
         directory.mkdir(parents=True, exist_ok=True)
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         seed = config.experiment.seed
+        self._constraint_count = len(configured_constraints(config))
         backend = (
-            optuna.samplers.RandomSampler(seed=seed) if sampler == "random" else optuna.samplers.TPESampler(seed=seed)
+            optuna.samplers.RandomSampler(seed=seed)
+            if sampler == "random"
+            else optuna.samplers.TPESampler(
+                seed=seed, **({"constraints_func": _constraints} if self._constraint_count else {})
+            )
         )
         self._study = optuna.create_study(
             study_name="vllm_optimizer",
@@ -53,6 +60,8 @@ class OptunaSearchSession:
             fingerprint = _fingerprint(arguments, environment)
             if fingerprint in self._seen:
                 optuna_trial.set_user_attr("vllm_optimizer_status", "duplicate_skipped")
+                if self._constraint_count:
+                    optuna_trial.set_user_attr("performance_constraints", [1.0] * self._constraint_count)
                 self._study.tell(optuna_trial, state=TrialState.PRUNED)
                 if not self._enqueue_remaining():
                     return None
@@ -64,8 +73,16 @@ class OptunaSearchSession:
             return trial
         return None
 
-    def complete(self, trial: TrialParameters, value: float) -> None:
-        self._study.tell(self._active.pop(trial.trial_id), value)
+    def complete(self, trial: TrialParameters, value: float, constraints: tuple[float, ...] = ()) -> None:
+        if len(constraints) != self._constraint_count or any(
+            isinstance(v, bool) or not isinstance(v, int | float) or not isfinite(v) for v in constraints
+        ):
+            raise ValueError("search feedback must contain one finite violation per performance constraint")
+        active = self._active[trial.trial_id]
+        if constraints:
+            active.set_user_attr("performance_constraints", list(constraints))
+        self._study.tell(active, value)
+        self._active.pop(trial.trial_id)
 
     def fail(self, trial: TrialParameters, interrupted: bool = False) -> None:
         optuna_trial = self._active.pop(trial.trial_id)
@@ -113,3 +130,7 @@ def _suggest(trial: optuna.Trial, parameter: str, definition: object, label: str
 
 def _fingerprint(arguments: Mapping[str, object], environment: Mapping[str, object]) -> str:
     return json.dumps([arguments, environment], sort_keys=True, default=repr)
+
+
+def _constraints(trial: optuna.trial.FrozenTrial) -> tuple[float, ...]:
+    return tuple(trial.user_attrs["performance_constraints"])

@@ -11,6 +11,7 @@ from vllm_optimizer.benchmarks.quality import aggregate_quality, request_quality
 from vllm_optimizer.domain.benchmark import BenchmarkResult
 from vllm_optimizer.domain.results import WorkerResult
 from vllm_optimizer.domain.trial_report import TrialReport
+from vllm_optimizer.reproduction.metric_redaction import redact_benchmarks
 from vllm_optimizer.reproduction.redaction import redact
 from vllm_optimizer.workers.base import TrialContext
 
@@ -53,7 +54,11 @@ class ResultsManager:
     def _write(self, report: TrialReport) -> None:
         self._output_path.parent.mkdir(parents=True, exist_ok=True)
         temporary = self._output_path.with_suffix(self._output_path.suffix + ".tmp")
-        temporary.write_text(json.dumps(redact(report.to_dict()), indent=2) + "\n", encoding="utf-8")
+        document = report.to_dict()
+        safe = redact(document)
+        assert isinstance(safe, dict)
+        safe["benchmarks"] = redact_benchmarks(document["benchmarks"])
+        temporary.write_text(json.dumps(safe, indent=2) + "\n", encoding="utf-8")
         temporary.replace(self._output_path)
 
     @staticmethod
