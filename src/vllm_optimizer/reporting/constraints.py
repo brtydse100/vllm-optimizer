@@ -76,11 +76,10 @@ def target_summary(trials: tuple[TrialReport, ...], context: ReportContext) -> l
         assessment = assess_report(trial, context)
         lines.append(f"Performance targets {trial.trial_id}: {'met' if assessment.feasible else 'not met'}")
         for item in assessment.evidence:
-            if not item["met"]:
-                measured = f"{item['measured']:g}" if isinstance(item["measured"], int | float) else "Unavailable"
-                lines.append(
-                    f"  {item['benchmark']} workload {item['workload']}: {item['metric']} "
-                    f"{item['statistic']}={measured} {item['unit']}; "
-                    f"{item['operator']} {item['bound']:g} {item['unit']}"
-                )
+            measured = f"{item['measured']:g}" if isinstance(item["measured"], int | float) else "Unavailable"
+            lines.append(
+                f"  {item['benchmark']} workload {item['workload']}: {item['metric']} "
+                f"{item['statistic']}={measured} {item['unit']}; "
+                f"{item['operator']} {item['bound']:g} {item['unit']}; {'met' if item['met'] else 'not met'}"
+            )
     return lines
