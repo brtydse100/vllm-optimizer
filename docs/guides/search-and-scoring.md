@@ -51,12 +51,52 @@ can still change the sequence of TPE suggestions.
 TPE state is persisted in the run's SQLite study. Runs themselves remain
 immutable: a retry creates a new linked run instead of rewriting history.
 
+## Performance targets
+
+Set `optimization.constraints` to require performance limits while maximizing
+the existing objective. Search continues through its configured budget.
+
+```yaml
+optimization:
+  maximize: output_tokens_per_second
+  sampler: tpe
+  trials: 20
+  constraints:
+    - metric: end_to_end_latency_ms
+      statistic: p99
+      max: "200 ms"
+    - metric: requests_per_second
+      statistic: average
+      min: "50 req/s"
+```
+
+Each entry requires a metric and exactly one `min` or `max` bound. Equality
+satisfies a limit. `statistic` defaults to `average`; latency also supports
+`p50`, `p95`, and `p99`, when the backend supplies that percentile.
+
+| Metrics | Accepted units | Numeric bound unit |
+| --- | --- | --- |
+| `end_to_end_latency_ms`, `time_to_first_token_ms`, `time_per_output_token_ms`, `inter_token_latency_ms` | `us`, `ms`, `s` | ms |
+| `requests_per_second` | `req/s` | req/s |
+| `output_tokens_per_second`, `total_tokens_per_second` | `tok/s` | tok/s |
+
+For example, `max: "1 s"` and `max: "1000 ms"` are equivalent. Bare numbers use
+the metric's canonical unit. Bounds must be finite and non-negative; unknown
+metrics, statistics, and incompatible units are rejected before execution.
+
+All limits must hold for every named benchmark and workload, using means across
+eligible repeats. Missing percentile measurements cannot meet a target. JSON,
+CSV, HTML, and the terminal summary show target status and measured evidence.
+Retries and offline request-failure reclassification preserve the limits.
+See [search and scoring](search-and-scoring.md#constrained-optimization) for
+selection and repeat rules.
+
 ## Constrained optimization
 
 Optional `optimization.constraints` adds performance limits alongside the
 maximize objective. For example, maximize output throughput with end-to-end
 p99 latency at or below `"200 ms"`, optionally also requiring requests per
-second above `"50 req/s"`. See [configuration](configuration.md#performance-targets)
+second above `"50 req/s"`. See [performance targets](#performance-targets)
 for the YAML and supported units.
 
 All limits must pass for every named benchmark and matched workload identity.

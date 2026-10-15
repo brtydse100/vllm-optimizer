@@ -53,3 +53,15 @@ Check workload coverage, unavailable percentiles, repeat/request eligibility,
 nonfinite values, unit conversion/overflow, zero bounds, signed sampler feedback,
 infeasible baselines, finalist reselection, persistence/retry fidelity, offline
 tampering, legacy compatibility, and HTML escaping.
+
+## Execution record
+
+- Tasks 1–3 complete: parsing/evaluation, constrained search, feasible selection,
+  artifacts/retries/finalists, and offline evidence verification implemented.
+- Task 4 complete: user-facing docs updated; private tests, public tests, Ruff,
+  mypy, strict MkDocs, and source review passed. Combined suite: 690 tests and
+  12 subtests passed, with two environment-dependent skips.
+- Judge findings reproduced and fixed: duplicate repeat/workload identities,
+  overflow, latency evidence redaction, and offline required-run integrity.
+- Tests remain outside the checkout; no GPU/model benchmark was executed.
+- PR #33: https://github.com/brtydse100/vllm-optimizer/pull/33

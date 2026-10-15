@@ -16,7 +16,24 @@ def load_constraints(
     document: Mapping[str, object], run: Path, trials: tuple[TrialReport, ...]
 ) -> tuple[Constraint, ...]:
     manifests = tuple(accepted_manifest(run, item.trial_id, item.execution) for item in trials)
-    return stored_constraints(document, manifests)
+    constraints = stored_constraints(document, manifests)
+    if constraints:
+        for manifest in manifests:
+            benchmark = manifest.get("benchmark")
+            runs = benchmark.get("runs") if isinstance(benchmark, Mapping) else None
+            if not isinstance(runs, list) or not runs:
+                raise ValueError("accepted manifest has no required benchmark runs")
+            names = tuple(item.get("name") for item in runs if isinstance(item, Mapping))
+            indexed = document.get("best_by_benchmark")
+            if (
+                len(names) != len(runs)
+                or not all(isinstance(name, str) and name for name in names)
+                or len(set(names)) != len(names)
+                or not isinstance(indexed, Mapping)
+                or set(indexed) != set(names)
+            ):
+                raise ValueError("stored required benchmark index disagrees with accepted manifest")
+    return constraints
 
 
 def validate_constraint_scores(

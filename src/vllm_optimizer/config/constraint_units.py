@@ -20,7 +20,10 @@ def parse_bound(value: object, unit: str) -> float:
     if isinstance(value, bool):
         raise ValueError("constraint bounds must be non-negative finite quantities")
     if isinstance(value, int | float):
-        number = float(value)
+        try:
+            number = float(value)
+        except OverflowError as error:
+            raise ValueError("constraint bounds must be non-negative and finite") from error
     elif isinstance(value, str) and (match := _QUANTITY.fullmatch(value)):
         source = match[2]
         factors = {"us": 0.001, "ms": 1.0, "s": 1000.0} if unit == "ms" else {unit: 1.0}
