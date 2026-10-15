@@ -33,6 +33,13 @@
 ## Testing and security
 
 - Every implementation stage and behavior must have tests.
+- Every feature requires a successful benchmark on a real GPU that exercises
+  the new behavior before it can be marked complete or its PR ready for review
+  or merge. Synthetic tests, mocks, and CPU-only CI are not substitutes.
+- Report the GPU/model/backend setup, benchmark configuration, measured results,
+  and private evidence location. Keep GPU benchmark artifacts outside the repository.
+- If the required GPU benchmark cannot run, stop and inform the user; do not
+  claim the feature is verified or mark its PR ready.
 - Public tests, fixtures, snapshots, and expected results are allowed only when
   they contain no models, secrets, GPU data, or private fixtures. Keep sensitive
   regression tests outside the repository.
