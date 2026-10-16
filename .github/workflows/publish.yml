@@ -1,20 +1,44 @@
 name: Publish Python package
 on:
+  push:
+    branches: [main]
+    paths: [pyproject.toml]
   release: {types: [published]}
   workflow_dispatch:
     inputs:
-      ref: {description: Immutable tag to publish, required: true, default: v0.1.0a20}
+      ref: {description: Immutable tag to publish, required: true, default: v0.1.0a21}
 permissions: {contents: read}
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.release.outputs.enabled }}
+      sha: ${{ steps.release.outputs.sha }}
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.ref || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with: {python-version: "3.12"}
+      - id: release
+        env:
+          RELEASE_EVENT: ${{ github.event_name }}
+          RELEASE_REF: ${{ github.event.release.tag_name || inputs.ref }}
+          RELEASE_BEFORE: ${{ github.event.before }}
+        run: python scripts/release.py plan
   validate:
+    needs: plan
+    if: needs.plan.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix: {python-version: ["3.11", "3.12"]}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with: {ref: "${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}"}
+        with: {ref: "${{ needs.plan.outputs.sha }}"}
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with: {python-version: "${{ matrix.python-version }}"}
       - run: python -m pip install --upgrade pip "setuptools>=83" ".[test]" -r requirements-docs.txt
@@ -27,28 +51,28 @@ jobs:
         run: python -m mkdocs build --strict
       - run: python -m pip_audit
   private-regression:
-    needs: validate
+    needs: [plan, validate]
     runs-on: ubuntu-latest
     environment: pypi
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with: {ref: "${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}"}
+        with: {ref: "${{ needs.plan.outputs.sha }}"}
       - name: Verify private regression evidence matches this commit
         env: {PRIVATE_REGRESSION_COMMIT: "${{ vars.PRIVATE_REGRESSION_COMMIT }}"}
         run: test -n "$PRIVATE_REGRESSION_COMMIT" && test "$PRIVATE_REGRESSION_COMMIT" = "$(git rev-parse HEAD)"
   build:
-    needs: [validate, private-regression]
+    needs: [plan, validate, private-regression]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with: {ref: "${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}"}
+        with: {ref: "${{ needs.plan.outputs.sha }}"}
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with: {python-version: "3.12"}
       - run: python -m pip install --upgrade build twine cyclonedx-bom
       - name: Verify tag and package versions
         shell: bash
         run: |
-          expected="${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}"
+          expected="${{ needs.plan.outputs.tag }}"
           actual="v$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
           test "$expected" = "$actual"
       - run: python -m build && python -m twine check dist/*
@@ -62,8 +86,24 @@ jobs:
             dist/*
             sbom.json
           if-no-files-found: error
+  release:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    permissions: {contents: write}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: {ref: "${{ needs.plan.outputs.sha }}"}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with: {python-version: "3.12"}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with: {name: release-evidence, path: evidence/}
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ needs.plan.outputs.sha }}
+          RELEASE_TAG: ${{ needs.plan.outputs.tag }}
+        run: python scripts/release.py publish
   publish:
-    needs: build
+    needs: [build, release]
     runs-on: ubuntu-latest
     environment: {name: pypi, url: "https://pypi.org/project/vllm-optimizer/"}
     permissions: {id-token: write, attestations: write}

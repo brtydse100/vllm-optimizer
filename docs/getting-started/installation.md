@@ -60,3 +60,5 @@ Bench Serve is included with vLLM.
 
 If the `vllm-opt` CLI cannot find a runtime command, it reports which command is missing and
 suggests `pip install "vllm-optimizer[runtime]"`.
+
+Continue with [the complete first experiment](index.md#2-create-experimentyaml).

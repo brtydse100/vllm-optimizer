@@ -23,12 +23,26 @@ A release is ready only after all of these checks have recorded artifacts:
 - The working tree contains no generated `dist/`, `build/`, `site/`, runtime
   output, credentials, or private benchmark artifacts.
 
-The PyPI workflow builds and tests the checked-out immutable tag before
-publishing and verifies that `vX.Y.Z` equals both package and runtime versions.
+A version bump merged to `main` starts the release pipeline. After software
+and private-regression gates pass, it creates the tag at that exact merged SHA,
+attaches the wheel/source distribution/SBOM to the GitHub release, and publishes
+to PyPI. Dependency-only edits without a version change skip release work.
+Existing `release: published` and immutable-tag manual dispatch remain supported.
+Retries reject tags on another commit and never overwrite mismatched artifacts.
+
+The workflow checks that `vX.Y.Z` matches package and runtime versions and that
+release notes exist. Creating the release and publishing the package are jobs
+in the same workflow; they do not depend on bot-created tag/release events.
 Configure branch protection with an external required `private-regression`
 status check and configure the `pypi` environment to require it. After that
 check passes, set the protected environment variable `PRIVATE_REGRESSION_COMMIT`
 to the exact release commit SHA. The repository-visible publish job verifies
 that SHA before building, so missing or stale private evidence blocks release.
+For a merged PR, this means validating the merged commit, updating the marker,
+then rerunning the failed release workflow; evidence for the PR head alone is
+insufficient. The workflow does not update the marker itself.
+If release assets already exist, use **Re-run failed jobs** to reuse the original
+artifacts. Rebuilding all jobs can change distribution/SBOM bytes; immutable
+digest checks intentionally reject replacing different files at the same version.
 Hardware evidence remains an explicit manual gate and must not be marked passed
 until one of the supported GPU paths completes against the release commit.

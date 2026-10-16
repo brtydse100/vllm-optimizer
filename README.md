@@ -1,194 +1,85 @@
 # vLLM Optimizer
 
-> **Alpha status:** native Linux, L40/H100,
-> tensor-parallel, and multi-GPU evidence remain **hardware validation pending**.
+Find better vLLM serving settings for your workload. Define a search space in
+YAML; `vllm-opt` runs the benchmarks and reports the best observed settings.
 
-vLLM Optimizer is a local-first benchmarking and optimization tool for vLLM
-serving configurations. Users define the parameters and workloads they care
-about; the `vllm-opt` CLI manages the server lifecycle, runs repeatable benchmarks,
-explores the search space, and reports which configurations performed best.
-
-vLLM Optimizer is alpha software targeting Linux with NVIDIA GPUs and
-Python 3.11–3.12. Install `vllm-optimizer`, import `vllm_optimizer`, and run
-`vllm-opt`. The former `vtune` aliases are deprecated; see the [migration guide](docs/guides/migration-vllm-optimizer.md).
-
-This independent community project is not affiliated with the vLLM project.
-
+**[Run your first experiment](https://brtydse100.github.io/vllm-optimizer/getting-started/)** ·
 **[Documentation](https://brtydse100.github.io/vllm-optimizer/)** ·
-**[Quick start](https://brtydse100.github.io/vllm-optimizer/getting-started/)** ·
-**[Full YAML example](docs/reference/yaml/full-example.yaml)** ·
 **[PyPI](https://pypi.org/project/vllm-optimizer/)**
 
-## See a real optimization report
+This is independent community alpha software, not affiliated with vLLM.
+Execution needs Python 3.11–3.12, Linux/WSL, an NVIDIA GPU, and a local model.
+Native Linux, L40/H100, tensor-parallel, and multi-GPU evidence remain
+**hardware validation pending**. See the [compatibility matrix](docs/reference/compatibility.md).
 
-[**Open the interactive RTX 3080 report**](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/report-showcase/report.html)
+## Install
+
+| Use | Command |
+| --- | --- |
+| Run GPU experiments on Linux/WSL | `pip install "vllm-optimizer[runtime]"` |
+| Inspect configs and saved results on any supported OS | `pip install vllm-optimizer` |
+
+Use a virtual environment. The runtime extra installs vLLM and GuideLLM;
+the core package requires an existing runtime to execute experiments.
+See [installation choices](docs/getting-started/installation.md) for setup and
+existing CUDA environments.
+
+## First experiment
+
+The [quick start](docs/getting-started/index.md) contains one complete example:
+
+1. Install the runtime in a virtual environment.
+2. Copy the YAML and set your local model path. Models are not downloaded.
+3. Validate and run it; open the printed `report.html` path.
+
+Read the walkthrough in 5–10 minutes. Installation and benchmark time depend
+on your machine and model.
+
+## What you can tune
+
+- Fixed or tunable vLLM flags and environment variables.
+- Grid, Random, or TPE search with a baseline comparison.
+- GuideLLM or native vLLM Bench Serve workloads.
+- Throughput objectives subject to latency/throughput targets, such as
+  p99 TTFT ≤ `"200 ms"` or request throughput ≥ `"50 req/s"`.
+
+Search keeps its configured budget after meeting a target. Only configurations
+satisfying every limit can win. See [search and scoring](docs/guides/search-and-scoring.md).
+
+## See a real report
+
+[Open the interactive RTX 3080 report](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/report-showcase/report.html)
+· [Experiment YAML](docs/results/rtx3080/report-showcase/experiment.yaml)
 · [Baseline-control example](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/baseline-control/report.html)
-· [Exact experiment YAML](docs/results/rtx3080/report-showcase/experiment.yaml)
-· [All published results](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/)
 
-[![Concise report with throughput and duration summary, confidence, and all trials](docs/results/rtx3080/overview.png)](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/report-showcase/report.html)
+[![Report showing throughput, confidence, settings, and all trials](docs/results/rtx3080/overview.png)](https://brtydse100.github.io/vllm-optimizer/results/rtx3080/report-showcase/report.html)
 
-This measured example increased the configured score from **194.34 to 1,082.27
-output tokens/s (+456.89%)** on its deliberately small RTX 3080 workloads. It
-also reports latency trade-offs, repeat evidence, validation drift, and failed
-configurations; it is a reporting demonstration, not a production benchmark.
+This deliberately small workload measured 194.34 → 1,082.27 output tokens/s.
+It demonstrates reporting and latency trade-offs; it is not a production
+benchmark or an expected improvement for other workloads. The published example
+used vLLM 0.28.0 and GuideLLM 0.7.3; dated runtime details and required WSL flags
+are in [compatibility](docs/reference/compatibility.md).
 
-Published runtime evidence records vLLM 0.28.0 and GuideLLM 0.7.3 on WSL2
-with an RTX 3080; see the [dated compatibility matrix](docs/reference/compatibility.md). That host required
-  `VLLM_USE_V2_MODEL_RUNNER: "0"` because UVA was unavailable and
-  `VLLM_USE_FLASHINFER_SAMPLER: "0"` because the CUDA compiler toolkit was
-  not installed. Native Linux systems may not require these settings.
+## Next steps
 
-Other combinations may work but are not yet verified.
+| Task | Guide |
+| --- | --- |
+| Set fixed values and search ranges | [Configuration](docs/guides/configuration.md) |
+| Choose workloads and datasets | [Benchmarking](docs/guides/benchmarks/benchmarking.md) |
+| Use native vLLM benchmarking | [vLLM Bench Serve example](docs/reference/yaml/full-example-vllm-bench.md) |
+| Understand confidence and target eligibility | [Reports](docs/guides/reports.md) |
+| Retry, reproduce, or regenerate results | [CLI reference](docs/reference/cli.md) |
+| Run independent trials on separate GPUs | [Parallel trials](docs/guides/parallel-trials.md) |
+| Resolve runtime failures | [Troubleshooting](docs/guides/troubleshooting.md) |
+| Find every YAML section | [Complete YAML](docs/reference/yaml/full-example.md) |
 
-## Installation
+Use `vllm-opt --config experiment.yaml --verbose` to stream logs. Full trial
+logs are saved regardless of verbosity; `NO_COLOR` disables terminal colors.
 
-Choose the installation that matches what you want to do:
+Install `vllm-optimizer`, import `vllm_optimizer`, and run `vllm-opt`.
+The former `vtune` aliases are deprecated; see [migration](docs/guides/migration-vllm-optimizer.md).
 
-| Goal | Command | Platform |
-| --- | --- | --- |
-| Run complete experiments | `pip install "vllm-optimizer[runtime]"` | Linux/WSL with NVIDIA GPU |
-| Read configs, results, and reports | `pip install vllm-optimizer` | Linux, Windows, or macOS |
+## Contribute
 
-The core package intentionally does not install GPU frameworks. The `runtime`
-extra adds vLLM and GuideLLM, which select large PyTorch/CUDA dependencies for
-the machine. See the [installation guide](https://brtydse100.github.io/vllm-optimizer/getting-started/installation/)
-for virtual environments, CUDA guidance, and verification commands.
-
-## Quick start
-
-Create and activate a Python 3.11 or 3.12 virtual environment on Linux or WSL,
-then install the complete experiment runtime:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install "vllm-optimizer[runtime]"
-vllm --help
-guidellm --help
-```
-
-Replace `/models/opt-125m` with an existing local model directory, then create
-`experiment.yaml`. The CLI does not download models:
-
-```yaml
-experiment:
-  name: first-run
-server:
-  model: /models/opt-125m
-  gpu-memory-utilization: 0.8
-tune:
-  max-num-seqs:
-    values: [8, 16]
-benchmark:
-  engine: guidellm  # Default. Use vllm for `vllm bench serve`.
-  max_failure_percentage: 2  # Accept up to 2% errored or incomplete requests.
-  # accept_any_request_failures: true  # Ignore the percentage (one success still required).
-  runs:
-    - name: throughput
-      profile:
-        kind: throughput
-        max_concurrency: 16
-      constraints:
-        - kind: max_requests
-          count: 10
-      data:
-        - kind: synthetic_text
-          prompt_tokens: 32
-          output_tokens: 16
-optimization:
-  maximize: output_tokens_per_second
-  sampler: tpe
-  trials: 2
-timeouts:
-  benchmark: 20m
-```
-
-Run it:
-
-```bash
-vllm-opt validate --config experiment.yaml
-vllm-opt --config experiment.yaml
-```
-
-The short form is `vllm-opt -c experiment.yaml`. The command validates the file,
-runs the experiment, persists results, and generates its exports and report.
-The `vllm-opt` CLI binds vLLM to `127.0.0.1` by default. Set `server.host` explicitly
-only when the benchmark server must be reachable from another host.
-
-Already have a native `vllm serve` YAML file? Use `server.config` to reuse it.
-See [native server configuration and LMCache](docs/reference/yaml/full-example-server.md#native-server-configuration-and-lmcache)
-for precedence, paths, and copyable examples.
-
-Fixed vLLM flags go directly under `server`; tunable flags use top-level
-`tune`. Fixed and tunable environment variables use `env` and `tune_env`.
-See the [configuration guide](https://brtydse100.github.io/vllm-optimizer/guides/configuration/)
-for categorical, boolean, integer-range, float-range, list, and environment
-examples. The [complete YAML](https://brtydse100.github.io/vllm-optimizer/reference/yaml/full-example/)
-and [benchmark guide](https://brtydse100.github.io/vllm-optimizer/guides/benchmarks/benchmarking/) show
-every supported control with copyable examples.
-
-To use vLLM's native benchmark, set `benchmark.engine: vllm` and configure
-`args` for each run. See the [vLLM Bench Serve example](docs/reference/yaml/full-example-vllm-bench.md).
-The CLI supplies the model, server address, and JSON output path.
-
-Interactive terminal output uses color and remains concise by default. Set the
-standard `NO_COLOR` environment variable to disable color. To stream server and
-benchmark logs:
-
-```bash
-vllm-opt --config experiment.yaml --verbose
-```
-
-Set `logging.level: DEBUG` in YAML for persistent verbose output. Full logs are
-saved for every trial regardless of terminal verbosity. See
-[logging and timeouts](docs/guides/configuration.md#logging-and-timeouts).
-
-Retry one or more selected trials into a new immutable linked run:
-
-```bash
-vllm-opt retry --run runs/EXPERIMENT/RUN_ID \
-  --trial trial-0001 --trial trial-0004
-```
-
-The source run is never modified.
-
-Display every stored vLLM and benchmark command for a trial without executing
-anything:
-
-```bash
-vllm-opt reproduce --run runs/EXPERIMENT/RUN_ID --trial trial-0001
-```
-
-Each completed run also contains a self-contained `report.html` decision
-dashboard with a one-line throughput and average benchmark duration summary,
-a visible confidence verdict, and the best observed settings. Every trial and
-its average benchmark duration remain visible; expand details for all recorded
-trial data. Comparisons, latency percentiles, repeat statistics, charts, and
-methodology are available on demand. See the [reports guide](docs/guides/reports.md).
-
-Random and TPE runs never execute the same resolved configuration twice. If
-`optimization.trials` exceeds the unique search space, the `vllm-opt` CLI warns and runs
-every unique configuration once.
-
-Multiple independent trials can run on explicitly assigned, non-overlapping
-GPU sets and ports. A sequential or tensor-parallel server receives port 8000
-unless `server.port` overrides it; local-parallel trials use their configured
-port range. Sequential execution remains the default. See
-[parallel trials](https://brtydse100.github.io/vllm-optimizer/guides/parallel-trials/) for the
-YAML and measurement caveats.
-
-## Product documents
-
-- [First MVP specification](docs/project/mvp/MVP_SPEC.md)
-- [Future implementation roadmap](docs/project/roadmap/ROADMAP.md)
-- [Architecture overview and early sketch](docs/project/ARCHITECTURE.md)
-- [Editable Draw.io architecture diagram](docs/vllm-optimizer-architecture.drawio)
-- [Contributor guide](CONTRIBUTING.md)
-- [Release notes](CHANGELOG.md)
-
-The MVP specification defines the first releasable version and its acceptance
-criteria. The roadmap describes capabilities that should be designed for now
-but implemented after the core experiment loop is reliable.
-
-vLLM Optimizer is available under the [MIT License](LICENSE).
+[Contributing](CONTRIBUTING.md) · [Architecture](docs/project/ARCHITECTURE.md) ·
+[Roadmap](docs/project/roadmap/ROADMAP.md) · [Release notes](CHANGELOG.md)
