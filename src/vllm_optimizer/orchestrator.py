@@ -63,7 +63,9 @@ class Orchestrator:
         run_id, started_at, directory = identity.run_id, identity.started_at, identity.directory
         directory.mkdir(parents=True, exist_ok=True)
         mode = execution_mode(self._config)
-        results = RunResultsManager(directory / "result.json", mode, effective_policy(self._config).to_dict())
+        results = RunResultsManager(
+            directory / "result.json", mode, effective_policy(self._config).to_dict(), self._scoring.constraints
+        )
         names = tuple(str(run["name"]) for run in configured_runs(self._config))
         session = RunAccumulator(names, self._scoring)
         policy = finalist_policy(self._config)

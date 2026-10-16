@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
+from vllm_optimizer.config.constraints import Constraint
 from vllm_optimizer.managers.scoring import TrialScore
 
 
@@ -24,3 +25,4 @@ class ReportContext:
     maximum_failure_percentage: float = 0.0
     finalist_validation: Mapping[str, object] = field(default_factory=dict)
     repeat_aggregation: str = "mean"
+    constraints: tuple[Constraint, ...] = ()

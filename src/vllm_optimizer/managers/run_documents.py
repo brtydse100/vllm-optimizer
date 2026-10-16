@@ -9,7 +9,8 @@ from vllm_optimizer.benchmarks.metrics import compact_metrics
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import TrialScore
 from vllm_optimizer.reporting.analysis import default_metrics
-from vllm_optimizer.reproduction.redaction import redact, redact_environment, redact_values
+from vllm_optimizer.reproduction.metric_redaction import redact_benchmarks
+from vllm_optimizer.reproduction.redaction import redact_environment, redact_values
 
 
 def score_document(score: TrialScore) -> dict[str, object]:
@@ -20,6 +21,7 @@ def score_document(score: TrialScore) -> dict[str, object]:
         "errored_requests": score.errored_requests,
         "incomplete_requests": score.incomplete_requests,
         "excluded_workloads": score.excluded_workloads,
+        **({"constraint_violations": list(score.constraint_violations)} if score.constraint_violations else {}),
         "error_rate": score.error_rate,
         "server_args": redact_values(score.server_args),
         "server_env": redact_environment(strings(score.server_env)),
@@ -38,13 +40,13 @@ def trial_document(report: TrialReport, source: Mapping[str, str] | None = None)
             "message": report.failure.message,
             "retryable": report.failure.retryable,
         }
-    document = {
+    document: dict[str, object] = {
         "trial_id": report.trial_id,
         "status": report.status.value,
         "failure": failure,
         "benchmark_count": len(report.benchmarks),
         "metrics": default_metrics(report),
-        "benchmarks": redact(_compact_benchmarks(report)),
+        "benchmarks": redact_benchmarks(_compact_benchmarks(report)),
     }
     if report.execution:
         document["execution"] = dict(report.execution)

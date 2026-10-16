@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from vllm_optimizer.config.constraints import stored_constraints
 from vllm_optimizer.config.models import ExperimentConfig, VTuneConfig
 from vllm_optimizer.lifecycle.integrity import load_retry_source
 from vllm_optimizer.reproduction.redaction import REDACTED
@@ -54,7 +55,14 @@ def load_retry_plan(run: Path, trial_ids: list[str]) -> RetryPlan:
         tune_env,
         benchmark=_mapping(benchmark, "benchmark"),
         baseline={"enabled": False},
-        optimization={"maximize": _text(result.get("maximize"), "maximize")},
+        optimization={
+            "maximize": _text(result.get("maximize"), "maximize"),
+            **(
+                {"constraints": [item.to_dict() for item in stored_constraints(result, tuple(manifests))]}
+                if result.get("constraints") or any(item.get("constraints") for item in manifests)
+                else {}
+            ),
+        },
         timeouts=_policy(manifests[0], "timeouts"),
         execution=_policy(manifests[0], "execution"),
         external_server_config=external_server_config,

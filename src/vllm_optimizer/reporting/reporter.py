@@ -10,6 +10,7 @@ from pathlib import Path
 from vllm_optimizer.benchmarks.quality import request_quality
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import TrialScore
+from vllm_optimizer.reporting.constraints import assess_report
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.dashboard import render_dashboard
 from vllm_optimizer.reproduction.redaction import redact_environment, redact_values
@@ -33,7 +34,7 @@ class Reporter:
         html_path = self._directory / "report.html"
         safe_ranking = tuple(_redacted(score) for score in ranking)
         safe_baseline = _redacted(baseline) if baseline else None
-        self._write_csv(csv_path, trials, safe_ranking, safe_baseline)
+        self._write_csv(csv_path, trials, safe_ranking, safe_baseline, context)
         html_path.write_text(
             render_dashboard(
                 self._artifact_directory, metric, trials, safe_ranking, safe_baseline, context or ReportContext()
@@ -44,7 +45,11 @@ class Reporter:
 
     @staticmethod
     def _write_csv(
-        path: Path, trials: tuple[TrialReport, ...], ranking: tuple[TrialScore, ...], baseline: TrialScore | None
+        path: Path,
+        trials: tuple[TrialReport, ...],
+        ranking: tuple[TrialScore, ...],
+        baseline: TrialScore | None,
+        context: ReportContext | None = None,
     ) -> None:
         ranks = {item.trial_id: (index, item.value) for index, item in enumerate(ranking, start=1)}
         fields = (
@@ -63,12 +68,15 @@ class Reporter:
             "failure_percentage",
             "server_args",
             "server_env",
+            "targets_met",
+            "target_evidence",
         )
         with path.open("w", newline="", encoding="utf-8") as stream:
             writer = csv.DictWriter(stream, fieldnames=fields)
             writer.writeheader()
             scores = {item.trial_id: item for item in (*ranking, *((baseline,) if baseline else ()))}
             for trial in trials:
+                assessment = assess_report(trial, context) if context and context.constraints else None
                 score = scores.get(trial.trial_id)
                 settings = score or TrialScore(trial.trial_id, 0, {}, {})
                 for benchmark in trial.benchmarks:
@@ -92,6 +100,8 @@ class Reporter:
                                 **{name: workload.get(name, quality[name]) for name in fields[8:13]},
                                 "server_args": json.dumps(dict(settings.server_args), sort_keys=True),
                                 "server_env": json.dumps(dict(settings.server_env), sort_keys=True),
+                                "targets_met": assessment.feasible if assessment else "",
+                                "target_evidence": json.dumps(assessment.to_dict()) if assessment else "",
                             }
                         )
 
@@ -107,4 +117,5 @@ def _redacted(score: TrialScore) -> TrialScore:
         score.errored_requests,
         score.incomplete_requests,
         score.excluded_workloads,
+        score.constraint_violations,
     )

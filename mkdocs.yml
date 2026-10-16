@@ -36,12 +36,6 @@ nav:
       - Installation choices: getting-started/installation.md
   - Configure and run:
       - Configuration: guides/configuration.md
-      - YAML reference:
-          - Overview: reference/yaml/full-example.md
-          - Server and tuning: reference/yaml/full-example-server.md
-          - Benchmarks and optimization: reference/yaml/full-example-benchmark.md
-          - Execution and logging: reference/yaml/full-example-execution.md
-          - vLLM Bench Serve: reference/yaml/full-example-vllm-bench.md
       - Benchmarks:
           - Overview and vLLM Bench Serve: guides/benchmarks/benchmarking.md
           - GuideLLM options: guides/benchmarks/benchmark-guidellm.md
@@ -50,18 +44,25 @@ nav:
           - Backend comparison: guides/benchmarks/backend-comparison.md
       - Search and scoring: guides/search-and-scoring.md
       - Parallel trials: guides/parallel-trials.md
-  - Results and operations:
+  - Results:
       - Reports: guides/reports.md
-      - Real GPU examples: results/index.md
-      - GPU experiment recipes: experiments/README.md
-      - H100 scenario suite: experiments/h100/README.md
-      - Reproduce the RTX examples: experiments/local-reproduction.md
-      - RTX 3080 results: results/rtx3080/index.md
-      - H100 results archive: results/h100/index.md
+      - Real GPU examples:
+          - Overview: results/index.md
+          - RTX 3080 results: results/rtx3080/index.md
+          - Reproduce the RTX examples: experiments/local-reproduction.md
+          - GPU experiment recipes: experiments/README.md
+          - H100 scenario suite: experiments/h100/README.md
+          - H100 results archive: results/h100/index.md
       - Troubleshooting: guides/troubleshooting.md
       - Migration from vtune: guides/migration-vllm-optimizer.md
   - Reference:
       - CLI: reference/cli.md
+      - YAML reference:
+          - Overview: reference/yaml/full-example.md
+          - Server and tuning: reference/yaml/full-example-server.md
+          - Benchmarks and optimization: reference/yaml/full-example-benchmark.md
+          - Execution and logging: reference/yaml/full-example-execution.md
+          - vLLM Bench Serve: reference/yaml/full-example-vllm-bench.md
       - Compatibility: reference/compatibility.md
   - Project:
       - Architecture: project/ARCHITECTURE.md
@@ -81,26 +82,10 @@ nav:
       - Contributing: project/contributing.md
       - Release checklist: project/release-checklist.md
   - Release notes:
+      - v0.1.0a21: project/releases/v0.1.0a21.md
       - v0.1.0a20: project/releases/v0.1.0a20.md
       - v0.1.0a19: project/releases/v0.1.0a19.md
-      - v0.1.0a18: project/releases/v0.1.0a18.md
-      - v0.1.0a17: project/releases/v0.1.0a17.md
-      - v0.1.0a16: project/releases/v0.1.0a16.md
-      - v0.1.0a15: project/releases/v0.1.0a15.md
-      - v0.1.0a13: project/releases/v0.1.0a13.md
-      - v0.1.0a12: project/releases/v0.1.0a12.md
-      - v0.1.0a11: project/releases/v0.1.0a11.md
-      - v0.1.0a10: project/releases/v0.1.0a10.md
-      - v0.1.0a9: project/releases/v0.1.0a9.md
-      - v0.1.0a8: project/releases/v0.1.0a8.md
-      - v0.1.0a7: project/releases/v0.1.0a7.md
-      - v0.1.0a6: project/releases/v0.1.0a6.md
-      - v0.1.0a5: project/releases/v0.1.0a5.md
-      - v0.1.0a4: project/releases/v0.1.0a4.md
-      - v0.1.0a3: project/releases/v0.1.0a3.md
-      - v0.1.0a2: project/releases/v0.1.0a2.md
-      - v0.1.0a1: project/releases/v0.1.0a1.md
-      - Changelog archive: project/releases/CHANGELOG_ARCHIVE.md
+      - All releases: project/releases/CHANGELOG_ARCHIVE.md
       - Current changelog: https://github.com/brtydse100/vllm-optimizer/blob/main/CHANGELOG.md
 
 markdown_extensions:

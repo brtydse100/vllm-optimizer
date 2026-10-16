@@ -1,58 +1,43 @@
 # vLLM Optimizer
 
-vLLM Optimizer is an independent community project and is not affiliated with
-the vLLM project.
+Tune vLLM serving settings against your own workloads. Describe an experiment
+in YAML; `vllm-opt` runs a baseline, searches your settings, and writes a report.
 
-Tune vLLM with evidence from controlled experiments in one YAML file. You choose
-the settings and workload; the `vllm-opt` CLI handles process lifecycle, unique search trials,
-failures, persistence, and a decision-focused report.
+**[Run your first experiment](getting-started/index.md)** ·
+**[See a real report](results/rtx3080/index.md)**
 
-```bash
-pip install "vllm-optimizer[runtime]"
-vllm-opt --config experiment.yaml
-```
+The quick start takes 5–10 minutes to read and includes a complete configuration.
+Installation and execution time depend on your model and hardware.
 
-Use plain `pip install vllm-optimizer` for configuration and report inspection without
-local vLLM execution. [Understand the two installation choices](getting-started/installation.md).
+## Start here
 
-## What vLLM Optimizer gives you
+| You want to… | Read |
+| --- | --- |
+| Install and run one experiment | [Quick start](getting-started/index.md) |
+| Use an existing runtime or inspect results without a GPU | [Installation](getting-started/installation.md) |
+| Choose settings and search ranges | [Configuration](guides/configuration.md) |
+| Maximize throughput under a latency target | [Search and scoring](guides/search-and-scoring.md#performance-targets) |
+| Choose a benchmark or dataset | [Benchmarking](guides/benchmarks/benchmarking.md) |
+| Interpret the recommendation | [Reports](guides/reports.md) |
+| Fix a failed run | [Troubleshooting](guides/troubleshooting.md) |
 
-- A baseline and Grid, Random, or TPE exploration of your chosen settings.
-- One or more GuideLLM or vLLM Bench Serve workloads per server configuration.
-- Immutable trial artifacts, concise terminal progress, and detailed logs.
-- A self-contained HTML report with a concise throughput/duration summary,
-  confidence, best-observed settings, and expandable data for every trial.
-- Exact, secret-redacted commands for reproducing completed trials.
+## What the tool does
 
-## Find what you need
+- Explores settings with Grid, Random, or TPE and optional performance limits.
+- Runs GuideLLM or native vLLM Bench Serve workloads with repeat evidence.
+- Keeps trial artifacts, logs, reproduction commands, and JSON/CSV/HTML results.
+- Shows the best observed settings and how much confidence the evidence supports.
 
-### Start an experiment
-
-- [Run your first experiment](getting-started/index.md)
-- [Choose an installation](getting-started/installation.md)
-- [Configure a run](guides/configuration.md)
-- [See a complete YAML example](reference/yaml/full-example.md)
-
-### Tune and benchmark
-
-- [Select a benchmark backend](guides/benchmarks/benchmarking.md)
-- [Choose benchmark data](guides/benchmarks/benchmark-data.md)
-- [Understand search and scoring](guides/search-and-scoring.md)
-- [Run trials in parallel](guides/parallel-trials.md)
-
-### Understand results and solve problems
-
-- [Interpret and regenerate reports](guides/reports.md)
-- [Compare GuideLLM and vLLM Bench Serve](guides/benchmarks/backend-comparison.md)
-- [Troubleshoot common failures](guides/troubleshooting.md)
-- [Check platform compatibility](reference/compatibility.md)
-
-### Contribute and explore the design
-
-- [Read the architecture overview](project/ARCHITECTURE.md)
-- [Review the roadmap](project/roadmap/ROADMAP.md)
-- [Contribute to the project](project/contributing.md)
+For less common options, use the [CLI](reference/cli.md),
+[complete YAML](reference/yaml/full-example.md), or
+[parallel trials](guides/parallel-trials.md) guides.
+Contributors can start with [architecture](project/ARCHITECTURE.md) and
+[contributing](project/contributing.md).
 
 !!! note "Alpha software"
-    Experiment execution targets Linux with NVIDIA GPUs. The universal Python
-    package can be installed elsewhere for configuration and result inspection.
+    Execution needs Python 3.11–3.12, Linux/WSL, an NVIDIA GPU, and an existing
+    local model. Native Windows supports configuration and result inspection.
+    Check [dated compatibility evidence](reference/compatibility.md) for your
+    setup; additional GPU/topology validation remains pending.
+
+This independent community project is not affiliated with vLLM.

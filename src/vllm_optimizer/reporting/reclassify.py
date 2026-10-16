@@ -12,14 +12,15 @@ from vllm_optimizer.domain.results import Failure, WorkerStatus
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.run_results import RunResultsManager
 from vllm_optimizer.managers.scoring import ScoringManager
+from vllm_optimizer.reporting.constraint_integrity import load_constraints
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.offline import _benchmark_policy, _load_trial, _read_object
+from vllm_optimizer.reporting.reclassify_requests import _expected_requests, _request_counts_valid
 from vllm_optimizer.reporting.reclassify_scores import benchmark_score as _benchmark_score
 from vllm_optimizer.reporting.reclassify_scores import results as _results
 from vllm_optimizer.reporting.reclassify_scores import trial_score as _trial_score
 from vllm_optimizer.reporting.reporter import Reporter
 from vllm_optimizer.reproduction.accepted import accepted_manifest
-from vllm_optimizer.workers.completion import max_requests, reported_request_total, request_count_failure
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +46,7 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         raise ValueError(f"re-evaluation output must be a new directory: {destination}")
     benchmark_policy = _benchmark_policy(document, source, stored).with_maximum(maximum)
     policy = _policy(source, stored, str(document.get("maximize", "")), benchmark_policy)
+    policy.constraints = load_constraints(document, source, stored)
     expected_requests = _expected_requests(source, stored)
     raw_validation = document.get("finalist_validation")
     validation = raw_validation if isinstance(raw_validation, Mapping) else {}
@@ -52,7 +54,9 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         repeats = validation.get("repeats")
         if isinstance(repeats, bool) or not isinstance(repeats, int) or repeats < 2:
             raise ValueError("invalid finalist validation repeat budget")
-        policy = ScoringManager(policy.metric, repeats, policy.required_runs, maximum, policy.repeat_aggregation)
+        policy = ScoringManager(
+            policy.metric, repeats, policy.required_runs, maximum, policy.repeat_aggregation, policy.constraints
+        )
 
     def is_accepted(item: TrialReport) -> bool:
         return not validation or item.execution.get("artifact_subdirectory") == "finalist-validation"
@@ -69,7 +73,9 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         for name in policy.required_runs
     }
     destination.mkdir(parents=True)
-    result = RunResultsManager(destination / "result.json", benchmark_policy=benchmark_policy.to_dict()).save(
+    result = RunResultsManager(
+        destination / "result.json", benchmark_policy=benchmark_policy.to_dict(), constraints=policy.constraints
+    ).save(
         str(document.get("run_id", source.name)),
         policy.metric,
         trials,
@@ -91,6 +97,7 @@ def reclassify_run(run: Path, maximum: float, output: Path | None = None) -> Rec
         maximum_failure_percentage=maximum,
         finalist_validation=validation,
         repeat_aggregation=benchmark_policy.repeat_aggregation,
+        constraints=policy.constraints,
     )
     csv_path, html = Reporter(destination, source).write(policy.metric, trials, ranking, baseline, context)
     return ReclassifiedReport(destination, result, csv_path, html)
@@ -156,35 +163,6 @@ def _reclassify(
             report.execution,
         )
     return report
-
-
-def _request_counts_valid(
-    measurements: tuple[object, ...], expected_requests: Mapping[str, int], maximum: float
-) -> bool:
-    for result in measurements:
-        name = str(getattr(result, "run_name", ""))
-        backend = str(getattr(result, "backend", "unknown"))
-        expected = expected_requests.get(name)
-        is_vllm = backend.lower().startswith("vllm")
-        if expected is None and is_vllm:
-            expected = reported_request_total(result)
-        if (expected is not None or is_vllm) and request_count_failure(result, expected, backend, maximum) is not None:
-            return False
-    return True
-
-
-def _expected_requests(run: Path, trials: tuple[TrialReport, ...]) -> dict[str, int]:
-    manifest = accepted_manifest(run, trials[0].trial_id, trials[0].execution)
-    benchmark = manifest.get("benchmark", {})
-    runs = benchmark.get("runs", ()) if isinstance(benchmark, Mapping) else ()
-    expected: dict[str, int] = {}
-    for item in runs if isinstance(runs, list | tuple) else ():
-        if not isinstance(item, Mapping) or not item.get("name"):
-            continue
-        has_limit, count = max_requests(item)
-        if has_limit and count is not None:
-            expected[str(item["name"])] = count
-    return expected
 
 
 def _baseline_id(document: Mapping[str, object]) -> str | None:

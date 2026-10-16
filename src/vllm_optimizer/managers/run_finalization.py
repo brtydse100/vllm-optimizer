@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from vllm_optimizer.benchmarks.configuration import configured_failure_percentage, configured_min_repeats
+from vllm_optimizer.config.constraints import configured_constraints
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.run_results import RunResultsManager
@@ -100,6 +101,7 @@ class RunFinalizer:
             float(self._config.analysis.get("drift_threshold", 0.05)),
             configured_failure_percentage(self._config),
             session.validation,
+            constraints=configured_constraints(self._config),
         )
         session.persist(
             results, run_id, self._metric, status, started_at, completed_at, source_run_id, sources, llm_summary

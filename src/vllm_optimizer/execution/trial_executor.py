@@ -13,6 +13,7 @@ from vllm_optimizer.config.runtime import max_attempts
 from vllm_optimizer.domain.benchmark import BenchmarkResult
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.execution.slots import WorkerSlot, execution_mode
+from vllm_optimizer.managers.constraints import assess_constraints
 from vllm_optimizer.managers.results import ResultsManager
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
 from vllm_optimizer.managers.trial import TrialManager
@@ -51,7 +52,13 @@ class TrialExecutor:
         policy = finalist_policy(config)
         if artifact_subdirectory == "finalist-validation" and policy is not None:
             config = validation_config(config, policy)
-            scorer = ScoringManager(scorer.metric, policy.repeats, scorer.required_runs, scorer.max_failure_percentage)
+            scorer = ScoringManager(
+                scorer.metric,
+                policy.repeats,
+                scorer.required_runs,
+                scorer.max_failure_percentage,
+                constraints=scorer.constraints,
+            )
         trial_dir = directory / "trials" / parameters.trial_id
         if artifact_subdirectory:
             trial_dir /= artifact_subdirectory
@@ -128,6 +135,13 @@ class TrialExecutor:
                 quality.errored,
                 quality.incomplete,
                 quality.excluded_workloads,
+                assess_constraints(
+                    results,
+                    scorer.constraints,
+                    scorer.minimum_repeats,
+                    scorer.required_runs,
+                    scorer.max_failure_percentage,
+                ).violations,
             ),
             by_benchmark,
         )

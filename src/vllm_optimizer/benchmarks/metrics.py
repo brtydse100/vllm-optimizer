@@ -57,7 +57,7 @@ def normalize_vllm_metrics(raw: Mapping[str, object]) -> dict[str, object]:
 
 
 def metric_summary(value: object, scale: float = 1.0) -> dict[str, float]:
-    """Extract average, median, and P99 without fabricating absent values."""
+    """Extract averages and backend-supplied percentiles without fabricating values."""
     if (number := _number(value)) is not None:
         return {"average": number * scale}
     if not isinstance(value, Mapping):
@@ -65,13 +65,18 @@ def metric_summary(value: object, scale: float = 1.0) -> dict[str, float]:
     successful = value.get("successful")
     source = successful if isinstance(successful, Mapping) else value
     result: dict[str, float] = {}
-    for target, names in {"average": ("average", "mean"), "median": ("median", "p50"), "p99": ("p99",)}.items():
+    for target, names in {
+        "average": ("average", "mean"),
+        "median": ("median", "p50"),
+        "p95": ("p95",),
+        "p99": ("p99",),
+    }.items():
         number = next((_number(source.get(name)) for name in names if _number(source.get(name)) is not None), None)
         if number is not None:
             result[target] = number * scale
     percentiles = source.get("percentiles")
     if isinstance(percentiles, Mapping):
-        for target, name in (("median", "p50"), ("p99", "p99")):
+        for target, name in (("median", "p50"), ("p95", "p95"), ("p99", "p99")):
             if target not in result and (number := _number(percentiles.get(name))) is not None:
                 result[target] = number * scale
     return result
@@ -95,6 +100,7 @@ def _vllm_latency(raw: Mapping[str, object], stem: str) -> dict[str, float]:
     values = {
         "average": raw.get(f"mean_{stem}_ms"),
         "median": raw.get(f"median_{stem}_ms", raw.get(f"p50_{stem}_ms")),
+        "p95": raw.get(f"p95_{stem}_ms"),
         "p99": raw.get(f"p99_{stem}_ms"),
     }
     return {name: number for name, value in values.items() if (number := _number(value)) is not None}

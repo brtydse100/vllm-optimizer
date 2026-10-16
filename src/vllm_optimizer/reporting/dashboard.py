@@ -11,6 +11,7 @@ from vllm_optimizer.managers.scoring import TrialScore
 from vllm_optimizer.reporting.charts import comparison_chart, effect_charts, history_chart
 from vllm_optimizer.reporting.comparison import comparison
 from vllm_optimizer.reporting.confidence import conclusion_class, confidence, verdict
+from vllm_optimizer.reporting.constraints import NO_TARGET_MATCH, render_constraints
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.dashboard_selection import best_observed, improvement
 from vllm_optimizer.reporting.finalist_decision import decide
@@ -57,6 +58,8 @@ def render_dashboard(
     if context.finalist_validation:
         conclusion = decision.reason
         outcome = f"Validation favors {decision.winner_trial_id}" if decision.winner_trial_id else "No clear winner"
+    if context.constraints and best is None:
+        outcome = NO_TARGET_MATCH
     conclusion_style = "confidence-note" if conclusion_class(conclusion) == "warning" else "note"
     counts = {
         state: sum(item.status.value == state for item in trials) for state in ("completed", "failed", "interrupted")
@@ -79,6 +82,7 @@ def render_dashboard(
 <p class='run-meta'>{_duration(context)} elapsed &middot; {counts["completed"]} completed &middot; {counts["failed"]} failed &middot;
 {counts["interrupted"]} interrupted &middot; {escape(context.status)}</p>{contention}</section>
 {recommendation(directory, best, baseline, selected, bool(context.finalist_validation) and not decision.winner_trial_id)}
+{render_constraints(trials, context)}
 <details class='report-panel'><summary>Performance breakdown</summary>{comparison(base_report, selected)}</details>
 <details class='report-panel'><summary>Confidence and validation</summary>
 {confidence(directory, base_report, finalist, metric, context, conclusion, validation_reports)}</details>

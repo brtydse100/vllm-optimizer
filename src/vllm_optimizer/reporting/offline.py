@@ -15,6 +15,7 @@ from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import TrialScore
 from vllm_optimizer.reporting.accepted_scores import validate_accepted_scores
 from vllm_optimizer.reporting.analysis import default_metrics
+from vllm_optimizer.reporting.constraint_integrity import load_constraints, validate_constraint_scores
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.offline_loading import load_trial as _load_trial
 from vllm_optimizer.reporting.offline_loading import read_object as _read_object
@@ -59,6 +60,8 @@ def regenerate_report(run: Path, output: Path | None = None) -> RegeneratedRepor
     }
     _validate_scores(trials, ranking, baseline, benchmark_rankings)
     policy = _benchmark_policy(document, source, trials)
+    constraints = load_constraints(document, source, trials)
+    validate_constraint_scores(document, trials, ranking, baseline, benchmark_rankings, policy, constraints)
     validate_accepted_scores(document, trials, ranking, baseline, policy)
     context = ReportContext(
         str(document["run_id"]),
@@ -76,6 +79,7 @@ def regenerate_report(run: Path, output: Path | None = None) -> RegeneratedRepor
         maximum_failure_percentage=policy.maximum_failure_percentage,
         finalist_validation=_mapping(document, "finalist_validation") if document.get("finalist_validation") else {},
         repeat_aggregation=policy.repeat_aggregation,
+        constraints=constraints,
     )
     destination.mkdir(parents=True)
     result_path = destination / "result.json"
@@ -103,7 +107,13 @@ def _score(value: Mapping[str, object]) -> TrialScore:
         _optional_count(value.get("errored_requests")),
         _optional_count(value.get("incomplete_requests")),
         _optional_count(value.get("excluded_workloads")),
+        _violations(value.get("constraint_violations", [])),
     )
+
+
+def _violations(value: object) -> tuple[float, ...]:
+    _require(isinstance(value, list), "stored performance constraint violations must be a list")
+    return tuple(cast(list[float], value))
 
 
 def _optional_count(value: object) -> int:

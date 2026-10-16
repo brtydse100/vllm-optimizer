@@ -87,13 +87,20 @@ def parse_result(path: Path, run_name: str) -> BenchmarkResult:
     workloads = tuple(
         WorkloadResult(
             index,
-            _mapping(item.get("config"), f"benchmark {index} config"),
+            _workload_configuration(item.get("config"), index),
             _normalized_metrics(_mapping(item.get("metrics"), f"benchmark {index} metrics")),
         )
         for index, value in enumerate(benchmarks)
         for item in (_mapping(value, f"benchmark {index}"),)
     )
     return BenchmarkResult(run_name, "guidellm", version, workloads, source)
+
+
+def _workload_configuration(raw: object, index: int) -> Mapping[str, object]:
+    configuration = _mapping(raw, f"benchmark {index} config")
+    # Invocation IDs and the environment object repr change on every repeat.
+    # Keep that execution metadata in the raw artifact, not workload identity.
+    return {name: value for name, value in configuration.items() if name not in {"id_", "run_id", "environment"}}
 
 
 def _normalized_metrics(raw: Mapping[str, object]) -> dict[str, object]:
