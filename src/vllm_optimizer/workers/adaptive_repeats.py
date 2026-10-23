@@ -36,6 +36,8 @@ class AdaptiveRepeatGate:
         ) < self.policy.minimum_relative_score:
             shortfall = (1 - self.policy.minimum_relative_score) * 100
             status, reason = "stopped", f"initial score was more than {shortfall:g}% below the baseline mean score"
+            if self.scorer.direction == "minimize":
+                reason = "initial latency was too high relative to the baseline mean latency"
             context.values[_STOP] = True
         context.execution["adaptive_repeats"] = {
             "status": status,

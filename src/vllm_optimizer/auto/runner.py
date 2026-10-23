@@ -10,6 +10,7 @@ from vllm_optimizer.auto.calibration_worker import CalibrationWorker
 from vllm_optimizer.auto.hardware import gpu_inventory
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.domain.results import WorkerStatus
+from vllm_optimizer.execution.slots import worker_slots
 from vllm_optimizer.managers.run_finalization import RunOutcome
 from vllm_optimizer.managers.trial import TrialManager
 from vllm_optimizer.orchestrator import Orchestrator
@@ -26,7 +27,8 @@ async def run_auto(config: VTuneConfig) -> RunOutcome:
     if config.auto.get("generated_benchmark"):
         directory.mkdir(parents=True, exist_ok=True)
         worker = CalibrationWorker(config, directory)
-        startup = build_trial_workers(config, TrialParameters("calibration", {}, {}), directory)[:4]
+        slot = next((slot for slot in worker_slots(config) if slot.supports({}, config.server)), None)
+        startup = build_trial_workers(config, TrialParameters("calibration", {}, {}), directory, slot)[:4]
         context = TrialContext("calibration")
         calibration = await TrialManager((*startup, worker)).execute(context)
         if calibration.status is WorkerStatus.INTERRUPTED:
