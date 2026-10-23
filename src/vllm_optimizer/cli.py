@@ -111,7 +111,12 @@ def _run(argv: Sequence[str] | None, prog: str) -> int:
                 print(f"Configuration valid: {config.experiment.name}")
                 print(f"Model: {model_path(config)}")
                 return 0
-            outcome = asyncio.run(Orchestrator(config).run())
+            if config.optimization.get("mode") == "auto":
+                from vllm_optimizer.auto.runner import run_auto
+
+                outcome = asyncio.run(run_auto(config))
+            else:
+                outcome = asyncio.run(Orchestrator(config).run())
     except CLIUsageError as error:
         print(styled(f"Command error: {error}", "red", sys.stderr), file=sys.stderr)
         return 2

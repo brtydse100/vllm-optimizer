@@ -11,8 +11,9 @@ from statistics import stdev
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
 from vllm_optimizer.reporting.durations import duration_change, mean_duration
+from vllm_optimizer.reporting.objective import improvement
 from vllm_optimizer.reporting.recommendation import manifest_settings, setting_changes, settings
-from vllm_optimizer.reporting.workloads import delta, failure_samples, formatted, samples, scenarios
+from vllm_optimizer.reporting.workloads import failure_samples, formatted, samples, scenarios
 from vllm_optimizer.reproduction.accepted import accepted_manifest
 from vllm_optimizer.reproduction.redaction import redact_values
 
@@ -87,10 +88,8 @@ def leaderboard(
             _cell(trial.status.value, trial.status.value),
             _cell(formatted(score.value if score else None), score.value if score else None),
             _cell(
-                delta(score.value if score else None, baseline.value if baseline else None),
-                (score.value - baseline.value) / abs(baseline.value) * 100
-                if score and baseline and baseline.value
-                else None,
+                f"{improvement(score, baseline):+.2f}%" if improvement(score, baseline) is not None else "Unavailable",
+                improvement(score, baseline),
             ),
             _cell(formatted(duration, "s"), duration),
             f"<td>{detail}</td>",

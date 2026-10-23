@@ -17,6 +17,7 @@ def score_document(score: TrialScore) -> dict[str, object]:
     return {
         "trial_id": score.trial_id,
         "score": score.value,
+        "direction": score.direction,
         "successful_requests": score.successful_requests,
         "errored_requests": score.errored_requests,
         "incomplete_requests": score.incomplete_requests,
@@ -76,9 +77,9 @@ def status_counts(trials: tuple[TrialReport, ...]) -> dict[str, int]:
 
 
 def improvement(candidate: TrialScore | None, baseline: TrialScore | None) -> float | None:
-    if candidate is None or baseline is None or baseline.value == 0:
-        return None
-    return (candidate.value - baseline.value) / baseline.value * 100
+    from vllm_optimizer.reporting.objective import improvement as compare
+
+    return compare(candidate, baseline)
 
 
 def duration(started_at: str | None, completed_at: str | None) -> float | None:

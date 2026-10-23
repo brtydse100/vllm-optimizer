@@ -26,6 +26,18 @@ existing CUDA environments.
 
 ## First experiment
 
+For automatic candidate selection and synthetic workload calibration:
+
+```yaml
+server:
+  model: /models/my-model
+optimization:
+  mode: auto
+```
+
+Run `vllm-opt -c experiment.yaml`. See [automatic tuning](docs/guides/auto-tuning.md)
+for percentile latency objectives, custom benchmarks, and calibration limits.
+
 The [quick start](docs/getting-started/index.md) contains one complete example:
 
 1. Install the runtime in a virtual environment.

@@ -108,6 +108,7 @@ def _score(value: Mapping[str, object]) -> TrialScore:
         _optional_count(value.get("incomplete_requests")),
         _optional_count(value.get("excluded_workloads")),
         _violations(value.get("constraint_violations", [])),
+        direction=str(value.get("direction", "maximize")),
     )
 
 

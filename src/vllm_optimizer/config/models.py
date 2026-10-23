@@ -30,3 +30,4 @@ class VTuneConfig:
     logging: ConfigMapping = field(default_factory=dict)
     execution: ConfigMapping = field(default_factory=dict)
     external_server_config: ConfigMapping | None = None
+    auto: ConfigMapping = field(default_factory=dict)

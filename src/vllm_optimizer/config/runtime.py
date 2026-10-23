@@ -27,10 +27,9 @@ def logging_level(config: VTuneConfig) -> str:
 
 
 def maximize_metric(config: VTuneConfig) -> str:
-    metric = config.optimization.get("maximize")
-    if not isinstance(metric, str) or not metric.strip():
-        raise ValueError("optimization requires a non-empty 'maximize' metric")
-    return metric
+    from vllm_optimizer.objectives import objective_from_config
+
+    return objective_from_config(config).key
 
 
 def positive(values: object, key: str, default: float) -> float:

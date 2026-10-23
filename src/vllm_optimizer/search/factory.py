@@ -11,7 +11,7 @@ from vllm_optimizer.search.strategy import SearchSession
 
 
 def validate_search(config: VTuneConfig) -> tuple[str, int]:
-    allowed = {"maximize", "sampler", "trials", "constraints"}
+    allowed = {"maximize", "objective", "mode", "calibration", "sampler", "trials", "constraints"}
     configured_constraints(config)
     unknown = set(config.optimization) - allowed
     sampler = config.optimization.get("sampler", "grid")

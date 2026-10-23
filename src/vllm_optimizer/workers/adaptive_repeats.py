@@ -31,7 +31,9 @@ class AdaptiveRepeatGate:
             status, reason = "continued_without_reference", "no positive baseline mean score was available"
         elif score is None or score <= 0:
             status, reason = "continued_without_comparison", "initial score was unavailable or non-positive"
-        elif score < baseline_mean * self.policy.minimum_relative_score:
+        elif (
+            baseline_mean / score if self.scorer.direction == "minimize" else score / baseline_mean
+        ) < self.policy.minimum_relative_score:
             shortfall = (1 - self.policy.minimum_relative_score) * 100
             status, reason = "stopped", f"initial score was more than {shortfall:g}% below the baseline mean score"
             context.values[_STOP] = True

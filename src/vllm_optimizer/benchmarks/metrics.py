@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from vllm_optimizer.benchmarks.percentiles import percentile_values, scalar_statistics
+
 _GUIDELLM_METRICS = {
     "requests_per_second": "requests_per_second",
     "output_tokens_per_second": "output_tokens_per_second",
@@ -34,7 +36,7 @@ def normalize_guidellm_metrics(raw: Mapping[str, object]) -> dict[str, object]:
     if summary := metric_summary(raw.get("request_latency"), scale=1000.0):
         result["end_to_end_latency_ms"] = summary
     result["request_totals"] = request_totals(raw.get("request_totals"))
-    return result
+    return scalar_statistics(result)
 
 
 def normalize_vllm_metrics(raw: Mapping[str, object]) -> dict[str, object]:
@@ -53,7 +55,7 @@ def normalize_vllm_metrics(raw: Mapping[str, object]) -> dict[str, object]:
         failed=raw.get("failed"),
         requested=raw.get("num_prompts"),
     )
-    return result
+    return scalar_statistics(result)
 
 
 def metric_summary(value: object, scale: float = 1.0) -> dict[str, float]:
@@ -65,6 +67,7 @@ def metric_summary(value: object, scale: float = 1.0) -> dict[str, float]:
     successful = value.get("successful")
     source = successful if isinstance(successful, Mapping) else value
     result: dict[str, float] = {}
+    result.update({key: value for key, value in percentile_values(source, scale).items() if key != "p50"})
     for target, names in {
         "average": ("average", "mean"),
         "median": ("median", "p50"),
@@ -103,6 +106,13 @@ def _vllm_latency(raw: Mapping[str, object], stem: str) -> dict[str, float]:
         "p95": raw.get(f"p95_{stem}_ms"),
         "p99": raw.get(f"p99_{stem}_ms"),
     }
+    values.update(
+        {
+            name.removesuffix(f"_{stem}_ms"): value
+            for name, value in raw.items()
+            if name.startswith("p") and not name.startswith("p50_") and name.endswith(f"_{stem}_ms")
+        }
+    )
     return {name: number for name, value in values.items() if (number := _number(value)) is not None}
 
 
