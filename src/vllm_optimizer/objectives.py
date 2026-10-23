@@ -72,7 +72,7 @@ def objective_from_key(key: str) -> Objective:
 
 def extract_objective(metrics: Mapping[str, object], objective: Objective) -> float | None:
     value = metrics.get(objective.key)
-    if value is None:
+    if value is None or isinstance(value, str):
         value = metrics.get(objective.metric)
         if not isinstance(value, Mapping) and objective.percentile is not None:
             value = None
