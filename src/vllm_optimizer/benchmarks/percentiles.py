@@ -8,7 +8,7 @@ def percentile_values(source: Mapping[str, object], scale: float = 1) -> dict[st
     nested = source.get("percentiles")
     values = {**(nested if isinstance(nested, Mapping) else {}), **source}
     return {
-        name: float(value) * scale
+        {"p01": "p1", "p05": "p5"}.get(name, name): float(value) * scale
         for name, value in values.items()
         if isinstance(name, str)
         and name.startswith("p")
