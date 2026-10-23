@@ -33,6 +33,10 @@ server:
   model: /models/my-model
 optimization:
   mode: auto
+benchmark:
+  average_request:
+    input_tokens: 20480  # Replace with your average prompt length.
+    output_tokens: 128  # Replace with your average generated length.
 ```
 
 Run `vllm-opt -c experiment.yaml`. See [automatic tuning](docs/guides/auto-tuning.md)

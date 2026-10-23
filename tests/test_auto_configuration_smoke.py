@@ -14,6 +14,10 @@ from vllm_optimizer.config.loader import load_config
 def configuration(tmp_path, **sections):
     (tmp_path / "config.json").write_text(json.dumps({"max_position_embeddings": 128}))
     path = tmp_path / "experiment.yaml"
+    benchmark = {"average_request": {"input_tokens": 16, "output_tokens": 8}, **sections.get("benchmark", {})}
+    if "runs" in benchmark:
+        benchmark.pop("average_request")
+    sections["benchmark"] = benchmark
     path.write_text(yaml.safe_dump({"server": {"model": "."}, "optimization": {"mode": "auto"}, **sections}))
     return load_config(path)
 
@@ -25,14 +29,19 @@ def test_minimal_auto_generates_bounded_workloads_and_space(tmp_path, engine):
     assert config.auto["generated_benchmark"]
     assert [run["name"] for run in config.benchmark["runs"]] == ["small", "medium", "large"]
     assert set(config.tune) == {"max-num-seqs", "max-num-batched-tokens", "gpu-memory-utilization"}
+    expected_inputs = {"small": 4, "medium": 16, "large": 48}
     for run in config.benchmark["runs"]:
         if engine == "vllm":
             args = run["args"]
             assert args["random-input-len"] + args["random-output-len"] <= 128
+            assert args["random-input-len"] == expected_inputs[run["name"]]
+            assert args["random-output-len"] == 8
             assert "e2el" in args["percentile-metrics"]
         else:
             dataset = run["data"][0]
             assert dataset["prompt_tokens"] + dataset["output_tokens"] <= 128
+            assert dataset["prompt_tokens"] == expected_inputs[run["name"]]
+            assert dataset["output_tokens"] == 8
 
 
 def test_native_and_inline_fixed_settings_are_excluded(tmp_path):
@@ -99,3 +108,10 @@ def test_non_power_of_two_load_cap_and_frozen_workload(tmp_path):
     assert frozen["args"]["max-concurrency"] == 4
     assert run["args"]["max-concurrency"] == 1
     assert frozen["args"]["random-input-len"] == run["args"]["random-input-len"]
+
+
+def test_generated_sizes_require_explicit_average_and_sufficient_context(tmp_path):
+    with pytest.raises(ConfigValidationError, match="average_request"):
+        configuration(tmp_path, benchmark={"average_request": None})
+    with pytest.raises(ConfigValidationError, match="200.*128"):
+        configuration(tmp_path, benchmark={"average_request": {"input_tokens": 64, "output_tokens": 8}})

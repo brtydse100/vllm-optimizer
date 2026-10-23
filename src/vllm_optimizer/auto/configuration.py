@@ -33,7 +33,7 @@ def prepare_auto_config(raw: Mapping[str, Any]) -> dict[str, Any]:
     benchmark = root.get("benchmark", {})
     if isinstance(benchmark, Mapping) and "runs" not in benchmark:
         engine = benchmark.get("engine", "vllm")
-        root["benchmark"] = {**benchmark, "engine": engine, "runs": default_workloads(2048, str(engine))}
+        root["benchmark"] = {**benchmark, "engine": engine}
     return root
 
 
@@ -45,7 +45,10 @@ def resolve_auto_config(config: VTuneConfig) -> VTuneConfig:
         limit = context_limit(config)
         benchmark = dict(config.benchmark)
         if config.auto.get("generated_benchmark"):
-            benchmark["runs"] = default_workloads(limit, str(benchmark.get("engine", "vllm")))
+            average = benchmark.pop("average_request", None)
+            benchmark["runs"] = default_workloads(limit, str(benchmark.get("engine", "vllm")), average)
+        elif "average_request" in benchmark:
+            raise ValueError("benchmark.average_request cannot be combined with explicit benchmark.runs")
         config = replace(config, tune=automatic_space(config, limit), benchmark=benchmark)
     objective = objective_from_config(config)
     if objective.percentile is None:
