@@ -49,6 +49,7 @@ class RunAccumulator:
                     score.incomplete_requests if score else 0,
                     score.excluded_workloads if score else 0,
                     score.constraint_violations if score else (),
+                    direction=score.direction if score else self._scoring.direction,
                 )
             )
 

@@ -12,6 +12,7 @@ from optuna.trial import TrialState
 
 from vllm_optimizer.config.constraints import configured_constraints
 from vllm_optimizer.config.models import VTuneConfig
+from vllm_optimizer.objectives import objective_from_config
 from vllm_optimizer.search.grid import TrialParameters, definition_values, iter_grid, space_cardinality
 
 
@@ -30,7 +31,7 @@ class OptunaSearchSession:
         )
         self._study = optuna.create_study(
             study_name="vllm_optimizer",
-            direction="maximize",
+            direction=objective_from_config(config).direction,
             sampler=backend,
             storage=f"sqlite:///{directory / 'study.db'}",
             load_if_exists=True,

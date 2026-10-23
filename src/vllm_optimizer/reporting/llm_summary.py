@@ -14,6 +14,7 @@ from urllib.request import Request, urlopen
 
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.managers.scoring import TrialScore
+from vllm_optimizer.reporting.objective import objective_label
 from vllm_optimizer.reproduction.redaction import redact_values
 
 
@@ -72,7 +73,7 @@ def generate(settings: LLMSettings, metric: str, ranking: tuple[TrialScore, ...]
         "Scores are observations, not proof of a winner or statistically significant improvement. "
         "Parameter associations from adaptive search are not causal effects. Do not attribute a score change "
         "to an individual parameter or invent controlled ablation results. "
-        f"Objective: maximize {metric}. Data: {json.dumps(rows, default=str)}"
+        f"Objective: {objective_label(metric)}. Data: {json.dumps(rows, default=str)}"
     )
     body = json.dumps(
         {"model": settings.model, "messages": [{"role": "user", "content": prompt}], "temperature": 0}

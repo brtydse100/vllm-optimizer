@@ -1,5 +1,8 @@
 # Configuration
 
+For automatic candidate selection and optional synthetic workload calibration,
+see [automatic tuning](auto-tuning.md). Explicit search spaces remain supported.
+
 Start with the [complete quick-start example](../getting-started/index.md),
 then change the sections you need. The [YAML reference](../reference/yaml/full-example.md)
 contains the full configuration.

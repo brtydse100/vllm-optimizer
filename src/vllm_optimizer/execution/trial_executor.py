@@ -11,6 +11,7 @@ from vllm_optimizer.config.finalist_validation import finalist_policy, validatio
 from vllm_optimizer.config.models import VTuneConfig
 from vllm_optimizer.config.runtime import max_attempts
 from vllm_optimizer.domain.benchmark import BenchmarkResult
+from vllm_optimizer.domain.results import Failure, WorkerResult, WorkerStatus
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.execution.slots import WorkerSlot, execution_mode
 from vllm_optimizer.managers.constraints import assess_constraints
@@ -58,6 +59,7 @@ class TrialExecutor:
                 scorer.required_runs,
                 scorer.max_failure_percentage,
                 constraints=scorer.constraints,
+                direction=scorer.direction,
             )
         trial_dir = directory / "trials" / parameters.trial_id
         if artifact_subdirectory:
@@ -98,6 +100,11 @@ class TrialExecutor:
         result_path = trial_dir / "result.json"
         raw = context.values.get("benchmark_results", ())
         results = raw if isinstance(raw, tuple) else ()
+        value = scorer.score(results)
+        if value is None and scorer.direction == "minimize" and outcome.status is WorkerStatus.COMPLETED:
+            outcome = WorkerResult.failed(
+                Failure("objective_metric_unavailable", f"No eligible measurements for {scorer.metric}")
+            )
         evidence = context.execution.get("adaptive_repeats")
         if isinstance(evidence, dict):
             evidence["actual_repeats_by_run"] = _repeat_counts(results)
@@ -107,7 +114,6 @@ class TrialExecutor:
         self._manifest.write(
             manifest_path, config, parameters, context, outcome.status.value, self._sources.get(parameters.trial_id)
         )
-        value = scorer.score(results)
         by_benchmark = scorer.score_each(results)
         quality = scorer.quality(results)
         if not quality.successful and quality.errored + quality.incomplete:
@@ -142,6 +148,7 @@ class TrialExecutor:
                     scorer.required_runs,
                     scorer.max_failure_percentage,
                 ).violations,
+                direction=scorer.direction,
             ),
             by_benchmark,
         )

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.measurement import sequential_drift, sequentially_drifted, summarize
+from vllm_optimizer.objectives import objective_from_key
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.offline_loading import load_trial, read_object
 from vllm_optimizer.reporting.tables import _table
@@ -31,7 +32,7 @@ def verdict(baseline: TrialReport | None, best: TrialReport | None, metric: str,
             continue
         if max(min(a), min(b)) <= min(max(a), max(b)):
             return "Inconclusive: repeat ranges overlap; the observed difference may be noise."
-        regressions += max(b) < min(a)
+        regressions += min(b) > max(a) if objective_from_key(metric).direction == "minimize" else max(b) < min(a)
     if retained:
         return "Baseline retained: no tuned configuration beat it under the scoring policy."
     if regressions == len(before):

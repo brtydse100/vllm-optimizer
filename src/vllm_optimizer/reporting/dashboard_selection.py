@@ -3,12 +3,8 @@
 from __future__ import annotations
 
 from vllm_optimizer.managers.scoring import TrialScore
-
-
-def improvement(best: TrialScore | None, baseline: TrialScore | None) -> float | None:
-    if best is None or baseline is None or baseline.value == 0:
-        return None
-    return (best.value - baseline.value) / abs(baseline.value) * 100
+from vllm_optimizer.reporting.objective import improvement as improvement
+from vllm_optimizer.reporting.objective import score_loss
 
 
 def best_observed(best_tuned: TrialScore | None, baseline: TrialScore | None) -> TrialScore | None:
@@ -16,7 +12,7 @@ def best_observed(best_tuned: TrialScore | None, baseline: TrialScore | None) ->
     return (
         min(
             candidates,
-            key=lambda item: (-item.value, item.error_rate, item.errored_requests + item.incomplete_requests),
+            key=lambda item: (score_loss(item), item.error_rate, item.errored_requests + item.incomplete_requests),
         )
         if candidates
         else None

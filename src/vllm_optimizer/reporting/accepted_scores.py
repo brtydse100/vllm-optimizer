@@ -30,6 +30,8 @@ def validate_accepted_scores(
     )
     reports = {item.trial_id: item for item in trials}
     for score in (*ranking, *((baseline,) if baseline else ())):
+        if score.direction != scoring.direction:
+            raise ValueError(f"Stored objective direction disagrees with metric: {score.trial_id}")
         measured = scoring.score(results(reports[score.trial_id]))
         if measured is None or not isclose(measured, score.value, rel_tol=1e-9, abs_tol=1e-12):
             raise ValueError(f"Stored score disagrees with accepted execution: {score.trial_id}")

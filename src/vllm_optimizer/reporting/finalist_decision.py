@@ -8,6 +8,8 @@ from vllm_optimizer.domain.results import WorkerStatus
 from vllm_optimizer.domain.trial_report import TrialReport
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
 from vllm_optimizer.measurement import sequentially_drifted, summarize
+from vllm_optimizer.objectives import objective_from_key
+from vllm_optimizer.reporting.objective import score_loss
 from vllm_optimizer.reporting.workloads import samples, scenarios
 
 
@@ -66,7 +68,7 @@ def decide(
         return _unclear("no validated candidate meets all performance targets")
     best = ordered[0]
     for other in ordered[1:]:
-        if best.value <= other.value:
+        if score_loss(best) >= score_loss(other):
             return _unclear("validated objective scores are tied")
         issue = _compare(reports[best.trial_id], reports[other.trial_id], metric, repeats, float(threshold))
         if issue:
@@ -89,6 +91,8 @@ def _compare(best: TrialReport, other: TrialReport, metric: str, repeats: int, t
         return "workload coverage differs or is unavailable"
     for key in a:
         x, y = samples(a[key], (metric,)), samples(b[key], (metric,))
+        if objective_from_key(metric).direction == "minimize":
+            x, y = [-value for value in x], [-value for value in y]
         if any(
             len(values) != repeats
             or len(observations) != repeats
