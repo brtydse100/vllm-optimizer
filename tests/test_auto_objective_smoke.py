@@ -66,6 +66,16 @@ def test_guidellm_percentile_names_and_units_are_normalized():
     assert metrics["end_to_end_latency_ms.p99"] == 10
 
 
+def test_numeric_percentile_evidence_survives_secret_redaction():
+    from vllm_optimizer.reproduction.metric_redaction import redact_benchmarks
+
+    metrics = normalize_vllm_metrics({"mean_ttft_ms": 10, "p55_ttft_ms": 5})
+    metrics["api_token"] = "fabricated-value"
+    stored = redact_benchmarks([{"workloads": [{"metrics": metrics}]}])[0]["workloads"][0]["metrics"]
+    assert stored["time_to_first_token_ms.p55"] == 5
+    assert stored["api_token"] == "<redacted>"
+
+
 def test_probe_extracts_fabricated_summaries_without_gpu(monkeypatch, tmp_path):
     from vllm_optimizer.auto import probes
     from vllm_optimizer.domain.results import WorkerResult
