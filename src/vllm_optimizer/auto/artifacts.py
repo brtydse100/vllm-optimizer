@@ -37,7 +37,12 @@ def finish_auto_run(outcome: RunOutcome, config: VTuneConfig, evidence: Mapping[
     result = json.loads((directory / "result.json").read_text(encoding="utf-8"))
     best = result.get("best")
     if isinstance(best, dict):
-        server = {"model": config.server["model"], **best.get("server_args", {})}
+        server = {
+            **(config.external_server_config or {}),
+            **best.get("server_args", {}),
+            "model": config.server["model"],
+        }
+        server.pop("config", None)
         (directory / "best-server.yaml").write_text(yaml.safe_dump(server, sort_keys=False), encoding="utf-8")
         (directory / "best-environment.yaml").write_text(yaml.safe_dump(best.get("server_env", {})), encoding="utf-8")
     add_auto_summary(directory / "report.html", directory)
@@ -52,7 +57,7 @@ def add_auto_summary(html_path: Path, artifacts: Path) -> None:
     if 'id="auto-calibration"' in html:
         return
     rows = "".join(
-        f"<li>{escape(str(item['workload']))}: concurrency={item['concurrency']}, {escape(str(item['reason']))}</li>"
+        f"<li>{escape(str(item['workload']))}: concurrency={escape(str(item['concurrency']))}, {escape(str(item['reason']))}</li>"
         for item in document.get("workloads", [])
     )
     objective = escape(json.dumps(document.get("objective", {})))

@@ -56,7 +56,12 @@ def resolve_auto_config(config: VTuneConfig) -> VTuneConfig:
             raise ValueError(f"GuideLLM does not emit P{objective.percentile}; select benchmark.engine: vllm")
         return config
     runs = []
-    for run in benchmark.get("runs", []):
+    source_runs = benchmark.get("runs", [])
+    if not isinstance(source_runs, list):
+        raise ValueError("benchmark.runs must be a list")
+    for run in source_runs:
+        if not isinstance(run, Mapping) or not isinstance(run.get("args", {}), Mapping):
+            raise ValueError("each benchmark run and its args must be mappings")
         args = dict(run.get("args", {}))
         percentiles = str(args.get("metric-percentiles", "50,95,99")).split(",")
         args["metric-percentiles"] = ",".join(dict.fromkeys([*percentiles, str(objective.percentile)]))
