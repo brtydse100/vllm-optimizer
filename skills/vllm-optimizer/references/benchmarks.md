@@ -148,10 +148,44 @@ plus server startups, backend profile points, retries, and validation reruns.
 
 An exhaustive grid's size is the product of candidate counts. Random/TPE need
 `trials`; grid forbids it. Adaptive repeats can save measurement rounds for weak
-candidates, but do not enforce latency SLOs or stop a benchmark mid-run.
+candidates; they do not implement a live latency stopping rule.
 
-For throughput optimization with a latency target, search a bounded space, then
-check the requested latency percentile in each matching workload. Recommend only
-candidates meeting the user's target, or report that none have sufficient evidence.
+## Optimize throughput within performance targets
+
+In `0.1.0a21`, replace the example's `optimization` section with this fragment
+when testing constrained optimization. These are illustrative smoke-test limits;
+replace them with the user's actual requirements for a meaningful experiment:
+
+```yaml
+optimization:
+  maximize: output_tokens_per_second
+  sampler: grid
+  constraints:
+    - metric: time_to_first_token_ms
+      statistic: p99
+      max: "1 s"
+    - metric: requests_per_second
+      min: "1 req/s"
+```
+
+This maximizes output throughput among candidates whose mean backend P99 TTFT
+is at most 1000 ms and mean request throughput is at least 1 request/s for every
+matched workload. The throughput statistic defaults to `average`. Equality
+passes. Use `max: "200 ms"` instead when that is the user's actual TTFT target.
+
+`optimization.constraints` are performance targets; the GuideLLM run's
+`constraints: [{kind: max_requests, count: 8}]` is a stopping condition. Keep
+these in their own sections. Choose a backend that actually emits the metric
+and percentile; unavailable measurements fail the performance target.
+
+Targets are assessed across eligible repeats and do not stop a benchmark or
+the search budget early. All limits must pass for every workload, including
+the baseline and fresh finalists. Target misses retain measurements but cannot
+win; if none pass, report that no tested configuration met all targets.
+TPE receives objective scores and separate constraint violations; Grid and
+Random also filter candidates by feasibility.
+
 Do not set `optimization.maximize` to a latency metric: larger latency would win.
-The inspected schema does not implement latency minimization or SLO constraints.
+Direct latency minimization is not supported in this schema. A passing mean of
+backend percentiles from a tiny smoke run does not establish a production SLO;
+inspect repeat coverage, request counts, and variability in the results.

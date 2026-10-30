@@ -52,10 +52,11 @@ use raw backend output for additional fields that exist there.
 4. Inspect mean, sample standard deviation, 95% Student's t interval, and drift.
    Drift compares early and late repeat halves and needs enough repeats (at least
    four). Two repeats and tiny workloads are exploratory.
-5. Read `selection_decision.status`, `winner_trial_id`, and `reason` when present.
-   `best` is the highest observed tuned score; it is not automatically a proven
-   winner. Baseline can remain preferable. A missing selection decision in older
-   artifacts limits the conclusion.
+5. Inspect performance targets, then read `selection_decision.status`,
+   `winner_trial_id`, and `reason` when present. `ranking` contains eligible tuned
+   candidates; `best` is the best feasible observed configuration and may be the
+   baseline. `best_tuned` identifies the best feasible tuned candidate. Neither
+   establishes a proven winner; missing fixed-budget validation limits certainty.
 6. Apply the user's goals, including latency and reliability, to that evidence.
    A throughput leader that violates the latency target is not a suitable
    recommendation. Say when no measured candidate is acceptable.
@@ -65,6 +66,34 @@ receive fresh sequential measurements. Search-only candidates cannot replace a
 failed finalist. Incomplete, mismatched, drifting, or overlapping evidence can
 yield **No clear winner**. The intervals are descriptive uncertainty guards,
 not proof of a global optimum or a causal effect.
+
+## Interpret performance targets in 0.1.0a21
+
+`optimization.constraints` filter configurations by measured performance.
+These differ from GuideLLM workload stopping constraints. Read the run's
+`constraints` and per-trial `constraint_assessments`: `met` is the overall
+assessment, and `workloads` identifies each metric, statistic, measured value,
+bound, unit, repeat count, and whether the limit passed. CSV exposes
+`targets_met` and `target_evidence`; HTML has a Performance targets section.
+
+All configured limits must hold for every named benchmark and matched workload,
+including the baseline and fresh finalists. A target uses the arithmetic mean
+of its statistic across eligible repeats. For P99 this is the mean of backend
+P99 values, not a pooled percentile or a production-wide guarantee. Equality
+passes. Missing/nonfinite metrics, insufficient matching repeats, or duplicate
+repeat identities fail the target; inspect the evidence rather than guessing.
+
+A completed trial may miss targets while producing valid, retained measurements.
+It is then ineligible to win overall or per benchmark. A positive throughput
+score or exit code `0` alone is not proof of feasibility. If all candidates,
+including the baseline, miss targets, `best` is null and the report says
+**No tested configuration met all targets.** Distinguish this from a failed
+execution and from an uncertainty-based **No clear winner**.
+
+Explain which bound was missed and the measured value with units. Preserve the
+user's limits; do not weaken them to manufacture a winner. Targets guide
+feasibility and TPE feedback but do not stop a benchmark or the full search
+budget early. Search associations still do not establish causal effects.
 
 ## Explain causes as testable hypotheses
 
@@ -123,7 +152,10 @@ vllm-opt reclassify --run /absolute/run --max-failure-percentage 2
 
 This recalculates eligibility from existing measurements into a new destination.
 It does not rerun the benchmark or fix failures. Explain how the policy change
-affects conclusions and preserve the original evidence.
+affects conclusions and preserve the original evidence. Performance targets
+remain in force: relaxing the request-failure threshold does not relax a latency
+bound. Regeneration verifies stored constraints against accepted manifests and
+measurements; an inconsistency is an integrity error, not a reason to edit them.
 
 ```bash
 vllm-opt retry --run /absolute/run --trial trial-0001
@@ -131,7 +163,8 @@ vllm-opt retry --run /absolute/run --trial trial-0001
 
 `retry` performs new GPU work and needs authorization. It creates a linked run
 from saved settings, preserving the accepted execution's budget. It does not
-modify the source or accept `--config`. To change YAML, start a new experiment.
+modify the source or accept `--config`; performance targets are preserved too.
+To change YAML or performance limits, start a new experiment.
 
 Finish with the best-supported recommendation, measured gains and costs, its
 confidence limits, and a useful next step. Keep local evidence paths available;

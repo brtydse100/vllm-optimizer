@@ -1,6 +1,6 @@
 # Build and explain optimization YAML
 
-This reference covers optimizer-owned fields in the inspected `0.1.0a19` schema
+This reference covers optimizer-owned fields in the inspected `0.1.0a21` schema
 and common upstream fields. `server`, `tune`, environment variables, and backend
 options are open-ended: the installed upstream release determines valid names,
 values, defaults, and hardware support. Look up an unfamiliar flag before
@@ -238,6 +238,39 @@ listed in the benchmark reference.
 The score uses arithmetic means across eligible repeated workload measurements,
 then averages workload points and named runs. It is not weighted by production
 traffic volume. Explain individual workloads as well as the aggregate.
+
+## Performance-constraint fields
+
+Add `optimization.constraints` when the user specifies measured performance
+requirements. The [benchmark reference](benchmarks.md) has a replacement
+`optimization` example. Omitting the list (or using `[]`) adds no targets.
+
+| Field | Meaning, default, and interactions |
+| --- | --- |
+| `optimization.constraints` | List of performance targets. Every limit must pass for every named benchmark and matched workload. These are distinct from backend run stopping constraints. |
+| `optimization.constraints[].metric` | Required canonical metric: `time_to_first_token_ms`, `time_per_output_token_ms`, `inter_token_latency_ms`, `end_to_end_latency_ms`, `requests_per_second`, `output_tokens_per_second`, or `total_tokens_per_second`. |
+| `optimization.constraints[].statistic` | Defaults to `average`. Latency accepts `average`, `p50`, `p95`, or `p99`; throughput accepts only `average`. Requires the backend to supply that statistic. |
+| `optimization.constraints[].min` | Inclusive lower bound; use exactly one of `min` or `max`. Useful for minimum throughput. Must be finite and nonnegative. |
+| `optimization.constraints[].max` | Inclusive upper bound; mutually exclusive with `min`. Useful for maximum latency. Must be finite and nonnegative. |
+
+Bare numbers use canonical units: latency in milliseconds, request throughput in
+requests/s, and token throughput in tokens/s. Strings must include compatible
+units: latency accepts `us`, `ms`, or `s`; request throughput uses `req/s`; token
+throughput uses `tok/s`. Thus `"1 s"` equals `1000` for a latency metric.
+`"200"` without a unit, incompatible units, unknown metrics/statistics, and
+entries with both or neither bound are invalid. No other per-target keys exist.
+
+The chosen statistic is averaged over eligible repeats for each matched workload.
+Missing/nonfinite values, duplicate repeat identities, or insufficient matching
+repeat coverage fail the target. Averaged backend percentiles are not pooled
+request percentiles. See [results](results.md) for target evidence and outcomes.
+
+All limits apply to baselines and fresh finalists too. A target miss retains
+measurements but excludes that configuration from winning overall or per
+benchmark. No feasible configuration means no winner. These targets do not
+interrupt benchmarks, stop the search after finding a match, or minimize latency.
+Raising a bound changes the experiment's acceptance criteria; do it only when
+the user's actual requirements change.
 
 ## Timeouts, logging, execution
 

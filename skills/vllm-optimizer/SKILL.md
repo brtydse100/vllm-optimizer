@@ -40,12 +40,13 @@ Ask only for facts that materially change the configuration. When a workload
 is unknown, offer a labeled synthetic exploratory workload and state its limits.
 Use the benchmark reference to explain why the selected load matches the goal.
 
-These references describe the inspected `0.1.0a19` schema. Identify the installed
+These references describe the inspected `0.1.0a21` schema. Identify the installed
 version before relying on its fields. For other versions, check their release
 documentation and `vllm-opt validate`; do not assume features from an unreleased
-branch exist. In this schema the objective is `optimization.maximize`.
-Latency goals must be assessed from results; do not invent `minimize`, SLO,
-automatic calibration, or early-stop fields.
+branch exist. The objective is `optimization.maximize`; express latency and
+throughput requirements with `optimization.constraints`. These targets filter
+eligible measurements; they do not stop requests or end the search early.
+Do not invent `minimize`, automatic calibration, or early-stop fields.
 
 ## Build a reviewable experiment
 
@@ -54,6 +55,9 @@ actual model and host. Preserve an existing YAML's intent and unrelated values.
 
 - Establish explicit fixed baseline settings. Change a small, explained set of
   tunable parameters while keeping the model and benchmark workload comparable.
+- Translate measured performance requirements into `optimization.constraints`.
+  Distinguish those targets from GuideLLM run `constraints`, which bound work.
+  Use the user's actual limits; exploratory example limits are not service SLOs.
 - Describe each field the user asks about using its full path, current value,
   units/default, effect, and relevant interaction. Explain every field you add
   when the user requests a walkthrough; see the field reference for the format.
@@ -88,7 +92,7 @@ enabling it. Credentials belong in the user's secret mechanism, never in YAML.
 
 Read structured run/trial results and the accepted execution manifests as well
 as the report. Follow the results reference to check failures, workload matches,
-repeat budgets, drift, latency, and the selection decision before recommending
+repeat budgets, drift, latency, target assessments, and the selection decision before recommending
 a configuration. An exit code of zero means at least one trial completed.
 
 Give the user a concise account of:
@@ -96,6 +100,9 @@ Give the user a concise account of:
 - What ran and whether the evidence is usable.
 - What changed versus the baseline, including throughput, latency, and failures.
 - Which configuration best fits their stated goals and what remains uncertain.
+- Whether every performance target passed for every matched workload. If none
+  passed, explain that no tested configuration met all targets; retain the
+  measurements and do not recommend an infeasible throughput leader.
 - Why the outcome might have occurred, with evidence for each hypothesis and
   one focused follow-up measurement when causality is unresolved.
 

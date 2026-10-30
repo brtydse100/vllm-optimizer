@@ -11,12 +11,20 @@ is `vllm-opt`. The older `vtune` aliases are deprecated.
   runtime extra. Native Windows vLLM execution is unsupported. WSL2 has limited
   recorded evidence and may need environment-specific workarounds.
 
-The inspected package requires Python 3.11 or 3.12. Its runtime dependencies are
+This reference targets `vllm-optimizer==0.1.0a21`, which requires Python 3.11 or
+3.12. Its runtime dependencies are
 vLLM `>=0.30,<0.31` and GuideLLM `>=0.7.3,<0.8`. These are version-specific
 requirements, not a promise that arbitrary CUDA/GPU combinations work. Native
 Linux L40/H100 and multi-GPU validation remain pending in the inspected release.
 Check the version-specific [compatibility documentation](https://brtydse100.github.io/vllm-optimizer/reference/compatibility/)
 when preparing another release.
+
+Performance targets in `optimization.constraints` require a version that supports
+them. An older installation may reject those fields. Inspect its version before
+building YAML, and use the matching release documentation rather than deleting
+the user's latency targets to make validation pass. The installation commands
+below select the available package release; pin `==0.1.0a21` when reproducing
+this reference (for runtime: `"vllm-optimizer[runtime]==0.1.0a21"`).
 
 ## Inspect before installing
 
