@@ -1,8 +1,40 @@
 # Search and scoring
 
-The configured `optimization.maximize` metric ranks eligible trials throughout
-search, baseline comparison, and reporting. It is **always maximized**; use
-latency constraints rather than selecting raw latency as a lower-is-better objective.
+One configured metric ranks eligible trials throughout search, baseline
+comparison, and reporting. `optimization.maximize` names a metric that is
+**always maximized**. To minimize latency, use `optimization.objective` instead.
+
+## Choose an objective
+
+```yaml
+optimization:
+  objective:
+    metric: end_to_end_latency_ms
+    percentile: 99
+  sampler: tpe
+  trials: 20
+```
+
+Latency metrics are `time_to_first_token_ms`, `time_per_output_token_ms`,
+`inter_token_latency_ms`, and `end_to_end_latency_ms`. They are minimized;
+omit `percentile` to minimize the mean. Throughput metrics are
+`output_tokens_per_second`, `total_tokens_per_second`, and `requests_per_second`;
+they are maximized and do not accept a percentile. Select one objective per
+run; combining `objective` with `maximize` is rejected.
+
+vLLM Bench Serve supports integer percentiles 1–100, including P55. The
+selected percentile and the latency metrics are added to each run's
+`metric-percentiles` and `percentile-metrics` arguments. GuideLLM supports the
+percentiles it emits: P1, P5, P10, P25, P50, P75, P90, P95, and P99; others
+fail validation with instructions to use `benchmark.engine: vllm`. A missing
+measurement never falls back to another percentile or the mean.
+
+Latency scores are the measured values in milliseconds; lower wins. A
+percentile score is the mean of backend-reported percentiles across workloads
+and repeats, not a percentile of pooled requests. Offline reports, retries, and
+reclassification retain the objective. `maximize` keeps its earlier behavior,
+including maximizing a latency mean if one is named, and rejects latency
+statistic keys such as `end_to_end_latency_ms.p99`.
 
 ## Choose a search
 

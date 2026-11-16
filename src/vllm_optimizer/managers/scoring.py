@@ -9,7 +9,8 @@ from statistics import fmean, median
 
 from vllm_optimizer.config.constraints import Constraint
 from vllm_optimizer.domain.benchmark import BenchmarkResult
-from vllm_optimizer.managers.scoring_values import _eligible, _metric_value, _request_counts, _workload_identity
+from vllm_optimizer.managers.scoring_values import _eligible, _request_counts, _workload_identity
+from vllm_optimizer.objectives import extract_objective, objective_from_key
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,12 +24,15 @@ class TrialScore:
     incomplete_requests: int = 0
     excluded_workloads: int = 0
     constraint_violations: tuple[float, ...] = ()
+    direction: str = "maximize"
 
     @property
     def feasible(self) -> bool:
         return all(value <= 0 for value in self.constraint_violations)
 
     def __post_init__(self) -> None:
+        if self.direction not in {"maximize", "minimize"}:
+            raise ValueError("score direction must be maximize or minimize")
         if isinstance(self.value, bool) or not isinstance(self.value, int | float) or not isfinite(self.value):
             raise ValueError("trial score must be finite")
         if any(
@@ -59,12 +63,14 @@ class ScoringManager:
         max_failure_percentage: float = 0,
         repeat_aggregation: str = "mean",
         constraints: tuple[Constraint, ...] = (),
+        direction: str | None = None,
     ) -> None:
         if not metric.strip():
             raise ValueError("optimization.maximize must not be empty")
         if not isinstance(minimum_repeats, int) or isinstance(minimum_repeats, bool) or minimum_repeats < 1:
             raise ValueError("minimum repeats must be positive")
         self.constraints = constraints
+        self.direction = direction or objective_from_key(metric).direction
         self.metric = metric
         self.minimum_repeats = minimum_repeats
         self.required_runs = required_runs
@@ -91,7 +97,7 @@ class ScoringManager:
         for result in results:
             result_values = {
                 _workload_identity(getattr(workload, "index", 0), getattr(workload, "configuration", {})): (
-                    _metric_value(workload.metrics.get(self.metric))
+                    extract_objective(workload.metrics, objective_from_key(self.metric))
                     if _eligible(workload.metrics, self.max_failure_percentage)
                     else None
                 )
@@ -131,7 +137,7 @@ class ScoringManager:
             sorted(
                 (item for item in scores if item.feasible),
                 key=lambda item: (
-                    -item.value,
+                    item.value if item.direction == "minimize" else -item.value,
                     item.error_rate,
                     item.errored_requests + item.incomplete_requests,
                     item.trial_id,

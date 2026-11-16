@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 
 from vllm_optimizer.benchmarks.metrics import metric_summary
+from vllm_optimizer.benchmarks.percentiles import scalar_statistics
 from vllm_optimizer.config.constraint_units import METRIC_UNITS
 from vllm_optimizer.reproduction.redaction import redact
 
@@ -28,5 +29,6 @@ def redact_benchmarks(values: object) -> list[object]:
                     for name, unit in METRIC_UNITS.items():
                         if unit == "ms" and (summary := metric_summary(metrics.get(name))):
                             target_metrics[name] = summary
+                    scalar_statistics(target_metrics)
         safe.append(clean)
     return safe
