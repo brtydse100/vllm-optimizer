@@ -118,4 +118,5 @@ def _redacted(score: TrialScore) -> TrialScore:
         score.incomplete_requests,
         score.excluded_workloads,
         score.constraint_violations,
+        direction=score.direction,
     )

@@ -70,6 +70,7 @@ def trial_score(run: Path, report: TrialReport, policy: ScoringManager) -> Trial
             policy.required_runs,
             policy.max_failure_percentage,
         ).violations,
+        direction=policy.direction,
     )
 
 
@@ -89,6 +90,7 @@ def benchmark_score(run: Path, report: TrialReport, policy: ScoringManager, name
             score.incomplete_requests,
             score.excluded_workloads,
             score.constraint_violations,
+            direction=score.direction,
         )
         if score
         else None

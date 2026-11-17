@@ -9,6 +9,7 @@ import yaml
 from .arguments import normalized_arguments
 from .errors import ConfigFileError, ConfigValidationError, ConfigYAMLError
 from .models import ExperimentConfig, VTuneConfig
+from .objective_percentiles import request_objective_percentile
 from .runtime import logging_level
 
 _OPTIONAL_SECTIONS = ("benchmark", "baseline", "optimization", "analysis", "timeouts", "logging", "execution")
@@ -65,6 +66,7 @@ def _build_config(raw: Any, config_directory: Path) -> VTuneConfig:
         external_server_config=external_server_config,
         **optional,
     )
+    config = request_objective_percentile(config)
     logging_level(config)
     from .preflight import validate_config
 

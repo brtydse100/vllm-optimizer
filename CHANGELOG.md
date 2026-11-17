@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add `optimization.objective` to minimize a latency mean or percentile, or
+  maximize a throughput metric, with manual `tune` spaces. Ranking, finalist
+  selection, reports, retries, and reclassification follow its direction.
+- Stored workload metrics now include every backend-reported latency percentile.
+
 ## v0.1.0a21 — Performance targets and simpler guides
 
 - Maximize throughput under per-workload latency or throughput limits, with

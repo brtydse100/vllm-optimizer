@@ -11,6 +11,7 @@ from pathlib import Path
 from vllm_optimizer.config.constraints import stored_constraints
 from vllm_optimizer.config.models import ExperimentConfig, VTuneConfig
 from vllm_optimizer.lifecycle.integrity import load_retry_source
+from vllm_optimizer.objectives import objective_from_key
 from vllm_optimizer.reproduction.redaction import REDACTED
 from vllm_optimizer.search.grid import TrialParameters
 
@@ -56,7 +57,7 @@ def load_retry_plan(run: Path, trial_ids: list[str]) -> RetryPlan:
         benchmark=_mapping(benchmark, "benchmark"),
         baseline={"enabled": False},
         optimization={
-            "maximize": _text(result.get("maximize"), "maximize"),
+            **_objective_settings(_text(result.get("maximize"), "maximize")),
             **(
                 {"constraints": [item.to_dict() for item in stored_constraints(result, tuple(manifests))]}
                 if result.get("constraints") or any(item.get("constraints") for item in manifests)
@@ -78,6 +79,16 @@ def load_retry_plan(run: Path, trial_ids: list[str]) -> RetryPlan:
     run_id = _text(result.get("run_id"), "run_id")
     sources = {trial: {"run_id": run_id, "trial_id": trial} for trial in trial_ids}
     return RetryPlan(config, trials, run_id, sources, warnings)
+
+
+def _objective_settings(metric: str) -> dict[str, object]:
+    objective = objective_from_key(metric)
+    if objective.direction == "maximize":
+        return {"maximize": metric}
+    settings: dict[str, object] = {"metric": objective.metric}
+    if objective.percentile is not None:
+        settings["percentile"] = objective.percentile
+    return {"objective": settings}
 
 
 def _parameters(manifest: Mapping[str, object]) -> dict[str, object]:
