@@ -29,6 +29,7 @@ available in this workspace. They remain explicitly unvalidated:
 | 2026-09-02 | RTX 3080 | 1 | WSL2 V0 smoke | 596.36 | 3.12.3 | 0.19.0 / 0.7.3 | local OPT-125M | Passed: two repeats/backend, 10/10 requests/backend, clean drains |
 | 2026-09-13 | RTX 3080 | 1 | WSL2 showcase and baseline control | 616.64 / CUDA 13.0 | 3.12.3 | 0.28.0 / 0.7.3 installed | facebook/opt-125m | Completed: published vLLM Bench Serve evidence; showcase drift remains inconclusive |
 | 2026-10-04 | RTX 3080 | 1 | WSL2 temperature smoke | 616.92 / CUDA 13.0 | 3.12.3 | 0.30.0 / 0.7.4 | local OPT-125M | Passed: default zero, explicit zero, nonzero startup warnings, 6/6 vLLM and 4/4 GuideLLM requests, JSON/CSV/HTML, clean shutdown |
+| 2026-11-17 | RTX 3080 | 1 | WSL2 runtime upgrade | 621.01 / CUDA 13.0 | 3.12.3 | 0.32.0 / 0.8.1 | local OPT-125M FP16 | Passed: 64/64 requests on the selected configuration per backend, temperature 0, P99 TTFT target, JSON/CSV/HTML, offline report/reclassification/retry planning, clean shutdown; short-context compatibility check |
 
 The RTX 3080 rows are environment diagnostics, not supported native-Linux
 validation. The September 1 attempt produced no accepted benchmark result;
