@@ -4,9 +4,12 @@ vLLM Optimizer targets Python 3.11–3.12 and native Linux experiment hosts
 with NVIDIA GPUs. This page records dated evidence rather than promising that
 every vLLM/CUDA combination works.
 
-The runtime extra targets stable vLLM **0.30.x** (`>=0.30,<0.31`) and GuideLLM
-`>=0.7.3,<0.8`. vLLM 0.30.0 is the latest stable release checked on 2026-10-04;
-see its [release notes](https://github.com/vllm-project/vllm/releases/tag/v0.30.0).
+The runtime extra targets stable vLLM **0.32.x** (`>=0.32,<0.33`) and GuideLLM
+`>=0.8.1,<0.9`. See the
+[vLLM release notes](https://github.com/vllm-project/vllm/releases/tag/v0.32.0)
+and [GuideLLM release notes](https://github.com/vllm-project/guidellm/releases/tag/v0.8.1).
+This runtime pair passed the RTX 3080/WSL2 backend check recorded below;
+earlier rows retain their tested versions.
 Install the current checkout on Linux with `pip install -e '.[runtime]'`.
 Historical evidence and captured requirement files below retain their original
 versions.

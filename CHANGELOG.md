@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update the runtime extra to vLLM 0.32.x and GuideLLM 0.8.1 or later below 0.9.
+
 ## v0.1.0a21 — Performance targets and simpler guides
 
 - Maximize throughput under per-workload latency or throughput limits, with
