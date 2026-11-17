@@ -1,5 +1,8 @@
 # Automatic tuning
 
+> **Experimental:** auto mode searches a small fixed catalog. It reports the best
+> measured configuration within that catalog and can conclude that the baseline wins.
+
 Choose a local model and enable auto mode:
 
 ```yaml
@@ -31,21 +34,9 @@ optimization:
   trials: 20
 ```
 
-Latency metrics are `time_to_first_token_ms`, `time_per_output_token_ms`,
-`inter_token_latency_ms`, and `end_to_end_latency_ms`. They are minimized;
-omit `percentile` to minimize the mean. Throughput metrics are
-`output_tokens_per_second`, `total_tokens_per_second`, and `requests_per_second`;
-they are maximized and do not accept a percentile. Select one objective per run.
-
-vLLM Bench Serve supports integer percentiles 1–100, including P55.
-GuideLLM 0.8.x supports its emitted integer percentiles P1, P5, P10, P25, P50,
-P75, P90, P95, and P99. Unsupported selections fail validation with instructions
-to use `benchmark.engine: vllm`. Missing measurements never fall back to another
-percentile or the mean.
-
-The objective syntax also works with manual `tune` spaces. Existing
-`optimization.maximize` retains its historical behavior, including maximizing
-latency if selected. Do not combine `maximize` with `objective`.
+Auto mode maximizes output tokens/s unless an objective is set. Metrics,
+percentiles, and backend support are described in
+[Choose an objective](search-and-scoring.md#choose-an-objective).
 
 ## Generated workloads and calibration
 

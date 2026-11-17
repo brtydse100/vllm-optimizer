@@ -1,12 +1,14 @@
 """Public objective checks using fabricated metrics; no captured benchmark fixtures."""
 
-import asyncio
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
+import yaml
 
 from vllm_optimizer.benchmarks.metrics import normalize_guidellm_metrics, normalize_vllm_metrics
+from vllm_optimizer.config.errors import ConfigValidationError
+from vllm_optimizer.config.loader import load_config
 from vllm_optimizer.config.models import ExperimentConfig, VTuneConfig
 from vllm_optimizer.domain.benchmark import BenchmarkResult, WorkloadResult
 from vllm_optimizer.managers.scoring import ScoringManager, TrialScore
@@ -76,48 +78,82 @@ def test_numeric_percentile_evidence_survives_secret_redaction():
     assert stored["api_token"] == "<redacted>"
 
 
-def test_probe_extracts_fabricated_summaries_without_gpu(monkeypatch, tmp_path):
-    from vllm_optimizer.auto import probes
-    from vllm_optimizer.domain.results import WorkerResult
-    from vllm_optimizer.workers.base import TrialContext
-
-    metrics = {
-        "output_tokens_per_second": {"average": 10},
-        "end_to_end_latency_ms": {"average": 1},
-        "request_totals": {"successful": 1},
+def _load(tmp_path, engine, args, optimization):
+    run = {"name": "custom", "args": args}
+    document = {
+        "experiment": {"name": "fabricated"},
+        "server": {"model": "."},
+        "tune": {"max-num-seqs": {"values": [8, 16]}},
+        "benchmark": {"engine": engine, "runs": [run]},
+        "optimization": optimization,
     }
-    result = BenchmarkResult(
-        "sample", "example", "example", (WorkloadResult(0, {}, metrics),), tmp_path / "not-read.json"
-    )
-
-    class FabricatedMeasurements:
-        name = "fabricated-measurements"
-
-        async def execute(self, context):
-            context.values["benchmark_results"] = (result,)
-            return WorkerResult.completed()
-
-        async def cleanup(self, context):
-            pass
-
-    monkeypatch.setattr(probes, "build_trial_workers", lambda *args: (None,) * 4 + (FabricatedMeasurements(),))
-    config = VTuneConfig(1, ExperimentConfig("example"), {"model": "."}, benchmark={"engine": "vllm"})
-    measured = asyncio.run(probes.measure_probe(config, {"name": "sample"}, TrialContext("example"), tmp_path, 1, 10))
-    assert measured.throughput == 10 and measured.latency == 1 and measured.failure is None
+    path = tmp_path / "experiment.yaml"
+    path.write_text(yaml.safe_dump(document), encoding="utf-8")
+    return load_config(path)
 
 
-def test_calibration_freezes_last_stable_fabricated_load(monkeypatch, tmp_path):
-    from vllm_optimizer.auto import calibration_worker
-    from vllm_optimizer.auto.calibration import ProbeResult
-    from vllm_optimizer.workers.base import TrialContext
+@pytest.mark.parametrize(
+    ("spelling", "expected"),
+    [
+        ({}, "50,95,99,55"),
+        ({"metric_percentiles": "90,99"}, "90,99,55"),
+        ({"--metric-percentiles=90": True}, "90,55"),
+        ({"metric-percentiles": [50, 55]}, "50,55"),
+        ({"metric-percentiles": False}, "50,95,99,55"),
+        ({"metric-percentiles=90": False}, "50,95,99,55"),
+    ],
+)
+def test_manual_space_requests_objective_percentile_once(tmp_path, spelling, expected):
+    args = {"dataset-name": "random", "num-prompts": 8, "max-concurrency": 3, **spelling}
+    objective = {"metric": "time_to_first_token_ms", "percentile": 55}
+    config = _load(tmp_path, "vllm", args, {"objective": objective})
+    resolved = config.benchmark["runs"][0]["args"]
+    assert resolved["max-concurrency"] == 3 and resolved["num-prompts"] == 8
+    assert resolved["metric-percentiles"] == expected
+    assert resolved["percentile-metrics"] == "ttft,tpot,itl,e2el"
+    assert not set(spelling) - {"metric-percentiles"} & set(resolved)
 
-    async def fabricated_probe(config, run, context, directory, concurrency, timeout, warmup=False):
-        return {1: ProbeResult(1, 10, 1), 2: ProbeResult(2, 19, 1.1), 4: ProbeResult(4, 19.1, 1.2)}[concurrency]
 
-    monkeypatch.setattr(calibration_worker, "measure_probe", fabricated_probe)
-    run = {"name": "example", "args": {"num-prompts": 8, "max-concurrency": 1}}
-    config = VTuneConfig(1, ExperimentConfig("example"), {"model": "."}, benchmark={"engine": "vllm", "runs": [run]})
-    worker = calibration_worker.CalibrationWorker(config, tmp_path)
-    asyncio.run(worker.execute(TrialContext("example")))
-    assert worker.decisions[0]["reason"] == "throughput_plateau"
-    assert worker.frozen_runs[0]["args"] == {"num-prompts": 8, "max-concurrency": 2}
+def test_legacy_maximize_arguments_are_not_modified(tmp_path):
+    args = {"dataset-name": "random", "num-prompts": 8}
+    config = _load(tmp_path, "vllm", args, {"maximize": "output_tokens_per_second"})
+    assert config.benchmark["runs"][0]["args"] == args
+
+
+@pytest.mark.parametrize(
+    ("engine", "optimization", "message"),
+    [
+        ("guidellm", {"objective": {"metric": "end_to_end_latency_ms", "percentile": 55}}, "GuideLLM.*55"),
+        ("vllm", {"maximize": "end_to_end_latency_ms.p99"}, "use optimization.objective"),
+        ("vllm", {"maximize": "x", "objective": {"metric": "end_to_end_latency_ms"}}, "not both"),
+        ("vllm", {"objective": {"metric": "output_tokens_per_second", "percentile": 99}}, "percentiles"),
+        ("vllm", {"objective": {"metric": "unknown"}}, "canonical"),
+    ],
+)
+def test_unsupported_objectives_fail_validation(tmp_path, engine, optimization, message):
+    _fails(tmp_path, engine, {}, optimization, message)
+
+
+@pytest.mark.parametrize(
+    ("spelling", "message"),
+    [
+        ({"metric_percentiles": "50", "--metric-percentiles": "99"}, "duplicate aliases"),
+        ({"metric-percentiles=90": "yes"}, "boolean true or false"),
+    ],
+)
+def test_ambiguous_percentile_arguments_fail_validation(tmp_path, spelling, message):
+    objective = {"metric": "time_to_first_token_ms", "percentile": 55}
+    _fails(tmp_path, "vllm", spelling, {"objective": objective}, message)
+
+
+def test_mean_extraction_keeps_the_stored_run_order_and_zero_improvement_is_unsigned():
+    metrics = {"custom_metric": {"average": 10, "successful": {"mean": 20}}}
+    assert extract_objective(metrics, Objective("custom_metric")) == 10
+    score = TrialScore("baseline", 5, {}, {}, direction="minimize")
+    assert str(improvement(score, score)) == "0.0"
+
+
+def _fails(tmp_path, engine, spelling, optimization, message):
+    args = {"dataset-name": "random", "num-prompts": 8, **spelling} if engine == "vllm" else {}
+    with pytest.raises(ConfigValidationError, match=message):
+        _load(tmp_path, engine, args, optimization)

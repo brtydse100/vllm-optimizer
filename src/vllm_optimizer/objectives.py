@@ -33,10 +33,6 @@ class Objective:
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
 
-    def loss(self, value: float) -> float:
-        """A comparison key, never a replacement for the measured score."""
-        return value if self.direction == "minimize" else -value
-
 
 def objective_from_config(config: VTuneConfig) -> Objective:
     values = config.optimization
@@ -44,6 +40,9 @@ def objective_from_config(config: VTuneConfig) -> Objective:
         metric = values.get("maximize")
         if not isinstance(metric, str) or not metric.strip():
             raise ValueError("optimization requires a non-empty 'maximize' metric or 'objective'")
+        if objective_from_key(metric).direction == "minimize":
+            # Scoring would minimize this derived key while 'maximize' promises the opposite.
+            raise ValueError("optimization.maximize cannot select a latency statistic; use optimization.objective")
         return Objective(metric)
     if "maximize" in values:
         raise ValueError("choose optimization.objective or optimization.maximize, not both")
@@ -76,15 +75,17 @@ def extract_objective(metrics: Mapping[str, object], objective: Objective) -> fl
         value = metrics.get(objective.metric)
         if not isinstance(value, Mapping) and objective.percentile is not None:
             value = None
+    if objective.percentile is None:
+        # Means keep the stored-run extraction order so earlier scores regenerate unchanged.
+        from vllm_optimizer.managers.scoring_values import _metric_value
+
+        return _metric_value(value)
     if isinstance(value, Mapping):
         successful = value.get("successful")
         source = successful if isinstance(successful, Mapping) else value
-        if objective.percentile is not None:
-            key = f"p{objective.percentile}"
-            percentiles = source.get("percentiles", {})
-            value = source.get(key, percentiles.get(key) if isinstance(percentiles, Mapping) else None)
-            if value is None and objective.percentile == 50:
-                value = source.get("median")
-        else:
-            value = source.get("average", source.get("mean"))
+        key = f"p{objective.percentile}"
+        percentiles = source.get("percentiles", {})
+        value = source.get(key, percentiles.get(key) if isinstance(percentiles, Mapping) else None)
+        if value is None and objective.percentile == 50:
+            value = source.get("median")
     return float(value) if isinstance(value, int | float) and not isinstance(value, bool) and isfinite(value) else None

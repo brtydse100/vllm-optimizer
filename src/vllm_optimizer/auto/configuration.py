@@ -8,7 +8,6 @@ from vllm_optimizer.auto.hardware import context_limit
 from vllm_optimizer.auto.space import automatic_space
 from vllm_optimizer.auto.workloads import default_workloads
 from vllm_optimizer.config.models import VTuneConfig
-from vllm_optimizer.objectives import objective_from_config
 
 
 def prepare_auto_config(raw: Mapping[str, Any]) -> dict[str, Any]:
@@ -50,25 +49,4 @@ def resolve_auto_config(config: VTuneConfig) -> VTuneConfig:
         elif "average_request" in benchmark:
             raise ValueError("benchmark.average_request cannot be combined with explicit benchmark.runs")
         config = replace(config, tune=automatic_space(config, limit), benchmark=benchmark)
-    objective = objective_from_config(config)
-    if objective.percentile is None:
-        return config
-    benchmark = dict(config.benchmark)
-    if benchmark.get("engine", "guidellm") == "guidellm":
-        if objective.percentile not in {1, 5, 10, 25, 50, 75, 90, 95, 99}:
-            raise ValueError(f"GuideLLM does not emit P{objective.percentile}; select benchmark.engine: vllm")
-        return config
-    runs = []
-    source_runs = benchmark.get("runs", [])
-    if not isinstance(source_runs, list):
-        raise ValueError("benchmark.runs must be a list")
-    for run in source_runs:
-        if not isinstance(run, Mapping) or not isinstance(run.get("args", {}), Mapping):
-            raise ValueError("each benchmark run and its args must be mappings")
-        args = dict(run.get("args", {}))
-        percentiles = str(args.get("metric-percentiles", "50,95,99")).split(",")
-        args["metric-percentiles"] = ",".join(dict.fromkeys([*percentiles, str(objective.percentile)]))
-        metrics = str(args.get("percentile-metrics", "ttft,tpot,itl,e2el")).split(",")
-        args["percentile-metrics"] = ",".join(dict.fromkeys([*metrics, "ttft", "tpot", "itl", "e2el"]))
-        runs.append({**run, "args": args})
-    return replace(config, benchmark={**benchmark, "runs": runs})
+    return config
