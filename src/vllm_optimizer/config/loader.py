@@ -39,7 +39,12 @@ def load_config(path: str | Path) -> VTuneConfig:
 
 
 def _build_config(raw: Any, config_directory: Path) -> VTuneConfig:
+    from vllm_optimizer.auto.configuration import prepare_auto_config, resolve_auto_config
+
     root = _mapping(raw, "configuration")
+    benchmark_source = root.get("benchmark", {})
+    generated = isinstance(benchmark_source, dict) and "runs" not in benchmark_source
+    root = prepare_auto_config(root)
     unknown = sorted(set(root) - _TOP_LEVEL_KEYS)
     if unknown:
         raise ConfigValidationError(f"Unknown top-level configuration key(s): {', '.join(unknown)}")
@@ -64,9 +69,10 @@ def _build_config(raw: Any, config_directory: Path) -> VTuneConfig:
         env=env,
         tune_env=tune_env,
         external_server_config=external_server_config,
+        auto={"generated_benchmark": generated} if optional["optimization"].get("mode") == "auto" else {},
         **optional,
     )
-    config = request_objective_percentile(config)
+    config = request_objective_percentile(resolve_auto_config(config))
     logging_level(config)
     from .preflight import validate_config
 

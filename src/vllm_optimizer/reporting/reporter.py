@@ -41,6 +41,9 @@ class Reporter:
             ),
             encoding="utf-8",
         )
+        from vllm_optimizer.auto.artifacts import add_auto_summary
+
+        add_auto_summary(html_path, self._artifact_directory)
         return csv_path, html_path
 
     @staticmethod

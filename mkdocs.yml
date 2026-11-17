@@ -43,6 +43,7 @@ nav:
           - Repeats and errors: guides/benchmarks/benchmark-repeats.md
           - Backend comparison: guides/benchmarks/backend-comparison.md
       - Search and scoring: guides/search-and-scoring.md
+      - Automatic tuning: guides/auto-tuning.md
       - Parallel trials: guides/parallel-trials.md
   - Results:
       - Reports: guides/reports.md
