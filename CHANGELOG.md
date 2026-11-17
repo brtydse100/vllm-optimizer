@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Update the runtime extra to vLLM 0.32.x and GuideLLM 0.8.1 or later below 0.9.
+- Add `optimization.objective` to minimize a latency mean or percentile, or
+  maximize a throughput metric, with manual `tune` spaces. Ranking, finalist
+  selection, reports, retries, and reclassification follow its direction.
+- Stored workload metrics now include every backend-reported latency percentile.
 
 ## v0.1.0a21 — Performance targets and simpler guides
 

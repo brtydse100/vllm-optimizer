@@ -15,10 +15,12 @@ from vllm_optimizer.managers.run_documents import status_counts as _status_count
 from vllm_optimizer.managers.run_documents import strings as _strings
 from vllm_optimizer.managers.run_documents import trial_document as _trial_document
 from vllm_optimizer.managers.scoring import TrialScore
+from vllm_optimizer.objectives import objective_from_key
 from vllm_optimizer.reporting.constraints import NO_TARGET_MATCH, constraint_documents, target_summary
 from vllm_optimizer.reporting.context import ReportContext
 from vllm_optimizer.reporting.dashboard_selection import best_observed as _best_observed
 from vllm_optimizer.reporting.finalist_decision import decide
+from vllm_optimizer.reporting.objective import objective_label
 from vllm_optimizer.reproduction.redaction import redact_environment, redact_values
 
 
@@ -64,6 +66,7 @@ class RunResultsManager:
             "schema_version": 1,
             "run_id": run_id,
             "maximize": metric,
+            "objective": objective_from_key(metric).to_dict(),
             "execution_mode": self._execution_mode,
             "status": status,
             "started_at": started_at,
@@ -123,7 +126,7 @@ class RunResultsManager:
         lines = [
             f"Trials: {len(trials)} | completed={counts['completed']} "
             f"failed={counts['failed']} interrupted={counts['interrupted']}",
-            f"Maximize: {metric}",
+            objective_label(metric),
         ]
         if finalist_validation:
             lines.append(decide(trials, ranking, baseline, metric, finalist_validation).reason)

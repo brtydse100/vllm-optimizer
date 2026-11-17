@@ -19,6 +19,7 @@ from vllm_optimizer.reporting.importance import importance_section
 from vllm_optimizer.reporting.interactions import report_script
 from vllm_optimizer.reporting.leaderboard import leaderboard
 from vllm_optimizer.reporting.methodology import metric_methodology
+from vllm_optimizer.reporting.objective import objective_label
 from vllm_optimizer.reporting.overview import result_summary
 from vllm_optimizer.reporting.recommendation import recommendation
 from vllm_optimizer.reporting.styles import dashboard_css
@@ -51,7 +52,11 @@ def render_dashboard(
         outcome = "Baseline wins — keep the baseline"
     elif change is not None:
         outcome = (
-            "Higher optimization score observed"
+            (
+                "Lower optimization latency observed"
+                if best.direction == "minimize"
+                else "Higher optimization score observed"
+            )
             if change > 0
             else "Score tied with baseline; recommendation selected by request quality"
         )
@@ -74,7 +79,7 @@ def render_dashboard(
 <meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>vLLM Optimizer · {escape(context.run_id)}</title><style>{dashboard_css()}</style></head><body>
 <header><div><p class='eyebrow'>vLLM Optimizer decision report</p><h1>{escape(context.run_id)}</h1>
-<p>Maximize <code>{escape(metric)}</code> · Mode {escape(context.execution_mode)}</p>
+<p>{escape(objective_label(metric))} · Mode {escape(context.execution_mode)}</p>
 <nav aria-label='Report sections'><a href='#overview'>Overview</a> · <a href='#recommendation'>Configuration</a> ·
 <a href='#comparison'>Comparison</a> · <a href='#confidence'>Confidence</a> · <a href='#leaderboard'>All trials</a></nav>
 </div></header><main><section id='overview'><h2>{escape(outcome)}</h2>
