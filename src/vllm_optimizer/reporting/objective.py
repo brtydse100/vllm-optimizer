@@ -12,7 +12,7 @@ def improvement(candidate: TrialScore | None, baseline: TrialScore | None) -> fl
     if candidate is None or baseline is None or baseline.value == 0:
         return None
     change = (candidate.value - baseline.value) / abs(baseline.value) * 100
-    return -change if candidate.direction == "minimize" else change
+    return (-change if candidate.direction == "minimize" else change) + 0.0  # Never report -0.0.
 
 
 def objective_label(metric: str) -> str:

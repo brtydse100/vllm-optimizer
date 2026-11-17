@@ -40,13 +40,23 @@ def request_objective_percentile(config: VTuneConfig) -> VTuneConfig:
 def _extend(args: dict[str, object], name: str, default: tuple[str, ...], required: tuple[str, ...]) -> None:
     """Merge required items into whichever spelling the user wrote, keeping one key."""
     current: list[str] = list(default)
+    source = None
     for raw in tuple(args):
         key, inline, embedded = str(raw).partition("=")
         if canonical_argument_name(key) != name:
             continue
-        value = args.pop(raw)
-        if inline and value is not True:
-            continue  # A disabled inline argument is absent.
+        value = args[raw]
+        if inline and not isinstance(value, bool):
+            raise ValueError("inline vLLM benchmark arguments must use a boolean true or false value")
+        if inline and value is False:
+            del args[raw]  # A disabled inline argument is absent.
+            continue
+        if source is not None:
+            raise ValueError(f"vLLM benchmark arguments contain duplicate aliases for '{name}': '{source}' and '{raw}'")
+        source = raw
+        del args[raw]
+        if value is False:
+            continue  # An ordinary false omits the flag, so the defaults apply.
         items = value if isinstance(value, list) else str(embedded if inline else value).split(",")
         current = [str(item).strip() for item in items]
     args[name] = ",".join(dict.fromkeys([*current, *required]))

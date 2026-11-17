@@ -75,15 +75,17 @@ def extract_objective(metrics: Mapping[str, object], objective: Objective) -> fl
         value = metrics.get(objective.metric)
         if not isinstance(value, Mapping) and objective.percentile is not None:
             value = None
+    if objective.percentile is None:
+        # Means keep the stored-run extraction order so earlier scores regenerate unchanged.
+        from vllm_optimizer.managers.scoring_values import _metric_value
+
+        return _metric_value(value)
     if isinstance(value, Mapping):
         successful = value.get("successful")
         source = successful if isinstance(successful, Mapping) else value
-        if objective.percentile is not None:
-            key = f"p{objective.percentile}"
-            percentiles = source.get("percentiles", {})
-            value = source.get(key, percentiles.get(key) if isinstance(percentiles, Mapping) else None)
-            if value is None and objective.percentile == 50:
-                value = source.get("median")
-        else:
-            value = source.get("average", source.get("mean"))
+        key = f"p{objective.percentile}"
+        percentiles = source.get("percentiles", {})
+        value = source.get(key, percentiles.get(key) if isinstance(percentiles, Mapping) else None)
+        if value is None and objective.percentile == 50:
+            value = source.get("median")
     return float(value) if isinstance(value, int | float) and not isinstance(value, bool) and isfinite(value) else None

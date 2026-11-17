@@ -99,6 +99,8 @@ def _load(tmp_path, engine, args, optimization):
         ({"metric_percentiles": "90,99"}, "90,99,55"),
         ({"--metric-percentiles=90": True}, "90,55"),
         ({"metric-percentiles": [50, 55]}, "50,55"),
+        ({"metric-percentiles": False}, "50,95,99,55"),
+        ({"metric-percentiles=90": False}, "50,95,99,55"),
     ],
 )
 def test_manual_space_requests_objective_percentile_once(tmp_path, spelling, expected):
@@ -129,6 +131,29 @@ def test_legacy_maximize_arguments_are_not_modified(tmp_path):
     ],
 )
 def test_unsupported_objectives_fail_validation(tmp_path, engine, optimization, message):
-    args = {"dataset-name": "random", "num-prompts": 8} if engine == "vllm" else {}
+    _fails(tmp_path, engine, {}, optimization, message)
+
+
+@pytest.mark.parametrize(
+    ("spelling", "message"),
+    [
+        ({"metric_percentiles": "50", "--metric-percentiles": "99"}, "duplicate aliases"),
+        ({"metric-percentiles=90": "yes"}, "boolean true or false"),
+    ],
+)
+def test_ambiguous_percentile_arguments_fail_validation(tmp_path, spelling, message):
+    objective = {"metric": "time_to_first_token_ms", "percentile": 55}
+    _fails(tmp_path, "vllm", spelling, {"objective": objective}, message)
+
+
+def test_mean_extraction_keeps_the_stored_run_order_and_zero_improvement_is_unsigned():
+    metrics = {"custom_metric": {"average": 10, "successful": {"mean": 20}}}
+    assert extract_objective(metrics, Objective("custom_metric")) == 10
+    score = TrialScore("baseline", 5, {}, {}, direction="minimize")
+    assert str(improvement(score, score)) == "0.0"
+
+
+def _fails(tmp_path, engine, spelling, optimization, message):
+    args = {"dataset-name": "random", "num-prompts": 8, **spelling} if engine == "vllm" else {}
     with pytest.raises(ConfigValidationError, match=message):
         _load(tmp_path, engine, args, optimization)
